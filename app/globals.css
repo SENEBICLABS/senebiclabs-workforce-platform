@@ -3,62 +3,55 @@
 @theme {
   /* ---- Palette ----------------------------------------------------
    *
-   * The ground is teal, not white.
+   * No greys and no whites. Every colour here is teal or a semantic, and
+   * nothing sits at the near-neutral chroma that reads as grey.
    *
-   * What makes a tint read as a colour rather than as off-white is chroma,
-   * not lightness. An earlier pass took the canvas down in lightness but
-   * left it at 9 steps of red-to-blue spread, which is why it still read as
-   * white. This canvas has 30, and that is the whole difference.
+   * The number that matters is chroma, the red-to-blue spread. Below about
+   * 20 the eye calls it white or grey regardless of how dark it is. The
+   * cards used to be 8, which is why they read as white on a teal page even
+   * after the ground was fixed.
    *
-   * Every value was chosen against the grounds rather than on its own, so
-   * the tint is unmistakable with nothing under WCAG AA (4.5:1).
-   * Measured, on canvas / on surface:
+   * A light tint cannot hold chroma, because the closer a colour gets to
+   * white the less colour is possible in it. So the ground went deeper and
+   * the cards took over the tone the ground used to have. Cards are now a
+   * clear teal at 30, on a ground of 46, and lift off it by 1.23.
    *
-   *   ink     10.65 / 12.96      muted   5.70 / 6.94      accent  4.91 / 5.97
+   * Everything else moved to keep WCAG AA (4.5:1) on the deeper ground,
+   * which is the harder of the two surfaces. Measured, on ground / on card:
    *
-   * Long reading happens on cards, which stay light. The canvas is the
-   * frame around them, and carries the colour.
+   *   ink   8.71 / 10.71     muted  5.62 / 6.92     accent  4.59 / 5.64
    */
-  --color-surface: #F0F8F5;
-  --color-canvas: #C9E7DF;
-  /* Text sits in the same hue family as the ground rather than reading as
-   * black and grey dropped onto a colour. Chroma, in steps of red-to-blue
-   * spread: ground 30, ink 37, muted 40. */
+  --color-surface: #C9E7DF;
+  --color-canvas: #A7D5C8;
   --color-ink: #0C312C;
-  /* Was #485855, a near-neutral 16. Most of the words on any page are this
-   * colour, so it was the one doing the most to make the page look like grey
-   * text on a tinted background. Going to 40 costs almost nothing: 5.70 to
-   * 5.52 against the canvas. */
-  --color-muted: #365E56;
-  --color-hairline: #AFD4C9;
-  /* Darker than the original #0E7C74, which measured 4.42 on accent-soft
-   * and so failed AA for the small accent text in Pill and on /welcome. */
-  --color-accent: #0B6A63;
-  --color-accent-hover: #0A5A54;
-  /* Sits between canvas and surface. Chips almost always sit on a card, so
-   * this is measured against surface (1.12) rather than against canvas. */
-  --color-accent-soft: #DCEDE9;
-  /* Semantics, darkened to hold their own against a saturated ground.
-   *
-   * At their previous values every one of these failed AA once the canvas
-   * deepened, and warning was the worst at 2.84. They are used as text: the
-   * Pill variants, and the error line in the application form. Each now
-   * clears 4.5 on canvas, on surface and on its own chip, and each soft has
-   * come down with it so a chip still reads as a chip beside teal cards
-   * rather than as a pale patch of some other palette. */
-  --color-warning: #875908;
-  --color-warning-soft: #F5E6C9;
-  --color-danger: #B02D2D;
-  --color-danger-soft: #F5DEDE;
-  --color-info: #2455AE;
-  --color-info-soft: #DCE7F8;
-  --color-success: #0C6845;
-  --color-success-soft: #DEEFE7;
+  /* Darkened with the ground: at #365E56 it landed on 4.49, just under. */
+  --color-muted: #2A4F48;
+  --color-hairline: #84C0AE;
+  --color-accent: #0A605A;
+  --color-accent-hover: #084C47;
+  /* Read against the card rather than the ground (1.18), since a chip is
+   * almost always on a card. */
+  --color-accent-soft: #A8DACD;
+  /* Semantics keep their hue but not their paleness. The old soft chips
+   * were near-white, which is the thing being removed, and every one of
+   * these colours fell under AA on the deeper ground. Each now clears 4.5
+   * on the ground, on a card, and on its own chip. */
+  --color-warning: #6B4706;
+  --color-warning-soft: #E8D199;
+  --color-danger: #9E2727;
+  --color-danger-soft: #E8C4C4;
+  --color-info: #1F4A99;
+  --color-info-soft: #C9D9F0;
+  --color-success: #0A5B3C;
+  --color-success-soft: #C4E3D5;
 
   /* Sidebar — dark teal ink */
   --color-rail: #0C2422;
   --color-rail-hover: #143432;
-  --color-rail-text: #A8BDBA;
+  /* Was #A8BDBA, a chroma-21 grey, and the last neutral in the palette.
+   * Now teal at 44, and it reads better on the rail than the grey did
+   * (8.83 against 8.25). */
+  --color-rail-text: #9CC8BC;
 
   /* ---- Type ------------------------------------------------------- */
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
@@ -136,6 +129,5 @@ body {
   border-radius: 999px;
   border: 3px solid var(--color-canvas);
 }
-/* Darker than the hairline the thumb is drawn in. The old value was lighter
-   than the new hairline, so hovering made the thumb fade rather than firm up. */
-::-webkit-scrollbar-thumb:hover { background: #93C4B6; }
+/* Darker than the hairline the thumb is drawn in, so hovering firms it up. */
+::-webkit-scrollbar-thumb:hover { background: #63A992; }
