@@ -47,7 +47,7 @@ export function Faqs({ featuredOnly = false }: { featuredOnly?: boolean }) {
 
         return (
           <section key={category}>
-            <h2 className="text-label uppercase text-accent">{category}</h2>
+            <h2 className="text-label uppercase text-muted">{category}</h2>
             <div className="mt-4 space-y-2.5">
               {items.map((f) => (
                 <Item key={f.q} q={f.q} a={f.a} />

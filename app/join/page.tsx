@@ -151,7 +151,7 @@ function Join() {
           </>
         ) : (
           <>
-            <p className="text-label uppercase text-accent">
+            <p className="text-label uppercase text-muted">
               You have been invited
             </p>
             <h1 className="mt-1.5 text-section text-ink">

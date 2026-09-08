@@ -32,8 +32,17 @@
   --color-surface: #F2E7CE;
   --color-canvas: #8CD7BE;
   --color-canvas-top: #B0E1C8;
+  /* Text is monochrome and the hierarchy is opacity, not separate colours.
+   * One ink, three steps.
+   *
+   * 72% is the floor, not a taste call. Below it body text fails AA on the
+   * darkest end of the gradient: 65% measures 4.35 there and 60% measures
+   * 3.80, against the 4.5 body text needs. At 72% it is 5.27, which is
+   * genuinely soft next to the 10.45 of full ink but still legible for
+   * someone reading cases for an hour. */
   --color-ink: #031E19;
-  --color-muted: #053A31;
+  --color-strong: rgb(3 30 25 / 0.85);
+  --color-muted: rgb(3 30 25 / 0.72);
   /* Warm, so the card edges belong to the cream rather than cutting across
    * it with a teal line. */
   --color-hairline: #C2AF7D;
@@ -59,30 +68,37 @@
   --color-rail-text: #7FCFB6;
 
   /* ---- Type ------------------------------------------------------- */
-  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
-  /* Landing hero headlines only; the application never uses it. */
-  --font-serif: var(--font-source-serif), ui-serif, Georgia, serif;
+  /* Body. Every sentence on the platform. */
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  /* Headings, applied by element in the base layer below rather than by class,
+   * so nothing has to remember to opt in. */
+  --font-display: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  /* Eyebrows and labels. */
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 
-  /* The scale runs a step heavier than it did. Body sits at 500 rather than
-   * 400, which is the change that carries: it is most of the words on any
-   * page, and on a coloured ground a 400 reads thin and washed out in a way
-   * it does not on white. Headings go to 700, the real weight, now loaded. */
+  /* Headings are bold and set tight. Body is back to 400: the softness is
+   * carried by weight and opacity together, and a 500 body fights a bold
+   * heading for the same attention. */
   --text-title: 24px;
-  --text-title--line-height: 1.3;
+  --text-title--line-height: 1.2;
   --text-title--font-weight: 700;
+  --text-title--letter-spacing: -0.02em;
 
   --text-section: 16px;
-  --text-section--line-height: 1.4;
+  --text-section--line-height: 1.3;
   --text-section--font-weight: 700;
+  --text-section--letter-spacing: -0.01em;
 
   --text-body: 14px;
-  --text-body--line-height: 1.55;
-  --text-body--font-weight: 500;
+  --text-body--line-height: 1.6;
+  --text-body--font-weight: 400;
 
-  --text-label: 12px;
+  /* Eyebrows. Mono, uppercase and widely tracked, which is what separates them
+   * from body text now that neither carries a colour of its own. */
+  --text-label: 11px;
   --text-label--line-height: 1.4;
-  --text-label--font-weight: 600;
-  --text-label--letter-spacing: 0.06em;
+  --text-label--font-weight: 500;
+  --text-label--letter-spacing: 0.12em;
 
   /* ---- Geometry --------------------------------------------------- */
   --radius-btn: 6px;
@@ -99,6 +115,27 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+/**
+ * Headings take the display face by element, so nothing has to remember a
+ * class. Set tight: Geist is drawn for it, and the negative tracking is what
+ * makes a bold heading read as deliberate rather than merely large.
+ */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+/* The hero sizes are large enough that the tracking wants to go further. */
+h1 {
+  letter-spacing: -0.035em;
+}
+
+/** Eyebrows are mono wherever the label size is used. */
+.text-label {
+  font-family: var(--font-mono);
 }
 
 /**

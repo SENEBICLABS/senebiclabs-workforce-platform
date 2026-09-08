@@ -14,10 +14,9 @@ export default function FaqsPage() {
     <>
       <section>
         <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
-          <p className="text-label uppercase text-accent">FAQs</p>
+          <p className="text-label uppercase text-muted">FAQs</p>
           <h1
             className="mx-auto mt-4 max-w-[640px] text-[34px] leading-[1.15] text-ink sm:text-[44px]"
-            style={{ fontFamily: "var(--font-serif)", fontWeight: 700 }}
           >
             Questions clinicians ask
           </h1>
@@ -29,7 +28,7 @@ export default function FaqsPage() {
       </section>
 
       <section>
-        <div className="mx-auto max-w-[720px] px-5 py-16 lg:px-8">
+        <div className="mx-auto max-w-[680px] px-5 py-16 text-center lg:px-8">
           <Faqs />
         </div>
       </section>
@@ -38,7 +37,6 @@ export default function FaqsPage() {
         <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
           <h2
             className="mx-auto max-w-[560px] text-[30px] leading-tight text-ink"
-            style={{ fontFamily: "var(--font-serif)", fontWeight: 700 }}
           >
             Put your clinical knowledge to paid work
           </h2>

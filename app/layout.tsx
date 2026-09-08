@@ -1,24 +1,32 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
+import { DM_Sans, Geist, Geist_Mono } from "next/font/google";
 import { AppStateProvider } from "@/components/AppState";
 import "./globals.css";
 
 /**
- * 700 is loaded on both faces because the type scale uses it. Without the real
- * weight the browser synthesises one by smearing the 600, which looks muddy at
- * heading sizes and is the usual reason "bold" looks wrong rather than heavy.
+ * Three faces, each with one job.
+ *
+ * All are variable fonts, so no weight array is passed: the whole axis ships in
+ * one file and any weight the design asks for is real rather than synthesised.
  */
-const plexSans = IBM_Plex_Sans({
-  variable: "--font-plex-sans",
-  weight: ["400", "500", "600", "700"],
+
+/** Headings. Set tight and bold. */
+const geist = Geist({
+  variable: "--font-geist",
   subsets: ["latin"],
   display: "swap",
 });
 
-/** Used only for the landing hero headline. The application itself is all sans. */
-const sourceSerif = Source_Serif_4({
-  variable: "--font-source-serif",
-  weight: ["600", "700"],
+/** Eyebrows and anything that wants to read as a label rather than a sentence. */
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+/** Body. Softer and rounder than the headings, which is the point of the pair. */
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
   display: "swap",
 });
@@ -34,7 +42,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${plexSans.variable} ${sourceSerif.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${geist.variable} ${geistMono.variable} ${dmSans.variable} h-full antialiased`}
+    >
       <body className="min-h-full">
         <AppStateProvider>{children}</AppStateProvider>
       </body>

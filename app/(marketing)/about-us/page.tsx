@@ -38,10 +38,9 @@ export default function AboutUs() {
     <>
       <section>
         <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
-          <p className="text-label uppercase text-accent">About us</p>
+          <p className="text-label uppercase text-muted">About us</p>
           <h1
             className="mx-auto mt-4 max-w-[720px] text-[34px] leading-[1.15] text-ink sm:text-[44px]"
-            style={{ fontFamily: "var(--font-serif)", fontWeight: 700 }}
           >
             Someone has to decide what a correct answer looks like
           </h1>
@@ -54,7 +53,7 @@ export default function AboutUs() {
       </section>
 
       <section>
-        <div className="mx-auto max-w-[720px] px-5 py-16 lg:px-8">
+        <div className="mx-auto max-w-[680px] px-5 py-16 text-center lg:px-8">
           <div className="space-y-5 text-body leading-relaxed text-muted">
             <h2 className="text-[26px] font-bold leading-tight text-ink">
               What we do
@@ -94,10 +93,10 @@ export default function AboutUs() {
 
           <div className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-2">
             {PRINCIPLES.map((p) => (
-              <Card key={p.title} className="h-full p-5">
+              <Card key={p.title} className="h-full p-5 text-center">
                 <span
                   aria-hidden="true"
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent"
+                  className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent"
                 >
                   <p.icon size={17} />
                 </span>
@@ -112,7 +111,7 @@ export default function AboutUs() {
       </section>
 
       <section>
-        <div className="mx-auto max-w-[720px] px-5 py-16 lg:px-8">
+        <div className="mx-auto max-w-[680px] px-5 py-16 text-center lg:px-8">
           <div className="space-y-5 text-body leading-relaxed text-muted">
             <h2 className="text-[26px] font-bold leading-tight text-ink">
               How we treat the clinicians who work here
@@ -137,7 +136,6 @@ export default function AboutUs() {
         <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
           <h2
             className="mx-auto max-w-[560px] text-[30px] leading-tight text-ink"
-            style={{ fontFamily: "var(--font-serif)", fontWeight: 700 }}
           >
             Put your clinical knowledge to paid work
           </h2>

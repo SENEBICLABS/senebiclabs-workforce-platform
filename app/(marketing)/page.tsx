@@ -112,20 +112,21 @@ export default function Landing() {
         {/* Hero */}
         <section>
           <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8 lg:py-24">
-            <p className="text-label uppercase text-accent">
+            <p className="text-label uppercase text-muted">
               For licensed clinicians
             </p>
             <h1
               className="mx-auto mt-4 max-w-[760px] text-[38px] leading-[1.12] text-ink sm:text-[52px]"
-              style={{ fontFamily: "var(--font-serif)", fontWeight: 700 }}
             >
               Your clinical expertise can shape the future of medical AI.
             </h1>
             {/* Three paragraphs, so three elements. Blank lines inside a single
                 JSX text node collapse to spaces, which ran these together into
                 one block on the page. */}
+            {/* Three steps of one ink: the heading at full, this lead at 85%,
+                the rest at 72%. That is the whole hierarchy. */}
             <div className="mx-auto mt-5 max-w-[600px] space-y-4 text-[17px] leading-relaxed text-muted">
-              <p>
+              <p className="text-strong">
                 Join medical experts around the world shaping the future of
                 medical AI.
               </p>
@@ -166,10 +167,10 @@ export default function Landing() {
 
             <div className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-3">
               {WORK.map((w) => (
-                <Card key={w.title} className="h-full p-5">
+                <Card key={w.title} className="h-full p-5 text-center">
                   <span
                     aria-hidden="true"
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent"
+                    className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent"
                   >
                     <w.icon size={17} />
                   </span>
@@ -203,10 +204,10 @@ export default function Landing() {
 
             <div className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
               {EXPECTATIONS.map((item) => (
-                <Card key={item.title} className="h-full p-5">
+                <Card key={item.title} className="h-full p-5 text-center">
                   <span
                     aria-hidden="true"
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent"
+                    className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent"
                   >
                     <item.icon size={17} />
                   </span>
@@ -224,9 +225,9 @@ export default function Landing() {
                 The bar is clinical experience. There is nothing to buy and no
                 training to complete first.
               </p>
-              <ul className="mx-auto mt-5 grid max-w-[600px] grid-cols-1 gap-2.5 text-left sm:grid-cols-2">
+              <ul className="mx-auto mt-5 grid max-w-[600px] grid-cols-1 gap-2.5 sm:grid-cols-2">
                 {ELIGIBILITY.map((r) => (
-                  <li key={r} className="flex items-start gap-2.5">
+                  <li key={r} className="flex items-start justify-center gap-2.5 text-left">
                     <CheckCircle2
                       size={16}
                       aria-hidden="true"
@@ -254,15 +255,15 @@ export default function Landing() {
               {STEPS.map((step, i) => (
                 <li
                   key={step.title}
-                  className="flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:gap-6"
+                  className="flex flex-col items-center gap-1.5 text-center"
                 >
                   <span
                     aria-hidden="true"
-                    className="tnum shrink-0 text-[15px] font-bold text-accent sm:w-10"
+                    className="tnum text-label text-muted"
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <div className="sm:flex-1">
+                  <div>
                     <h3 className="text-section text-ink">{step.title}</h3>
                     <p className="mt-1 text-body text-muted">{step.body}</p>
                   </div>
@@ -303,7 +304,6 @@ export default function Landing() {
           <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
             <h2
               className="mx-auto max-w-[560px] text-[30px] leading-tight text-ink"
-              style={{ fontFamily: "var(--font-serif)", fontWeight: 700 }}
             >
               Put your clinical knowledge to paid work
             </h2>
