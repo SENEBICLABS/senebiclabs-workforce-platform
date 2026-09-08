@@ -87,13 +87,15 @@ export default function Landing() {
               For licensed clinicians
             </p>
             <h1
-              className="mx-auto mt-4 max-w-[720px] text-[38px] leading-[1.12] text-ink sm:text-[52px]"
+              className="mx-auto mt-4 max-w-[760px] text-[38px] leading-[1.12] text-ink sm:text-[52px]"
               style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
             >
-              Get paid to apply your clinical knowledge
+              Your clinical expertise can shape the future of medical AI.
             </h1>
+            {/* The headline leads on what the work is for, so the subhead
+                carries the terms: remote, your own schedule, paid per case. */}
             <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">
-              Review what medical AI says in your specialty, confirm it or
+              Review what these systems say in your specialty, confirm it or
               correct it, and flag what it misses. Remote work, on your own
               schedule, paid per case.
             </p>
