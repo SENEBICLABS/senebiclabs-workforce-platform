@@ -11,47 +11,58 @@
    * cards used to be 8, which is why they read as white on a teal page even
    * after the ground was fixed.
    *
-   * A light tint cannot hold chroma, because the closer a colour gets to
-   * white the less colour is possible in it. So the ground went deeper and
-   * the cards took over the tone the ground used to have. Cards are now a
-   * clear teal at 30, on a ground of 46, and lift off it by 1.23.
+   * Chroma is raised by dropping the DIMMEST channel, not by darkening.
+   * Making a colour darker to get colour into it backfires: it eats the
+   * contrast range that everything above the ground needs, and an earlier
+   * attempt at that collapsed accent and muted into each other. Red is only
+   * 21% of perceived brightness, so pulling red out and lifting green to
+   * compensate buys a great deal of colour at the same brightness, and the
+   * whole contrast range survives intact.
    *
-   * Everything else moved to keep WCAG AA (4.5:1) on the deeper ground,
-   * which is the harder of the two surfaces. Measured, on ground / on card:
+   * That is why the ground and the cards here are brighter than they look:
+   * the ground's brightness is unchanged from when it was a pale mint, and
+   * only its chroma moved, 46 to 79. Cards went 30 to 57. Text is on the
+   * same principle, which is why ink and muted start at #00.
    *
-   *   ink   8.71 / 10.71     muted  5.62 / 6.92     accent  4.59 / 5.64
+   * Measured, on ground / on card:
+   *
+   *   ink   8.47 / 10.65     muted  5.40 / 6.79     accent  4.62 / 5.81
+   *
+   * Hierarchy is the thing a one-hue palette puts at risk. A ground this
+   * bright leaves a narrow band for text, since anything readable on it has
+   * to be very dark, so ink, muted and accent end up packed close together
+   * in weight. Ink still separates from muted by 1.57, but accent cannot
+   * also separate from muted by weight without falling under 4.5 on the
+   * ground. It separates by hue instead: muted is green-teal at G-B +10,
+   * accent is cyan-teal at -6. Colour is not carrying that alone, since
+   * accent text is always either a medium weight link that underlines on
+   * hover, an uppercase label, or an icon.
    */
-  --color-surface: #C9E7DF;
-  --color-canvas: #A7D5C8;
-  --color-ink: #0C312C;
-  /* Darkened with the ground: at #365E56 it landed on 4.49, just under. */
-  --color-muted: #2A4F48;
-  --color-hairline: #84C0AE;
-  --color-accent: #0A605A;
-  --color-accent-hover: #084C47;
-  /* Read against the card rather than the ground (1.18), since a chip is
-   * almost always on a card. */
-  --color-accent-soft: #A8DACD;
-  /* Semantics keep their hue but not their paleness. The old soft chips
-   * were near-white, which is the thing being removed, and every one of
-   * these colours fell under AA on the deeper ground. Each now clears 4.5
-   * on the ground, on a card, and on its own chip. */
-  --color-warning: #6B4706;
-  --color-warning-soft: #E8D199;
-  --color-danger: #9E2727;
-  --color-danger-soft: #E8C4C4;
-  --color-info: #1F4A99;
-  --color-info-soft: #C9D9F0;
-  --color-success: #0A5B3C;
-  --color-success-soft: #C4E3D5;
+  --color-surface: #B4EDDB;
+  --color-canvas: #8AD9C2;
+  --color-ink: #00332C;
+  --color-muted: #00544A;
+  --color-hairline: #46B08E;
+  --color-accent: #005D63;
+  --color-accent-hover: #00434A;
+  --color-accent-soft: #8FE0C8;
+  /* Semantics keep their hue and lose the last of their paleness. Each is
+   * the most saturated value that still clears 4.5 on the ground, on a card
+   * and on its own chip. The chips are now colours rather than tints. */
+  --color-warning: #5E3D00;
+  --color-warning-soft: #E0B44D;
+  --color-danger: #8E1F1F;
+  --color-danger-soft: #F0A8A8;
+  --color-info: #123E8E;
+  --color-info-soft: #90B0E8;
+  --color-success: #005232;
+  --color-success-soft: #77D4A4;
 
   /* Sidebar — dark teal ink */
   --color-rail: #0C2422;
   --color-rail-hover: #143432;
-  /* Was #A8BDBA, a chroma-21 grey, and the last neutral in the palette.
-   * Now teal at 44, and it reads better on the rail than the grey did
-   * (8.83 against 8.25). */
-  --color-rail-text: #9CC8BC;
+  /* Same principle as the rest: red pulled out for colour, not darkened. */
+  --color-rail-text: #7FCFB6;
 
   /* ---- Type ------------------------------------------------------- */
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
@@ -130,4 +141,4 @@ body {
   border: 3px solid var(--color-canvas);
 }
 /* Darker than the hairline the thumb is drawn in, so hovering firms it up. */
-::-webkit-scrollbar-thumb:hover { background: #63A992; }
+::-webkit-scrollbar-thumb:hover { background: #2E9A76; }
