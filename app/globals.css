@@ -3,32 +3,36 @@
 @theme {
   /* ---- Palette ----------------------------------------------------
    *
-   * The ground is teal, not white. Every value below was chosen against
-   * the two grounds rather than picked for its own sake, so the tint can
-   * be read from across a room without any text falling under WCAG AA
-   * (4.5:1). Measured, on canvas / on surface:
+   * The ground is teal, not white.
    *
-   *   ink     12.38 / 13.67      muted   5.01 / 5.54      accent  5.25 / 5.80
+   * What makes a tint read as a colour rather than as off-white is chroma,
+   * not lightness. An earlier pass took the canvas down in lightness but
+   * left it at 9 steps of red-to-blue spread, which is why it still read as
+   * white. This canvas has 30, and that is the whole difference.
    *
-   * Cards are a lighter teal rather than white, and lift off the canvas by
-   * a 1.10 step, which is deliberately soft: the shadow on Card does the
-   * separating, and a harder step would put a grid of grey boxes on the page.
+   * Every value was chosen against the grounds rather than on its own, so
+   * the tint is unmistakable with nothing under WCAG AA (4.5:1).
+   * Measured, on canvas / on surface:
+   *
+   *   ink     10.65 / 12.96      muted   5.70 / 6.94      accent  4.91 / 5.97
+   *
+   * Long reading happens on cards, which stay light. The canvas is the
+   * frame around them, and carries the colour.
    */
-  --color-surface: #FAFDFC;
-  --color-canvas: #EAF3F0;
+  --color-surface: #F0F8F5;
+  --color-canvas: #C9E7DF;
   --color-ink: #10312E;
-  --color-muted: #5B6A68;
-  /* Deepened with the ground. At the old #E3ECE9 a border was 1.07 against
-   * the canvas, which is close enough to invisible that panels lost their
-   * edges. */
-  --color-hairline: #D6E4DF;
-  /* Darker than the old #0E7C74, which measured 4.42 on accent-soft and so
-   * failed AA for the small accent text in Pill and on /welcome. The shift
-   * is barely perceptible and it clears every ground here. */
-  --color-accent: #0C7069;
+  /* Darkened from #5B6A68, which was the binding constraint on how deep the
+   * canvas could go: it hit 4.49 and failed AA before the ground was
+   * saturated enough to read as teal. */
+  --color-muted: #485855;
+  --color-hairline: #AFD4C9;
+  /* Darker than the original #0E7C74, which measured 4.42 on accent-soft
+   * and so failed AA for the small accent text in Pill and on /welcome. */
+  --color-accent: #0B6A63;
   --color-accent-hover: #0A5A54;
-  /* Also deepened: against a teal canvas the old chip was 1.01, meaning a
-   * pill on a canvas section had no visible shape at all. */
+  /* Sits between canvas and surface. Chips almost always sit on a card, so
+   * this is measured against surface (1.12) rather than against canvas. */
   --color-accent-soft: #DCEDE9;
   --color-warning: #B4780C;
   --color-warning-soft: #FBF3E2;
@@ -120,4 +124,6 @@ body {
   border-radius: 999px;
   border: 3px solid var(--color-canvas);
 }
-::-webkit-scrollbar-thumb:hover { background: #C9D8D4; }
+/* Darker than the hairline the thumb is drawn in. The old value was lighter
+   than the new hairline, so hovering made the thumb fade rather than firm up. */
+::-webkit-scrollbar-thumb:hover { background: #93C4B6; }

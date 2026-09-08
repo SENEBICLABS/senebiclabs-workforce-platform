@@ -92,13 +92,23 @@ export default function Landing() {
             >
               Your clinical expertise can shape the future of medical AI.
             </h1>
-            {/* The headline leads on what the work is for, so the subhead
-                carries the terms: remote, your own schedule, paid per case. */}
-            <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">
-              Review what these systems say in your specialty, confirm it or
-              correct it, and flag what it misses. Remote work, on your own
-              schedule, paid per case.
-            </p>
+            {/* Three paragraphs, so three elements. Blank lines inside a single
+                JSX text node collapse to spaces, which ran these together into
+                one block on the page. */}
+            <div className="mx-auto mt-5 max-w-[600px] space-y-4 text-[17px] leading-relaxed text-muted">
+              <p>
+                Join medical experts around the world shaping the future of
+                medical AI.
+              </p>
+              <p>
+                Use your expertise to help build, evaluate, and improve the AI
+                systems that will shape the future of healthcare.
+              </p>
+              <p>
+                Work on your schedule. Get paid for your expertise. Help build
+                better medical AI.
+              </p>
+            </div>
 
             <div className="mt-8">
               <ApplyActions />
