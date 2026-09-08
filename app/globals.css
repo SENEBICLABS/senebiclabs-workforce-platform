@@ -1,15 +1,35 @@
 @import "tailwindcss";
 
 @theme {
-  /* ---- Palette ---------------------------------------------------- */
-  --color-surface: #FFFFFF;
-  --color-canvas: #F6F8F8;
+  /* ---- Palette ----------------------------------------------------
+   *
+   * The ground is teal, not white. Every value below was chosen against
+   * the two grounds rather than picked for its own sake, so the tint can
+   * be read from across a room without any text falling under WCAG AA
+   * (4.5:1). Measured, on canvas / on surface:
+   *
+   *   ink     12.38 / 13.67      muted   5.01 / 5.54      accent  5.25 / 5.80
+   *
+   * Cards are a lighter teal rather than white, and lift off the canvas by
+   * a 1.10 step, which is deliberately soft: the shadow on Card does the
+   * separating, and a harder step would put a grid of grey boxes on the page.
+   */
+  --color-surface: #FAFDFC;
+  --color-canvas: #EAF3F0;
   --color-ink: #10312E;
   --color-muted: #5B6A68;
-  --color-hairline: #E3ECE9;
-  --color-accent: #0E7C74;
+  /* Deepened with the ground. At the old #E3ECE9 a border was 1.07 against
+   * the canvas, which is close enough to invisible that panels lost their
+   * edges. */
+  --color-hairline: #D6E4DF;
+  /* Darker than the old #0E7C74, which measured 4.42 on accent-soft and so
+   * failed AA for the small accent text in Pill and on /welcome. The shift
+   * is barely perceptible and it clears every ground here. */
+  --color-accent: #0C7069;
   --color-accent-hover: #0A5A54;
-  --color-accent-soft: #E7F2F0;
+  /* Also deepened: against a teal canvas the old chip was 1.01, meaning a
+   * pill on a canvas section had no visible shape at all. */
+  --color-accent-soft: #DCEDE9;
   --color-warning: #B4780C;
   --color-warning-soft: #FBF3E2;
   --color-danger: #D64545;
