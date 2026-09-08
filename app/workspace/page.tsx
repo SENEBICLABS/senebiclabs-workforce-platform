@@ -313,7 +313,7 @@ function Workspace() {
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <PurposeBadge purpose={task.pool.purpose} />
-          <span className="text-body font-medium text-ink">{task.pool.name}</span>
+          <span className="text-body font-semibold text-ink">{task.pool.name}</span>
         </div>
         <span className="tnum text-[13px] text-muted">
           {task.case_id ? `Case ${task.case_id} · ` : ""}
@@ -365,7 +365,7 @@ function Workspace() {
                 role="alert"
                 className="mt-4 rounded-card border border-danger bg-danger-soft px-4 py-3"
               >
-                <p className="text-[13px] font-medium text-danger">
+                <p className="text-[13px] font-semibold text-danger">
                   {missing.length === 1
                     ? "One required field is still empty."
                     : `${missing.length} required fields are still empty.`}{" "}
@@ -379,7 +379,7 @@ function Workspace() {
                 role="alert"
                 className="mt-4 rounded-card border border-danger bg-danger-soft px-4 py-3"
               >
-                <p className="text-[13px] font-medium text-danger">
+                <p className="text-[13px] font-semibold text-danger">
                   {submitError}
                 </p>
                 <p className="mt-1 text-[12px] text-danger">

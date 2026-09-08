@@ -17,7 +17,7 @@ export default function FaqsPage() {
           <p className="text-label uppercase text-accent">FAQs</p>
           <h1
             className="mx-auto mt-4 max-w-[640px] text-[34px] leading-[1.15] text-ink sm:text-[44px]"
-            style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
+            style={{ fontFamily: "var(--font-serif)", fontWeight: 700 }}
           >
             Questions clinicians ask
           </h1>
@@ -38,7 +38,7 @@ export default function FaqsPage() {
         <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
           <h2
             className="mx-auto max-w-[560px] text-[30px] leading-tight text-ink"
-            style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
+            style={{ fontFamily: "var(--font-serif)", fontWeight: 700 }}
           >
             Put your clinical knowledge to paid work
           </h2>
@@ -51,7 +51,7 @@ export default function FaqsPage() {
           <p className="mt-6 text-body text-muted">
             <Link
               href="/about-us"
-              className="focusable rounded-btn font-medium text-accent underline-offset-2 hover:underline"
+              className="focusable rounded-btn font-semibold text-accent underline-offset-2 hover:underline"
             >
               Read more about what we do
             </Link>

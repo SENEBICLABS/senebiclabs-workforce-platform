@@ -37,7 +37,7 @@ function Sidebar() {
       <div className="px-5 py-5">
         <Link
           href="/dashboard"
-          className="focusable rounded-btn text-[17px] font-semibold tracking-tight text-white"
+          className="focusable rounded-btn text-[17px] font-bold tracking-tight text-white"
         >
           Senebiclabs
         </Link>
@@ -54,7 +54,7 @@ function Sidebar() {
                   aria-current={active ? "page" : undefined}
                   className={`focusable flex items-center gap-3 rounded-btn border-l-2 px-3 py-2 text-body transition-colors duration-150 ${
                     active
-                      ? "border-accent bg-rail-hover font-medium text-white"
+                      ? "border-accent bg-rail-hover font-semibold text-white"
                       : "border-transparent text-rail-text hover:bg-rail-hover hover:text-white"
                   }`}
                 >
@@ -71,12 +71,12 @@ function Sidebar() {
         <div className="flex items-center gap-3">
           <span
             aria-hidden="true"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-[12px] font-semibold text-white"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-[12px] font-bold text-white"
           >
             {initialsOf(me?.name, me?.email)}
           </span>
           <div className="min-w-0">
-            <p className="truncate text-[13px] font-medium text-white">
+            <p className="truncate text-[13px] font-semibold text-white">
               {me?.name ?? me?.email ?? "Signing in…"}
             </p>
             <p className="tnum truncate text-[12px] text-rail-text">
@@ -104,7 +104,7 @@ function MobileTabBar() {
             key={href}
             href={href}
             aria-current={active ? "page" : undefined}
-            className={`focusable flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${
+            className={`focusable flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-semibold transition-colors ${
               active ? "text-accent" : "text-muted"
             }`}
           >
@@ -142,7 +142,7 @@ function TopBar({ title }: { title: string }) {
               onChange={setAvailable}
               label="Available for reviews"
             />
-            <span className="text-[13px] font-medium text-muted">
+            <span className="text-[13px] font-semibold text-muted">
               {available ? "Available for reviews" : "Not available"}
             </span>
           </div>
@@ -158,7 +158,7 @@ function TopBar({ title }: { title: string }) {
             >
               <span
                 aria-hidden="true"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[12px] font-semibold text-white"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[12px] font-bold text-white"
               >
                 {initialsOf(me?.name, me?.email)}
               </span>
@@ -178,7 +178,7 @@ function TopBar({ title }: { title: string }) {
                 >
                   {me && (
                     <div className="border-b border-hairline px-4 py-3">
-                      <p className="truncate text-[13px] font-medium text-ink">
+                      <p className="truncate text-[13px] font-semibold text-ink">
                         {me.name}
                       </p>
                       <p className="mt-0.5 truncate text-[12px] text-muted">
@@ -229,7 +229,7 @@ function Toast() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-btn bg-ink px-4 py-2.5 text-[13px] font-medium text-white shadow-[0_8px_28px_rgba(16,49,46,0.24)] md:bottom-6 md:left-auto md:right-6 md:translate-x-0"
+      className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-btn bg-ink px-4 py-2.5 text-[13px] font-semibold text-white shadow-[0_8px_28px_rgba(16,49,46,0.24)] md:bottom-6 md:left-auto md:right-6 md:translate-x-0"
     >
       {toast}
     </div>

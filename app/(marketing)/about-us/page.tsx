@@ -41,7 +41,7 @@ export default function AboutUs() {
           <p className="text-label uppercase text-accent">About us</p>
           <h1
             className="mx-auto mt-4 max-w-[720px] text-[34px] leading-[1.15] text-ink sm:text-[44px]"
-            style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
+            style={{ fontFamily: "var(--font-serif)", fontWeight: 700 }}
           >
             Someone has to decide what a correct answer looks like
           </h1>
@@ -56,7 +56,7 @@ export default function AboutUs() {
       <section>
         <div className="mx-auto max-w-[720px] px-5 py-16 lg:px-8">
           <div className="space-y-5 text-body leading-relaxed text-muted">
-            <h2 className="text-[26px] font-semibold leading-tight text-ink">
+            <h2 className="text-[26px] font-bold leading-tight text-ink">
               What we do
             </h2>
             <p>
@@ -84,7 +84,7 @@ export default function AboutUs() {
       <section>
         <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
           <div className="text-center">
-            <h2 className="text-[26px] font-semibold leading-tight text-ink">
+            <h2 className="text-[26px] font-bold leading-tight text-ink">
               How we think about the work
             </h2>
             <p className="mx-auto mt-3 max-w-[520px] text-body text-muted">
@@ -114,7 +114,7 @@ export default function AboutUs() {
       <section>
         <div className="mx-auto max-w-[720px] px-5 py-16 lg:px-8">
           <div className="space-y-5 text-body leading-relaxed text-muted">
-            <h2 className="text-[26px] font-semibold leading-tight text-ink">
+            <h2 className="text-[26px] font-bold leading-tight text-ink">
               How we treat the clinicians who work here
             </h2>
             <p>
@@ -137,7 +137,7 @@ export default function AboutUs() {
         <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
           <h2
             className="mx-auto max-w-[560px] text-[30px] leading-tight text-ink"
-            style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
+            style={{ fontFamily: "var(--font-serif)", fontWeight: 700 }}
           >
             Put your clinical knowledge to paid work
           </h2>
@@ -150,7 +150,7 @@ export default function AboutUs() {
           <p className="mt-6 text-body text-muted">
             <Link
               href="/our-experts"
-              className="focusable rounded-btn font-medium text-accent underline-offset-2 hover:underline"
+              className="focusable rounded-btn font-semibold text-accent underline-offset-2 hover:underline"
             >
               See who reviews here
             </Link>

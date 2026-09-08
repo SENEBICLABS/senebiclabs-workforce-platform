@@ -68,7 +68,7 @@ export default function AccountPage() {
           <Card className="p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-body font-medium text-ink">
+                <p className="text-body font-semibold text-ink">
                   Available for reviews
                 </p>
                 <p className="mt-1 text-body text-muted">

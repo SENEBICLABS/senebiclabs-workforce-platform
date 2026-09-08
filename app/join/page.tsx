@@ -120,7 +120,7 @@ function Join() {
           <p className="mt-2 text-body text-muted">{copy.body}</p>
           <a
             href="/login"
-            className="focusable mt-5 inline-flex h-10 items-center justify-center rounded-btn border border-hairline bg-surface px-4 text-[14px] font-medium text-ink transition-colors hover:bg-canvas"
+            className="focusable mt-5 inline-flex h-10 items-center justify-center rounded-btn border border-hairline bg-surface px-4 text-[14px] font-semibold text-ink transition-colors hover:bg-canvas"
           >
             Go to sign in
           </a>
@@ -137,7 +137,7 @@ function Join() {
             <h1 className="text-section text-ink">Check your email</h1>
             <p className="mt-2 text-body text-muted">
               We sent a sign-in link to{" "}
-              <span className="font-medium text-ink">{email}</span>. Opening it
+              <span className="font-semibold text-ink">{email}</span>. Opening it
               completes your registration.
             </p>
             {devLink && (
@@ -160,7 +160,7 @@ function Join() {
             <p className="mt-2 text-body text-muted">
               {state.inviter ? (
                 <>
-                  <span className="font-medium text-ink">{state.inviter}</span>{" "}
+                  <span className="font-semibold text-ink">{state.inviter}</span>{" "}
                   invited you to review medical-AI output as a licensed
                   clinician.
                 </>
@@ -176,7 +176,7 @@ function Join() {
               <p className="text-label uppercase text-muted">
                 This invitation is for
               </p>
-              <p className="mt-0.5 text-body font-medium text-ink">
+              <p className="mt-0.5 text-body font-semibold text-ink">
                 {state.invited_email}
               </p>
             </div>

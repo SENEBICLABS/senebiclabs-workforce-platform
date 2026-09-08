@@ -19,7 +19,7 @@ export default function MarketingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="ground-blend min-h-screen">
       <SiteHeader />
       <main>{children}</main>
       <SiteFooter />

@@ -132,7 +132,7 @@ export function ApplyDialog({
           <p className="text-body text-muted">
             Thank you. We have your application and will review your credentials.
             If you are a fit for the work we have, we will email an invitation to{" "}
-            <span className="font-medium text-ink">{values.email}</span>.
+            <span className="font-semibold text-ink">{values.email}</span>.
           </p>
           <p className="mt-3 text-[13px] text-muted">
             Membership is vetted, so this can take a little time. There is nothing
@@ -208,7 +208,7 @@ export function ApplyActions() {
           href="/login"
           // Hovers to the teal tint rather than to canvas: canvas is now the
           // ground the button sits on, so that hover made it vanish.
-          className="focusable inline-flex h-11 w-full items-center justify-center rounded-btn border border-hairline bg-surface px-5 text-body font-medium text-ink transition-colors hover:bg-accent-soft sm:w-auto"
+          className="focusable inline-flex h-11 w-full items-center justify-center rounded-btn border border-hairline bg-surface px-5 text-body font-semibold text-ink transition-colors hover:bg-accent-soft sm:w-auto"
         >
           Sign in
         </a>

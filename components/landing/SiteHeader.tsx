@@ -27,8 +27,8 @@ export function SiteHeader() {
     const active = pathname === href;
     return `focusable rounded-btn px-2.5 py-1.5 text-body transition-colors ${
       active
-        ? "font-medium text-accent"
-        : "font-medium text-muted hover:text-ink"
+        ? "font-semibold text-accent"
+        : "font-semibold text-muted hover:text-ink"
     }`;
   };
 
@@ -36,13 +36,13 @@ export function SiteHeader() {
   // the top of one continuous surface rather than a bar sitting on top of it.
   // The blur is what separates it from content scrolling underneath.
   return (
-    <header className="sticky top-0 z-40 bg-canvas/90 backdrop-blur">
+    <header className="sticky top-0 z-40 bg-canvas-top/90 backdrop-blur">
       <div className="mx-auto max-w-[1100px] px-5 lg:px-8">
         {/* Row one: identity and the way in */}
         <div className="flex h-14 items-center justify-between gap-4">
           <Link
             href="/"
-            className="focusable rounded-btn text-[15px] font-semibold tracking-tight text-ink"
+            className="focusable rounded-btn text-[15px] font-bold tracking-tight text-ink"
           >
             Senebiclabs
           </Link>
@@ -63,7 +63,7 @@ export function SiteHeader() {
 
           <Link
             href="/login"
-            className="focusable rounded-btn px-2.5 py-1.5 text-body font-medium text-ink transition-colors hover:text-accent"
+            className="focusable rounded-btn px-2.5 py-1.5 text-body font-semibold text-ink transition-colors hover:text-accent"
           >
             Sign in
           </Link>

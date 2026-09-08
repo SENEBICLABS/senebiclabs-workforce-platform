@@ -48,7 +48,7 @@ export function ReviewField({
 
   return (
     <fieldset className="border-0 p-0">
-      <legend className="mb-1 text-body font-medium text-ink">
+      <legend className="mb-1 text-body font-semibold text-ink">
         {field.title}
         {field.required && (
           <>
@@ -187,7 +187,7 @@ export function ReviewField({
                   key={option}
                   className={`flex flex-1 cursor-pointer items-center justify-center rounded-card border px-3 py-2.5 transition-colors ${
                     selected
-                      ? "border-accent bg-accent-soft font-medium"
+                      ? "border-accent bg-accent-soft font-semibold"
                       : `${border} hover:bg-canvas`
                   }`}
                 >
@@ -209,7 +209,7 @@ export function ReviewField({
             <div className="border-l-2 border-accent-soft pl-4">
               <label
                 htmlFor={`${field.name}_finding`}
-                className="mb-1.5 block text-[13px] font-medium text-ink"
+                className="mb-1.5 block text-[13px] font-semibold text-ink"
               >
                 Which finding?
               </label>
@@ -301,7 +301,7 @@ function SpanPicker({
             key={label}
             type="button"
             onClick={() => capture(label)}
-            className="focusable rounded-btn border border-hairline bg-surface px-3 py-1.5 text-[13px] font-medium text-ink transition-colors hover:bg-canvas"
+            className="focusable rounded-btn border border-hairline bg-surface px-3 py-1.5 text-[13px] font-semibold text-ink transition-colors hover:bg-canvas"
           >
             Tag selection as {label}
           </button>
@@ -316,13 +316,13 @@ function SpanPicker({
               className="flex items-center justify-between gap-3 rounded-card bg-canvas px-3 py-2"
             >
               <span className="min-w-0 truncate text-[13px] text-ink">
-                <span className="font-medium">{span.label}</span> — “{span.text}”
+                <span className="font-semibold">{span.label}</span> — “{span.text}”
               </span>
               <button
                 type="button"
                 onClick={() => onChange(value.filter((_, j) => j !== i))}
                 aria-label={`Remove ${span.label} tag`}
-                className="focusable shrink-0 rounded-btn px-2 text-[13px] font-medium text-accent hover:underline"
+                className="focusable shrink-0 rounded-btn px-2 text-[13px] font-semibold text-accent hover:underline"
               >
                 Remove
               </button>

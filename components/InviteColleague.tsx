@@ -47,11 +47,11 @@ export function InviteColleague() {
         <div className="mt-4 rounded-card border border-hairline bg-canvas px-4 py-3">
           <p className="text-body text-ink">
             Invitation sent to{" "}
-            <span className="font-medium">{sentTo}</span>.
+            <span className="font-semibold">{sentTo}</span>.
           </p>
           <button
             onClick={() => setSentTo(null)}
-            className="focusable mt-2 rounded-btn text-[13px] font-medium text-accent underline-offset-2 hover:underline"
+            className="focusable mt-2 rounded-btn text-[13px] font-semibold text-accent underline-offset-2 hover:underline"
           >
             Invite someone else
           </button>

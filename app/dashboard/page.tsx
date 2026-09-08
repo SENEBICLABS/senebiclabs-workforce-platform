@@ -19,7 +19,7 @@ function StatTile({ label, value }: { label: string; value: string }) {
   return (
     <Card className="p-5">
       <p className="text-label uppercase text-muted">{label}</p>
-      <p className="tnum mt-2 text-[28px] font-semibold leading-none text-ink">
+      <p className="tnum mt-2 text-[28px] font-bold leading-none text-ink">
         {value}
       </p>
     </Card>

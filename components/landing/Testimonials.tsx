@@ -26,7 +26,7 @@ export function Testimonials() {
   return (
     <section>
       <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
-        <h2 className="text-center text-[26px] font-semibold leading-tight text-ink">
+        <h2 className="text-center text-[26px] font-bold leading-tight text-ink">
           From clinicians on the platform
         </h2>
 
@@ -37,7 +37,7 @@ export function Testimonials() {
                 {q.quote}
               </blockquote>
               <footer className="mt-5">
-                <p className="text-body font-medium text-ink">{q.name}</p>
+                <p className="text-body font-semibold text-ink">{q.name}</p>
                 <p className="text-[13px] text-muted">
                   {q.credential}, {q.specialty}
                 </p>

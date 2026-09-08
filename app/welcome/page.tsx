@@ -49,12 +49,12 @@ export default function WelcomePage() {
             <div key={point.title} className="flex gap-4 p-5">
               <span
                 aria-hidden="true"
-                className="tnum flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[13px] font-semibold text-accent"
+                className="tnum flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[13px] font-bold text-accent"
               >
                 {i + 1}
               </span>
               <div>
-                <h2 className="text-body font-medium text-ink">{point.title}</h2>
+                <h2 className="text-body font-semibold text-ink">{point.title}</h2>
                 <p className="mt-1 text-body text-muted">{point.body}</p>
               </div>
             </div>

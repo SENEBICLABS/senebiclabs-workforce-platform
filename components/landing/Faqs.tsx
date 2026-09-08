@@ -9,7 +9,7 @@ import { FAQS, FAQ_CATEGORIES } from "@/lib/marketing-content";
 function Item({ q, a }: { q: string; a: string }) {
   return (
     <details className="group rounded-card border border-hairline bg-surface">
-      <summary className="focusable cursor-pointer list-none px-5 py-4 text-body font-medium text-ink marker:hidden">
+      <summary className="focusable cursor-pointer list-none px-5 py-4 text-body font-semibold text-ink marker:hidden">
         <span className="flex items-center justify-between gap-4">
           {q}
           <span

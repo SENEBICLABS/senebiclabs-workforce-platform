@@ -88,7 +88,7 @@ export default function Landing() {
             </p>
             <h1
               className="mx-auto mt-4 max-w-[760px] text-[38px] leading-[1.12] text-ink sm:text-[52px]"
-              style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
+              style={{ fontFamily: "var(--font-serif)", fontWeight: 700 }}
             >
               Your clinical expertise can shape the future of medical AI.
             </h1>
@@ -125,7 +125,7 @@ export default function Landing() {
         <section>
           <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
             <div className="text-center">
-              <h2 className="text-[26px] font-semibold leading-tight text-ink">
+              <h2 className="text-[26px] font-bold leading-tight text-ink">
                 What you can expect
               </h2>
               <p className="mx-auto mt-3 max-w-[500px] text-body text-muted">
@@ -179,7 +179,7 @@ export default function Landing() {
         {/* How it works */}
         <section>
           <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
-            <h2 className="text-center text-[26px] font-semibold leading-tight text-ink">
+            <h2 className="text-center text-[26px] font-bold leading-tight text-ink">
               How it works
             </h2>
 
@@ -191,7 +191,7 @@ export default function Landing() {
                 >
                   <span
                     aria-hidden="true"
-                    className="tnum shrink-0 text-[15px] font-semibold text-accent sm:w-10"
+                    className="tnum shrink-0 text-[15px] font-bold text-accent sm:w-10"
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>
@@ -212,7 +212,7 @@ export default function Landing() {
         {/* FAQs: the featured subset, with the rest a click away. */}
         <section>
           <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
-            <h2 className="text-center text-[26px] font-semibold leading-tight text-ink">
+            <h2 className="text-center text-[26px] font-bold leading-tight text-ink">
               FAQs
             </h2>
 
@@ -223,7 +223,7 @@ export default function Landing() {
             <p className="mt-8 text-center text-body text-muted">
               <Link
                 href="/faqs"
-                className="focusable rounded-btn font-medium text-accent underline-offset-2 hover:underline"
+                className="focusable rounded-btn font-semibold text-accent underline-offset-2 hover:underline"
               >
                 Read all the questions
               </Link>
@@ -236,7 +236,7 @@ export default function Landing() {
           <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
             <h2
               className="mx-auto max-w-[560px] text-[30px] leading-tight text-ink"
-              style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
+              style={{ fontFamily: "var(--font-serif)", fontWeight: 700 }}
             >
               Put your clinical knowledge to paid work
             </h2>

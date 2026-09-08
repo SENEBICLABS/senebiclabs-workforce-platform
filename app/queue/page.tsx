@@ -190,7 +190,7 @@ export default function QueuePage() {
                           className="border-b border-hairline transition-colors last:border-b-0 hover:bg-canvas"
                         >
                           <th scope="row" className="max-w-[320px] px-5 py-4 font-normal">
-                            <span className="block text-body font-medium text-ink">
+                            <span className="block text-body font-semibold text-ink">
                               {pool.name}
                             </span>
                             {pool.description && (
@@ -247,7 +247,7 @@ export default function QueuePage() {
               Showing {rows.length} of {total} pools.{" "}
               <button
                 onClick={clearFilters}
-                className="focusable rounded-btn font-medium text-accent underline-offset-2 hover:underline"
+                className="focusable rounded-btn font-semibold text-accent underline-offset-2 hover:underline"
               >
                 Clear filters
               </button>

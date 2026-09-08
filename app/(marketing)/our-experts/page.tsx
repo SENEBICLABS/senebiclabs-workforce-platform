@@ -83,7 +83,7 @@ export default function OurExperts() {
           <p className="text-label uppercase text-accent">Our experts</p>
           <h1
             className="mx-auto mt-4 max-w-[720px] text-[34px] leading-[1.15] text-ink sm:text-[44px]"
-            style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
+            style={{ fontFamily: "var(--font-serif)", fontWeight: 700 }}
           >
             Every judgment here has a licence behind it
           </h1>
@@ -98,7 +98,7 @@ export default function OurExperts() {
       {/* Who is here */}
       <section>
         <div className="mx-auto max-w-[720px] px-5 py-16 lg:px-8">
-          <h2 className="text-[26px] font-semibold leading-tight text-ink">
+          <h2 className="text-[26px] font-bold leading-tight text-ink">
             Who reviews here
           </h2>
           <div className="mt-4 space-y-4 text-body leading-relaxed text-muted">
@@ -138,7 +138,7 @@ export default function OurExperts() {
       <section>
         <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
           <div className="text-center">
-            <h2 className="text-[26px] font-semibold leading-tight text-ink">
+            <h2 className="text-[26px] font-bold leading-tight text-ink">
               How we vet
             </h2>
             <p className="mx-auto mt-3 max-w-[520px] text-body text-muted">
@@ -154,7 +154,7 @@ export default function OurExperts() {
               >
                 <span
                   aria-hidden="true"
-                  className="tnum shrink-0 text-[15px] font-semibold text-accent sm:w-10"
+                  className="tnum shrink-0 text-[15px] font-bold text-accent sm:w-10"
                 >
                   {String(i + 1).padStart(2, "0")}
                 </span>
@@ -174,7 +174,7 @@ export default function OurExperts() {
       {EXPERTS.length > 0 && (
         <section>
           <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
-            <h2 className="text-center text-[26px] font-semibold leading-tight text-ink">
+            <h2 className="text-center text-[26px] font-bold leading-tight text-ink">
               Some of the clinicians who review here
             </h2>
             <div className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -196,7 +196,7 @@ export default function OurExperts() {
       <section>
         <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
           <div className="text-center">
-            <h2 className="text-[26px] font-semibold leading-tight text-ink">
+            <h2 className="text-[26px] font-bold leading-tight text-ink">
               How quality holds up
             </h2>
             <p className="mx-auto mt-3 max-w-[540px] text-body text-muted">
@@ -221,7 +221,7 @@ export default function OurExperts() {
         <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
           <h2
             className="mx-auto max-w-[560px] text-[30px] leading-tight text-ink"
-            style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}
+            style={{ fontFamily: "var(--font-serif)", fontWeight: 700 }}
           >
             Apply to review with us
           </h2>
@@ -234,7 +234,7 @@ export default function OurExperts() {
           <p className="mt-6 text-body text-muted">
             <Link
               href="/faqs"
-              className="focusable rounded-btn font-medium text-accent underline-offset-2 hover:underline"
+              className="focusable rounded-btn font-semibold text-accent underline-offset-2 hover:underline"
             >
               Read the questions clinicians ask
             </Link>

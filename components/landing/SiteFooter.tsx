@@ -11,7 +11,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-hairline">
       <div className="mx-auto max-w-[1100px] px-5 py-10 text-center lg:px-8">
-        <p className="text-[15px] font-semibold tracking-tight text-ink">
+        <p className="text-[15px] font-bold tracking-tight text-ink">
           Senebiclabs
         </p>
         <p className="mt-1 text-[13px] text-muted">

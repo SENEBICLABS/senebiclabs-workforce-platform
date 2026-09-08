@@ -58,7 +58,7 @@ function Verify() {
           <p className="mt-2 text-body text-muted">{error}</p>
           <Link
             href="/"
-            className="focusable mt-5 inline-flex h-9 items-center justify-center rounded-btn bg-accent px-4 text-[14px] font-medium text-white transition-colors hover:bg-accent-hover"
+            className="focusable mt-5 inline-flex h-9 items-center justify-center rounded-btn bg-accent px-4 text-[14px] font-semibold text-white transition-colors hover:bg-accent-hover"
           >
             Request a new link
           </Link>

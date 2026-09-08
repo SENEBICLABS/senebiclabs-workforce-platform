@@ -12,7 +12,7 @@ export function AuthShell({
     <div className="flex min-h-screen flex-col items-center justify-center bg-canvas px-5 py-12">
       <div className="w-full max-w-[420px]">
         <div className="mb-8 text-center">
-          <p className="text-[18px] font-semibold tracking-tight text-ink">
+          <p className="text-[18px] font-bold tracking-tight text-ink">
             Senebiclabs
           </p>
           <p className="mt-1 text-body text-muted">Clinical review platform</p>
@@ -48,7 +48,7 @@ export function GoogleButton({
   return (
     <a
       href={href}
-      className="focusable flex h-11 w-full items-center justify-center gap-2.5 rounded-btn border border-hairline bg-surface text-[14px] font-medium text-ink transition-colors hover:bg-canvas"
+      className="focusable flex h-11 w-full items-center justify-center gap-2.5 rounded-btn border border-hairline bg-surface text-[14px] font-semibold text-ink transition-colors hover:bg-canvas"
     >
       <GoogleMark />
       {label}

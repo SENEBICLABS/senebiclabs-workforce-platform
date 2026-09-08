@@ -11,52 +11,46 @@
    * cards used to be 8, which is why they read as white on a teal page even
    * after the ground was fixed.
    *
-   * Chroma is raised by dropping the DIMMEST channel, not by darkening.
-   * Making a colour darker to get colour into it backfires: it eats the
-   * contrast range that everything above the ground needs, and an earlier
-   * attempt at that collapsed accent and muted into each other. Red is only
-   * 21% of perceived brightness, so pulling red out and lifting green to
-   * compensate buys a great deal of colour at the same brightness, and the
-   * whole contrast range survives intact.
+   * Teal and cream, blended in space rather than in pigment.
    *
-   * That is why the ground and the cards here are brighter than they look:
-   * the ground's brightness is unchanged from when it was a pale mint, and
-   * only its chroma moved, 46 to 79. Cards went 30 to 57. Text is on the
-   * same principle, which is why ink and muted start at #00.
+   * Mixing the two as colour does not work. Teal is cyan-green and cream is
+   * warm yellow, near opposites, so averaging them cancels the colour: a
+   * 75/25 mix lands at chroma 23, which is the grey this palette exists to
+   * avoid. Instead the ground is a gradient between them and the cards are
+   * cream, so both colours stay whole and the eye never sees the average.
    *
-   * Measured, on ground / on card:
+   * The ground runs canvas-top to canvas down the page. Every colour here
+   * is checked against CANVAS, the darker end, because that is where
+   * contrast is worst. Measured on cream / on the darkest ground:
    *
-   *   ink   8.47 / 10.65     muted  5.40 / 6.79     accent  4.62 / 5.81
+   *   ink  14.20 / 10.45     muted 10.32 / 7.60     accent 6.26 / 4.60
    *
-   * Hierarchy is the thing a one-hue palette puts at risk. A ground this
-   * bright leaves a narrow band for text, since anything readable on it has
-   * to be very dark, so ink, muted and accent end up packed close together
-   * in weight. Ink still separates from muted by 1.57, but accent cannot
-   * also separate from muted by weight without falling under 4.5 on the
-   * ground. It separates by hue instead: muted is green-teal at G-B +10,
-   * accent is cyan-teal at -6. Colour is not carrying that alone, since
-   * accent text is always either a medium weight link that underlines on
-   * hover, an uppercase label, or an icon.
+   * Hierarchy is by weight again, not by the hue trick the all-teal palette
+   * needed: ink to muted 1.38, muted to accent 1.65. Cream is what bought
+   * that back. A second hue family gives the text somewhere to separate.
    */
-  --color-surface: #B4EDDB;
-  --color-canvas: #8AD9C2;
-  --color-ink: #00332C;
-  --color-muted: #00544A;
-  --color-hairline: #46B08E;
-  --color-accent: #005D63;
-  --color-accent-hover: #00434A;
-  --color-accent-soft: #8FE0C8;
-  /* Semantics keep their hue and lose the last of their paleness. Each is
-   * the most saturated value that still clears 4.5 on the ground, on a card
-   * and on its own chip. The chips are now colours rather than tints. */
-  --color-warning: #5E3D00;
-  --color-warning-soft: #E0B44D;
+  --color-surface: #F2E7CE;
+  --color-canvas: #8CD7BE;
+  --color-canvas-top: #B0E1C8;
+  --color-ink: #031E19;
+  --color-muted: #053A31;
+  /* Warm, so the card edges belong to the cream rather than cutting across
+   * it with a teal line. */
+  --color-hairline: #C2AF7D;
+  /* Cyan-teal, which keeps it clear of the green-teal text. */
+  --color-accent: #045C67;
+  --color-accent-hover: #033F47;
+  --color-accent-soft: #BCE6DC;
+  /* Semantics, each the most saturated value that still clears 4.5 on cream,
+   * on the darkest ground and on its own chip. */
+  --color-warning: #6B4405;
+  --color-warning-soft: #E8C87A;
   --color-danger: #8E1F1F;
-  --color-danger-soft: #F0A8A8;
+  --color-danger-soft: #EFB3A8;
   --color-info: #123E8E;
-  --color-info-soft: #90B0E8;
-  --color-success: #005232;
-  --color-success-soft: #77D4A4;
+  --color-info-soft: #A9C2EC;
+  --color-success: #0A5232;
+  --color-success-soft: #8AD9AE;
 
   /* Sidebar — dark teal ink */
   --color-rail: #0C2422;
@@ -69,21 +63,25 @@
   /* Landing hero headlines only; the application never uses it. */
   --font-serif: var(--font-source-serif), ui-serif, Georgia, serif;
 
+  /* The scale runs a step heavier than it did. Body sits at 500 rather than
+   * 400, which is the change that carries: it is most of the words on any
+   * page, and on a coloured ground a 400 reads thin and washed out in a way
+   * it does not on white. Headings go to 700, the real weight, now loaded. */
   --text-title: 24px;
   --text-title--line-height: 1.3;
-  --text-title--font-weight: 600;
+  --text-title--font-weight: 700;
 
   --text-section: 16px;
   --text-section--line-height: 1.4;
-  --text-section--font-weight: 600;
+  --text-section--font-weight: 700;
 
   --text-body: 14px;
   --text-body--line-height: 1.55;
-  --text-body--font-weight: 400;
+  --text-body--font-weight: 500;
 
   --text-label: 12px;
   --text-label--line-height: 1.4;
-  --text-label--font-weight: 500;
+  --text-label--font-weight: 600;
   --text-label--letter-spacing: 0.06em;
 
   /* ---- Geometry --------------------------------------------------- */
@@ -101,6 +99,20 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+/**
+ * The public pages carry the teal-to-cream blend as one gradient down the
+ * whole page. It is on a utility rather than on body so the signed-in
+ * application stays flat: a ground that shifts behind a case a clinician is
+ * reading for an hour is a distraction, and the workspace has no use for it.
+ */
+.ground-blend {
+  background-image: linear-gradient(
+    to bottom,
+    var(--color-canvas-top) 0%,
+    var(--color-canvas) 100%
+  );
 }
 
 body {

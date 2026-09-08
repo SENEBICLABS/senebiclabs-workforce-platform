@@ -82,7 +82,7 @@ export default function AgreementPage() {
           <div className="max-h-[420px] divide-y divide-hairline overflow-y-auto">
             {CLAUSES.map((clause) => (
               <section key={clause.heading} className="px-5 py-4">
-                <h2 className="text-body font-medium text-ink">
+                <h2 className="text-body font-semibold text-ink">
                   {clause.heading}
                 </h2>
                 <p className="mt-1 text-body leading-relaxed text-muted">

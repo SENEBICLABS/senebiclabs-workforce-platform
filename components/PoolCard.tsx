@@ -68,7 +68,7 @@ export function PoolCard({ pool }: { pool: Pool }) {
 
       {!available && !complete && (
         <div className="absolute inset-0 flex items-center justify-center rounded-card bg-surface/85 px-4 text-center">
-          <p className="text-[13px] font-medium text-muted">
+          <p className="text-[13px] font-semibold text-muted">
             Turn on availability to start reviewing.
           </p>
         </div>

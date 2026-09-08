@@ -76,7 +76,7 @@ function SignIn() {
           <p className="mt-2 text-body text-muted">{ERRORS.no_invite}</p>
           <a
             href="/login"
-            className="focusable mt-5 inline-flex h-10 items-center justify-center rounded-btn border border-hairline bg-surface px-4 text-[14px] font-medium text-ink transition-colors hover:bg-canvas"
+            className="focusable mt-5 inline-flex h-10 items-center justify-center rounded-btn border border-hairline bg-surface px-4 text-[14px] font-semibold text-ink transition-colors hover:bg-canvas"
           >
             Back to sign in
           </a>
@@ -93,7 +93,7 @@ function SignIn() {
             <h1 className="text-section text-ink">Check your email</h1>
             <p className="mt-2 text-body text-muted">
               We sent a sign-in link to{" "}
-              <span className="font-medium text-ink">{email}</span>. It works
+              <span className="font-semibold text-ink">{email}</span>. It works
               once and expires in 24 hours.
             </p>
             {devLink && (
@@ -109,7 +109,7 @@ function SignIn() {
                 setSent(false);
                 setDevLink("");
               }}
-              className="focusable mt-4 w-full rounded-btn text-[13px] font-medium text-accent underline-offset-2 hover:underline"
+              className="focusable mt-4 w-full rounded-btn text-[13px] font-semibold text-accent underline-offset-2 hover:underline"
             >
               Use a different email
             </button>
