@@ -40,10 +40,18 @@
   --color-muted: rgb(255 255 255 / 0.62);
   /* A border on dark is light at low alpha, not a colour of its own. */
   --color-hairline: rgb(255 255 255 / 0.14);
-  --color-accent: #2DD4BF;
+  /* Electric rather than merely light. Brightness here is chroma, not
+   * luminance: pushing toward white would raise the contrast number while
+   * washing the colour out, which is the opposite of brighter. This is 206
+   * steps of red-to-blue spread against the 167 it replaces, and it reads
+   * as more teal, not more pale. On a dark ground it costs nothing, since
+   * there is no contrast ceiling to run into going up. */
+  --color-accent: #22F0D5;
   /* Brighter on hover, not darker. On a dark ground, up is forward. */
-  --color-accent-hover: #5EEAD4;
-  --color-accent-soft: #164A42;
+  --color-accent-hover: #63FFEC;
+  /* The chip comes up with it, so a pill still reads as teal beside the
+   * brighter accent rather than as a dark patch behind it. */
+  --color-accent-soft: #1A5A50;
   /* Fills are bright, so the type on them is the ground colour, not white.
    * White on accent measures 1.86 and is unreadable. */
   --color-on-fill: #03211C;
