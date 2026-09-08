@@ -71,7 +71,7 @@ function Sidebar() {
         <div className="flex items-center gap-3">
           <span
             aria-hidden="true"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-[12px] font-bold text-white"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-[12px] font-bold text-on-fill"
           >
             {initialsOf(me?.name, me?.email)}
           </span>
@@ -158,7 +158,7 @@ function TopBar({ title }: { title: string }) {
             >
               <span
                 aria-hidden="true"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[12px] font-bold text-white"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[12px] font-bold text-on-fill"
               >
                 {initialsOf(me?.name, me?.email)}
               </span>
@@ -229,7 +229,7 @@ function Toast() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-btn bg-ink px-4 py-2.5 text-[13px] font-semibold text-white shadow-[0_8px_28px_rgba(16,49,46,0.24)] md:bottom-6 md:left-auto md:right-6 md:translate-x-0"
+      className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-btn border border-hairline bg-surface px-4 py-2.5 text-[13px] font-semibold text-ink shadow-[0_8px_28px_rgba(0,0,0,0.5)] md:bottom-6 md:left-auto md:right-6 md:translate-x-0"
     >
       {toast}
     </div>

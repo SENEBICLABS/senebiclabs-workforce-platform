@@ -11,61 +11,57 @@
    * cards used to be 8, which is why they read as white on a teal page even
    * after the ground was fixed.
    *
-   * Teal and cream, blended in space rather than in pigment.
+   * Dark, teal and white.
    *
-   * Mixing the two as colour does not work. Teal is cyan-green and cream is
-   * warm yellow, near opposites, so averaging them cancels the colour: a
-   * 75/25 mix lands at chroma 23, which is the grey this palette exists to
-   * avoid. Instead the ground is a gradient between them and the cards are
-   * cream, so both colours stay whole and the eye never sees the average.
+   * Inverting the ground fixes the thing every light version of this palette
+   * fought. On a light ground all text has to be dark, so headings, body and
+   * accent compete for one narrow band, and the accent kept collapsing into
+   * the body colour. On a dark ground there is room below white for a whole
+   * scale, and the accent can be a genuinely bright teal that nothing else
+   * comes near. Accent measures 6.62 against a card here; on the cream
+   * version the equivalent was 4.60 and could not be pushed any further.
    *
-   * The ground runs canvas-top to canvas down the page. Every colour here
-   * is checked against CANVAS, the darker end, because that is where
-   * contrast is worst. Measured on cream / on the darkest ground:
-   *
-   *   ink  14.20 / 10.45     muted 10.32 / 7.60     accent 6.26 / 4.60
-   *
-   * Hierarchy is by weight again, not by the hue trick the all-teal palette
-   * needed: ink to muted 1.38, muted to accent 1.65. Cream is what bought
-   * that back. A second hue family gives the text somewhere to separate.
+   * The ground still runs canvas-top to canvas down the page. Light text is
+   * checked against the LIGHTEST surface, the card, because that is where
+   * contrast is worst now. That is the mirror of the light palette, where
+   * the darkest ground was the binding one.
    */
-  --color-surface: #F2E7CE;
-  --color-canvas: #8CD7BE;
-  --color-canvas-top: #B0E1C8;
-  /* Text is monochrome and the hierarchy is opacity, not separate colours.
-   * One ink, three steps.
+  --color-surface: #143B33;
+  --color-canvas: #020D0B;
+  --color-canvas-top: #06231F;
+  /* Monochrome, hierarchy by opacity, same as before but inverted to white.
    *
-   * 72% is the floor, not a taste call. Below it body text fails AA on the
-   * darkest end of the gradient: 65% measures 4.35 there and 60% measures
-   * 3.80, against the 4.5 body text needs. At 72% it is 5.27, which is
-   * genuinely soft next to the 10.45 of full ink but still legible for
-   * someone reading cases for an hour. */
-  --color-ink: #031E19;
-  --color-strong: rgb(3 30 25 / 0.85);
-  --color-muted: rgb(3 30 25 / 0.72);
-  /* Warm, so the card edges belong to the cream rather than cutting across
-   * it with a teal line. */
-  --color-hairline: #C2AF7D;
-  /* Cyan-teal, which keeps it clear of the green-teal text. */
-  --color-accent: #045C67;
-  --color-accent-hover: #033F47;
-  --color-accent-soft: #BCE6DC;
-  /* Semantics, each the most saturated value that still clears 4.5 on cream,
-   * on the darkest ground and on its own chip. */
-  --color-warning: #6B4405;
-  --color-warning-soft: #E8C87A;
-  --color-danger: #8E1F1F;
-  --color-danger-soft: #EFB3A8;
-  --color-info: #123E8E;
-  --color-info-soft: #A9C2EC;
-  --color-success: #0A5232;
-  --color-success-soft: #8AD9AE;
+   * Body can finally be as soft as it was asked to be. On the light palette
+   * 72% was the floor and 65% already failed. Here 62% measures 5.77 on the
+   * card and even 50% would pass, so the soft, low-contrast body is real
+   * rather than a compromise. */
+  --color-ink: #FFFFFF;
+  --color-strong: rgb(255 255 255 / 0.85);
+  --color-muted: rgb(255 255 255 / 0.62);
+  /* A border on dark is light at low alpha, not a colour of its own. */
+  --color-hairline: rgb(255 255 255 / 0.14);
+  --color-accent: #2DD4BF;
+  /* Brighter on hover, not darker. On a dark ground, up is forward. */
+  --color-accent-hover: #5EEAD4;
+  --color-accent-soft: #164A42;
+  /* Fills are bright, so the type on them is the ground colour, not white.
+   * White on accent measures 1.86 and is unreadable. */
+  --color-on-fill: #03211C;
+  /* Semantics invert too: the colour is light and the chip is dark. */
+  --color-warning: #FBBF24;
+  --color-warning-soft: #3B2C0A;
+  --color-danger: #FCA5A5;
+  --color-danger-soft: #3D1717;
+  --color-info: #93C5FD;
+  --color-info-soft: #152A4D;
+  --color-success: #6EE7B7;
+  --color-success-soft: #0B3527;
 
-  /* Sidebar — dark teal ink */
-  --color-rail: #0C2422;
-  --color-rail-hover: #143432;
-  /* Same principle as the rest: red pulled out for colour, not darkened. */
-  --color-rail-text: #7FCFB6;
+  /* Sidebar. Lighter than the canvas now, so it reads as a raised panel
+   * rather than disappearing into a ground that is already near black. */
+  --color-rail: #0A2A24;
+  --color-rail-hover: #143B33;
+  --color-rail-text: rgb(255 255 255 / 0.62);
 
   /* ---- Type ------------------------------------------------------- */
   /* Body. Every sentence on the platform. */
@@ -115,6 +111,9 @@
 
 html {
   scroll-behavior: smooth;
+  /* Tells the browser the page is dark, so native controls, form widgets and
+   * the default scrollbar render dark instead of staying light on top of it. */
+  color-scheme: dark;
 }
 
 /**
@@ -189,5 +188,6 @@ body {
   border-radius: 999px;
   border: 3px solid var(--color-canvas);
 }
-/* Darker than the hairline the thumb is drawn in, so hovering firms it up. */
-::-webkit-scrollbar-thumb:hover { background: #2E9A76; }
+/* Brighter than the hairline the thumb is drawn in, so hovering firms it up.
+   On dark the direction reverses: up is forward, not down. */
+::-webkit-scrollbar-thumb:hover { background: rgb(255 255 255 / 0.3); }

@@ -23,7 +23,7 @@ export function Switch({
     >
       <span
         aria-hidden="true"
-        className={`absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow-sm transition-[left] duration-150 ${
+        className={`absolute top-0.5 h-4 w-4 rounded-full bg-ink shadow-sm transition-[left] duration-150 ${
           checked ? "left-[18px]" : "left-0.5"
         }`}
       />

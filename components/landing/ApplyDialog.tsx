@@ -55,13 +55,13 @@ function Dialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
-      <div className="absolute inset-0 bg-ink/30" onClick={onClose} aria-hidden="true" />
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} aria-hidden="true" />
       <div
         ref={panel}
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative my-8 w-full max-w-md rounded-card border border-hairline bg-surface text-left shadow-[0_16px_48px_rgba(16,49,46,0.18)]"
+        className="relative my-8 w-full max-w-md rounded-card border border-hairline bg-surface text-left shadow-[0_16px_48px_rgba(0,0,0,0.6)]"
       >
         <div className="flex items-center justify-between border-b border-hairline px-5 py-4">
           <h2 className="text-section text-ink">{title}</h2>
@@ -69,7 +69,7 @@ function Dialog({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="focusable rounded-btn p-1 text-muted transition-colors hover:bg-canvas hover:text-ink"
+            className="focusable rounded-btn p-1 text-muted transition-colors hover:bg-accent-soft hover:text-ink"
           >
             <X size={16} aria-hidden="true" />
           </button>
