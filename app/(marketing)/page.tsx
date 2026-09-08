@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import {
   CalendarClock,
+  CheckCheck,
   CheckCircle2,
   Globe,
   Lock,
+  PenLine,
   Scale,
+  ScanSearch,
   Stethoscope,
   Wallet,
 } from "lucide-react";
@@ -51,6 +54,32 @@ const EXPECTATIONS = [
     icon: Globe,
     title: "Your judgment is the standard",
     body: "A correction you make today shapes how a model answers the same question for everyone who asks it next.",
+  },
+];
+
+/**
+ * What a clinician actually does, rather than what they get.
+ *
+ * Every one of these describes a control the workspace really renders: the
+ * choice and scale fields, the span highlighter, the free text and structured
+ * fields, the flag, and the approve / edit / send back actions on a review
+ * pool. Nothing here is aspirational, so it stays true as long as those do.
+ */
+const WORK = [
+  {
+    icon: ScanSearch,
+    title: "Judge an answer",
+    body: "A case, and the answer a model gave for it. You say whether it holds up, choose what went wrong if it did not, rate how confident you are, and highlight the exact passage at fault. The rubric for that body of work sits beside the case while you read.",
+  },
+  {
+    icon: PenLine,
+    title: "Write the answer yourself",
+    body: "Where the model's answer will not do, or the case calls for one written from scratch, you write it. Structured fields where the work needs structure, prose where it needs prose.",
+  },
+  {
+    icon: CheckCheck,
+    title: "Approve a colleague's",
+    body: "Written work always goes to a second clinician, and never to its author. You approve it, edit it, or send it back saying what has to change. Sending back pays exactly what approving pays.",
   },
 ];
 
@@ -117,6 +146,44 @@ export default function Landing() {
             <p className="mt-5 text-[13px] text-muted">
               Membership is vetted. Apply, and we send an invitation to the
               clinicians we can offer work to.
+            </p>
+          </div>
+        </section>
+
+        {/* What the work is, before what it pays. A clinician deciding whether
+            to apply wants to know what a case looks like first. */}
+        <section>
+          <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
+            <div className="text-center">
+              <h2 className="text-[26px] font-bold leading-tight text-ink">
+                What you would actually do
+              </h2>
+              <p className="mx-auto mt-3 max-w-[520px] text-body text-muted">
+                Three shapes of work, depending on the case and the body of work
+                it belongs to.
+              </p>
+            </div>
+
+            <div className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-3">
+              {WORK.map((w) => (
+                <Card key={w.title} className="h-full p-5">
+                  <span
+                    aria-hidden="true"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent"
+                  >
+                    <w.icon size={17} />
+                  </span>
+                  <h3 className="mt-4 text-section text-ink">{w.title}</h3>
+                  <p className="mt-1.5 text-body leading-relaxed text-muted">
+                    {w.body}
+                  </p>
+                </Card>
+              ))}
+            </div>
+
+            <p className="mx-auto mt-6 max-w-[620px] text-center text-body text-muted">
+              Any case you cannot judge, you flag instead of guessing. It goes to
+              another clinician, and it pays the same as one you complete.
             </p>
           </div>
         </section>
