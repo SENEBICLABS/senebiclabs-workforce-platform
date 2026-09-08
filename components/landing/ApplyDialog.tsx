@@ -206,7 +206,9 @@ export function ApplyActions() {
         </Button>
         <a
           href="/login"
-          className="focusable inline-flex h-11 w-full items-center justify-center rounded-btn border border-hairline bg-surface px-5 text-body font-medium text-ink transition-colors hover:bg-canvas sm:w-auto"
+          // Hovers to the teal tint rather than to canvas: canvas is now the
+          // ground the button sits on, so that hover made it vanish.
+          className="focusable inline-flex h-11 w-full items-center justify-center rounded-btn border border-hairline bg-surface px-5 text-body font-medium text-ink transition-colors hover:bg-accent-soft sm:w-auto"
         >
           Sign in
         </a>

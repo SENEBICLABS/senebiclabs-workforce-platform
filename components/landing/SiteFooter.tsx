@@ -1,9 +1,15 @@
 import Link from "next/link";
 
-/** The public site's footer. Mirrors the header's routes so nothing is orphaned. */
+/**
+ * The public site's footer. Mirrors the header's routes so nothing is orphaned.
+ *
+ * This rule is the only one on the public site. The pages run as one unbroken
+ * ground, so the single line here is what marks the end of the page rather than
+ * one seam among many.
+ */
 export function SiteFooter() {
   return (
-    <footer className="border-t border-hairline bg-canvas">
+    <footer className="border-t border-hairline">
       <div className="mx-auto max-w-[1100px] px-5 py-10 text-center lg:px-8">
         <p className="text-[15px] font-semibold tracking-tight text-ink">
           Senebiclabs

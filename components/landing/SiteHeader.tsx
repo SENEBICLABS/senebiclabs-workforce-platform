@@ -32,8 +32,11 @@ export function SiteHeader() {
     }`;
   };
 
+  // No rule under the header, and the same ground as the page, so it reads as
+  // the top of one continuous surface rather than a bar sitting on top of it.
+  // The blur is what separates it from content scrolling underneath.
   return (
-    <header className="sticky top-0 z-40 border-b border-hairline bg-surface/95 backdrop-blur">
+    <header className="sticky top-0 z-40 bg-canvas/90 backdrop-blur">
       <div className="mx-auto max-w-[1100px] px-5 lg:px-8">
         {/* Row one: identity and the way in */}
         <div className="flex h-14 items-center justify-between gap-4">
@@ -69,7 +72,7 @@ export function SiteHeader() {
         {/* Row two, small screens only */}
         <nav
           aria-label="Main"
-          className="flex items-center gap-1 overflow-x-auto border-t border-hairline py-2 md:hidden"
+          className="flex items-center gap-1 overflow-x-auto pb-2 md:hidden"
         >
           {NAV.map((item) => (
             <Link

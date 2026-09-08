@@ -20,9 +20,9 @@ function Item({ q, a }: { q: string; a: string }) {
           </span>
         </span>
       </summary>
-      <p className="border-t border-hairline px-5 py-4 text-body leading-relaxed text-muted">
-        {a}
-      </p>
+      {/* No rule between question and answer. The gap does the separating, and
+          the footer's line is meant to be the only one on the site. */}
+      <p className="px-5 pb-5 text-body leading-relaxed text-muted">{a}</p>
     </details>
   );
 }

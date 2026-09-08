@@ -81,7 +81,7 @@ export default function Landing() {
   return (
     <>
         {/* Hero */}
-        <section className="border-b border-hairline">
+        <section>
           <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8 lg:py-24">
             <p className="text-label uppercase text-accent">
               For licensed clinicians
@@ -110,7 +110,7 @@ export default function Landing() {
         </section>
 
         {/* What you can expect */}
-        <section className="border-b border-hairline bg-canvas">
+        <section>
           <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
             <div className="text-center">
               <h2 className="text-[26px] font-semibold leading-tight text-ink">
@@ -165,17 +165,17 @@ export default function Landing() {
         <Testimonials />
 
         {/* How it works */}
-        <section className="border-b border-hairline">
+        <section>
           <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
             <h2 className="text-center text-[26px] font-semibold leading-tight text-ink">
               How it works
             </h2>
 
-            <ol className="mx-auto mt-10 max-w-[760px] divide-y divide-hairline border-y border-hairline">
+            <ol className="mx-auto mt-10 max-w-[760px] space-y-6">
               {STEPS.map((step, i) => (
                 <li
                   key={step.title}
-                  className="flex flex-col gap-1.5 py-5 sm:flex-row sm:items-baseline sm:gap-6"
+                  className="flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:gap-6"
                 >
                   <span
                     aria-hidden="true"
@@ -198,7 +198,7 @@ export default function Landing() {
         </section>
 
         {/* FAQs: the featured subset, with the rest a click away. */}
-        <section className="border-b border-hairline bg-canvas">
+        <section>
           <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
             <h2 className="text-center text-[26px] font-semibold leading-tight text-ink">
               FAQs

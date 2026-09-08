@@ -36,7 +36,7 @@ const PRINCIPLES = [
 export default function AboutUs() {
   return (
     <>
-      <section className="border-b border-hairline">
+      <section>
         <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
           <p className="text-label uppercase text-accent">About us</p>
           <h1
@@ -53,7 +53,7 @@ export default function AboutUs() {
         </div>
       </section>
 
-      <section className="border-b border-hairline bg-canvas">
+      <section>
         <div className="mx-auto max-w-[720px] px-5 py-16 lg:px-8">
           <div className="space-y-5 text-body leading-relaxed text-muted">
             <h2 className="text-[26px] font-semibold leading-tight text-ink">
@@ -81,7 +81,7 @@ export default function AboutUs() {
         </div>
       </section>
 
-      <section className="border-b border-hairline">
+      <section>
         <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
           <div className="text-center">
             <h2 className="text-[26px] font-semibold leading-tight text-ink">
@@ -111,7 +111,7 @@ export default function AboutUs() {
         </div>
       </section>
 
-      <section className="border-b border-hairline bg-canvas">
+      <section>
         <div className="mx-auto max-w-[720px] px-5 py-16 lg:px-8">
           <div className="space-y-5 text-body leading-relaxed text-muted">
             <h2 className="text-[26px] font-semibold leading-tight text-ink">

@@ -24,7 +24,7 @@ export function Testimonials() {
   if (QUOTES.length === 0) return null;
 
   return (
-    <section className="border-t border-hairline bg-canvas">
+    <section>
       <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
         <h2 className="text-center text-[26px] font-semibold leading-tight text-ink">
           From clinicians on the platform
@@ -36,7 +36,7 @@ export function Testimonials() {
               <blockquote className="text-body leading-relaxed text-ink">
                 {q.quote}
               </blockquote>
-              <footer className="mt-4 border-t border-hairline pt-3">
+              <footer className="mt-5">
                 <p className="text-body font-medium text-ink">{q.name}</p>
                 <p className="text-[13px] text-muted">
                   {q.credential}, {q.specialty}

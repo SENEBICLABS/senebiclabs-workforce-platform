@@ -78,7 +78,7 @@ const SAFEGUARDS = [
 export default function OurExperts() {
   return (
     <>
-      <section className="border-b border-hairline">
+      <section>
         <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
           <p className="text-label uppercase text-accent">Our experts</p>
           <h1
@@ -96,7 +96,7 @@ export default function OurExperts() {
       </section>
 
       {/* Who is here */}
-      <section className="border-b border-hairline bg-canvas">
+      <section>
         <div className="mx-auto max-w-[720px] px-5 py-16 lg:px-8">
           <h2 className="text-[26px] font-semibold leading-tight text-ink">
             Who reviews here
@@ -135,7 +135,7 @@ export default function OurExperts() {
       </section>
 
       {/* Vetting */}
-      <section className="border-b border-hairline">
+      <section>
         <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
           <div className="text-center">
             <h2 className="text-[26px] font-semibold leading-tight text-ink">
@@ -146,11 +146,11 @@ export default function OurExperts() {
             </p>
           </div>
 
-          <ol className="mx-auto mt-10 max-w-[760px] divide-y divide-hairline border-y border-hairline">
+          <ol className="mx-auto mt-10 max-w-[760px] space-y-6">
             {VETTING.map((v, i) => (
               <li
                 key={v.step}
-                className="flex flex-col gap-1.5 py-5 sm:flex-row sm:items-baseline sm:gap-6"
+                className="flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:gap-6"
               >
                 <span
                   aria-hidden="true"
@@ -172,7 +172,7 @@ export default function OurExperts() {
 
       {/* Profiles appear only once real clinicians have agreed to be named. */}
       {EXPERTS.length > 0 && (
-        <section className="border-b border-hairline bg-canvas">
+        <section>
           <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
             <h2 className="text-center text-[26px] font-semibold leading-tight text-ink">
               Some of the clinicians who review here
@@ -193,7 +193,7 @@ export default function OurExperts() {
       )}
 
       {/* Safeguards */}
-      <section className="border-b border-hairline bg-canvas">
+      <section>
         <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
           <div className="text-center">
             <h2 className="text-[26px] font-semibold leading-tight text-ink">
