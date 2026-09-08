@@ -21,11 +21,15 @@
    */
   --color-surface: #F0F8F5;
   --color-canvas: #C9E7DF;
-  --color-ink: #10312E;
-  /* Darkened from #5B6A68, which was the binding constraint on how deep the
-   * canvas could go: it hit 4.49 and failed AA before the ground was
-   * saturated enough to read as teal. */
-  --color-muted: #485855;
+  /* Text sits in the same hue family as the ground rather than reading as
+   * black and grey dropped onto a colour. Chroma, in steps of red-to-blue
+   * spread: ground 30, ink 37, muted 40. */
+  --color-ink: #0C312C;
+  /* Was #485855, a near-neutral 16. Most of the words on any page are this
+   * colour, so it was the one doing the most to make the page look like grey
+   * text on a tinted background. Going to 40 costs almost nothing: 5.70 to
+   * 5.52 against the canvas. */
+  --color-muted: #365E56;
   --color-hairline: #AFD4C9;
   /* Darker than the original #0E7C74, which measured 4.42 on accent-soft
    * and so failed AA for the small accent text in Pill and on /welcome. */
@@ -34,14 +38,22 @@
   /* Sits between canvas and surface. Chips almost always sit on a card, so
    * this is measured against surface (1.12) rather than against canvas. */
   --color-accent-soft: #DCEDE9;
-  --color-warning: #B4780C;
-  --color-warning-soft: #FBF3E2;
-  --color-danger: #D64545;
-  --color-danger-soft: #FBEBEB;
-  --color-info: #3B7CE8;
-  --color-info-soft: #EAF1FD;
-  --color-success: #0F7B52;
-  --color-success-soft: #E6F3EE;
+  /* Semantics, darkened to hold their own against a saturated ground.
+   *
+   * At their previous values every one of these failed AA once the canvas
+   * deepened, and warning was the worst at 2.84. They are used as text: the
+   * Pill variants, and the error line in the application form. Each now
+   * clears 4.5 on canvas, on surface and on its own chip, and each soft has
+   * come down with it so a chip still reads as a chip beside teal cards
+   * rather than as a pale patch of some other palette. */
+  --color-warning: #875908;
+  --color-warning-soft: #F5E6C9;
+  --color-danger: #B02D2D;
+  --color-danger-soft: #F5DEDE;
+  --color-info: #2455AE;
+  --color-info-soft: #DCE7F8;
+  --color-success: #0C6845;
+  --color-success-soft: #DEEFE7;
 
   /* Sidebar — dark teal ink */
   --color-rail: #0C2422;
