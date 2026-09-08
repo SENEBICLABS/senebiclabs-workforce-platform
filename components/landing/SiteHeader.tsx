@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { buttonClass } from "@/components/ui/Button";
 
 /**
  * The public site's header.
@@ -61,10 +62,9 @@ export function SiteHeader() {
             ))}
           </nav>
 
-          <Link
-            href="/login"
-            className="focusable rounded-btn px-2.5 py-1.5 text-body font-semibold text-ink transition-colors hover:text-accent"
-          >
+          {/* An anchor, because it navigates, wearing the button's own classes
+              so it cannot drift from the real thing. */}
+          <Link href="/login" className={buttonClass({ variant: "secondary", size: "sm" })}>
             Sign in
           </Link>
         </div>

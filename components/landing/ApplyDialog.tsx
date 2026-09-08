@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { X } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClass } from "@/components/ui/Button";
 
 /**
  * The application form.
@@ -204,14 +205,16 @@ export function ApplyActions() {
         <Button size="lg" className="w-full sm:w-auto" onClick={() => setOpen(true)}>
           Apply to join
         </Button>
-        <a
+        <Link
           href="/login"
-          // Hovers to the teal tint rather than to canvas: canvas is now the
-          // ground the button sits on, so that hover made it vanish.
-          className="focusable inline-flex h-11 w-full items-center justify-center rounded-btn border border-hairline bg-surface px-5 text-body font-semibold text-ink transition-colors hover:bg-accent-soft sm:w-auto"
+          className={buttonClass({
+            variant: "secondary",
+            size: "lg",
+            className: "w-full sm:w-auto",
+          })}
         >
           Sign in
-        </a>
+        </Link>
       </div>
       <ApplyDialog open={open} onClose={() => setOpen(false)} />
     </>
