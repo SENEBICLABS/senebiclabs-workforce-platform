@@ -8,9 +8,12 @@ import {
   Stethoscope,
   Wallet,
 } from "lucide-react";
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { ApplyActions } from "@/components/landing/ApplyDialog";
 import { Testimonials } from "@/components/landing/Testimonials";
+import { Faqs } from "@/components/landing/Faqs";
+import { ELIGIBILITY } from "@/lib/marketing-content";
 
 export const metadata: Metadata = {
   title: "Senebiclabs for clinicians",
@@ -51,13 +54,6 @@ const EXPECTATIONS = [
   },
 ];
 
-const ELIGIBILITY = [
-  "An active clinical licence in good standing",
-  "A clinical specialty you practise in",
-  "Comfort reading and assessing written cases",
-  "A reliable internet connection",
-];
-
 const STEPS = [
   {
     title: "Apply",
@@ -81,51 +77,9 @@ const STEPS = [
   },
 ];
 
-const FAQ = [
-  {
-    q: "Can I sign up directly?",
-    a: "No. Membership is vetted and by invitation. You apply, we review your credentials, and if there is work that matches your specialty we email you an invitation. That invitation is what creates your account.",
-  },
-  {
-    q: "How does pay work?",
-    a: "You are paid per reviewed case. The rate for a body of work is shown before you accept it, so you always know what a case pays before you begin. Cases you flag as unclear are paid the same as cases you complete.",
-  },
-  {
-    q: "How much time does it take?",
-    a: "As much or as little as you want. There are no minimum hours and no shifts. Your place is saved between sessions, so you can stop mid-case and come back.",
-  },
-  {
-    q: "Do I need experience with AI?",
-    a: "No. The judgment we need is clinical, not technical. If you can assess whether an answer is right for a patient, you can do this work.",
-  },
-  {
-    q: "Which specialties do you work with?",
-    a: "A range, and it changes as new work arrives. If your specialty is not needed right now we keep your application on file rather than turning you away.",
-  },
-  {
-    q: "Where do I need to be?",
-    a: "Anywhere with a reliable connection. The work is fully remote and you choose your own hours.",
-  },
-];
-
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-surface">
-      <header className="sticky top-0 z-40 border-b border-hairline bg-surface/95 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-[1100px] items-center justify-between px-5 lg:px-8">
-          <span className="text-[15px] font-semibold tracking-tight text-ink">
-            Senebiclabs
-          </span>
-          <a
-            href="/login"
-            className="focusable rounded-btn px-2.5 py-1.5 text-body font-medium text-ink transition-colors hover:text-accent"
-          >
-            Sign in
-          </a>
-        </div>
-      </header>
-
-      <main>
+    <>
         {/* Hero */}
         <section className="border-b border-hairline">
           <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8 lg:py-24">
@@ -243,36 +197,25 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* FAQs */}
+        {/* FAQs: the featured subset, with the rest a click away. */}
         <section className="border-b border-hairline bg-canvas">
           <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
             <h2 className="text-center text-[26px] font-semibold leading-tight text-ink">
               FAQs
             </h2>
 
-            <div className="mx-auto mt-10 max-w-[720px] space-y-2.5">
-              {FAQ.map((item) => (
-                <details
-                  key={item.q}
-                  className="group rounded-card border border-hairline bg-surface"
-                >
-                  <summary className="focusable cursor-pointer list-none px-5 py-4 text-body font-medium text-ink marker:hidden">
-                    <span className="flex items-center justify-between gap-4">
-                      {item.q}
-                      <span
-                        aria-hidden="true"
-                        className="shrink-0 text-muted transition-transform duration-150 group-open:rotate-45"
-                      >
-                        +
-                      </span>
-                    </span>
-                  </summary>
-                  <p className="border-t border-hairline px-5 py-4 text-body leading-relaxed text-muted">
-                    {item.a}
-                  </p>
-                </details>
-              ))}
+            <div className="mx-auto mt-10 max-w-[720px]">
+              <Faqs featuredOnly />
             </div>
+
+            <p className="mt-8 text-center text-body text-muted">
+              <Link
+                href="/faqs"
+                className="focusable rounded-btn font-medium text-accent underline-offset-2 hover:underline"
+              >
+                Read all the questions
+              </Link>
+            </p>
           </div>
         </section>
 
@@ -293,14 +236,6 @@ export default function Landing() {
             </div>
           </div>
         </section>
-      </main>
-
-      <footer className="border-t border-hairline bg-canvas">
-        <div className="mx-auto max-w-[1100px] px-5 py-8 text-center text-[13px] text-muted lg:px-8">
-          <p className="font-medium text-ink">Senebiclabs</p>
-          <p className="mt-1">Clinical review platform for licensed clinicians</p>
-        </div>
-      </footer>
-    </div>
+    </>
   );
 }
