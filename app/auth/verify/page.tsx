@@ -24,7 +24,7 @@ function Verify() {
 
       try {
         const invite = searchParams.get("invite");
-        const { created } = await api.verifyMagicLink(token, invite);
+        const { created } = await api.consumeSignInLink(token, invite);
         router.push(created ? "/welcome" : "/dashboard");
       } catch (err) {
         setError(

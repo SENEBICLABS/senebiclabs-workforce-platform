@@ -5,7 +5,10 @@ import { supabaseAdmin } from "./supabase";
 import { jwtSecret, magicLinkSecret } from "./secrets";
 
 /**
- * Magic-link tokens.
+ * Sign-in link tokens.
+ *
+ * The same mechanism as an invite link, for someone who already has an
+ * account. An invite creates the account; this signs them back in afterwards.
  *
  * Two things used to be wrong here, and both were invisible from the outside:
  *
@@ -30,16 +33,18 @@ import { jwtSecret, magicLinkSecret } from "./secrets";
  * leaked link is usually already dead.
  */
 const EXPIRY_MINUTES = (() => {
+  // Env names keep "MAGIC_LINK": they are already set in production and
+  // renaming them would break sign-in the moment this deploys.
   const raw = parseInt(process.env.MAGIC_LINK_EXPIRY_MINUTES ?? "", 10);
   return Number.isFinite(raw) && raw > 0 && raw <= 60 ? raw : 15;
 })();
 
-export const MAGIC_LINK_EXPIRY_MINUTES = EXPIRY_MINUTES;
+export const SIGN_IN_LINK_EXPIRY_MINUTES = EXPIRY_MINUTES;
 
 /** Tokens are stored as hashes, so the table is not a bag of working keys. */
 const hash = (value: string) => createHash("sha256").update(value).digest("hex");
 
-export async function generateMagicLink(email: string): Promise<string> {
+export async function createSignInLink(email: string): Promise<string> {
   return new SignJWT({ email })
     .setProtectedHeader({ alg: "HS256" })
     .setJti(randomBytes(16).toString("base64url"))
@@ -48,19 +53,19 @@ export async function generateMagicLink(email: string): Promise<string> {
     .sign(magicLinkSecret());
 }
 
-export type MagicLinkFailure = "invalid" | "used" | "unavailable";
+export type SignInLinkFailure = "invalid" | "used" | "unavailable";
 
 /**
- * Verifies a magic link and spends it.
+ * Verifies a sign-in link and spends it.
  *
  * The claim is an insert against a unique jti, so two requests carrying the
  * same link race and exactly one wins. Fails closed: if the table is missing
  * the sign-in is refused rather than silently falling back to the replayable
  * behaviour this was written to remove.
  */
-export async function verifyMagicLink(
+export async function consumeSignInLink(
   token: string
-): Promise<{ ok: true; email: string } | { ok: false; reason: MagicLinkFailure }> {
+): Promise<{ ok: true; email: string } | { ok: false; reason: SignInLinkFailure }> {
   let email: string;
   let jti: string;
   let expiresAt: string;
@@ -77,7 +82,7 @@ export async function verifyMagicLink(
     return { ok: false, reason: "invalid" };
   }
 
-  const { error } = await supabaseAdmin.from("magic_link_tokens").insert({
+  const { error } = await supabaseAdmin.from("sign_in_tokens").insert({
     jti: hash(jti),
     email,
     expires_at: expiresAt,
@@ -91,8 +96,8 @@ export async function verifyMagicLink(
     // only safe answer, because the alternative is accepting a link that can
     // then be replayed for the rest of its life.
     console.error(
-      "[magic-link] could not claim token. If this is a missing relation, " +
-        "apply migrations/008_magic_link_tokens.sql.",
+      "[sign-in-link] could not claim token. If this is a missing relation, " +
+        "apply migrations/008_sign_in_tokens.sql.",
       error
     );
     return { ok: false, reason: "unavailable" };
@@ -104,7 +109,7 @@ export async function verifyMagicLink(
 /**
  * Verifies a session token's signature.
  *
- * Signed with JWT_SECRET, not the magic-link secret: different lifetime and a
+ * Signed with JWT_SECRET, not the sign-in link secret: different lifetime and a
  * different blast radius, so a leak of one is not a leak of both.
  */
 export async function verifySessionToken(

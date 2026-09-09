@@ -130,15 +130,16 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  /** Emails a sign-in link. `magicLink` comes back in development only. */
-  requestMagicLink: (email: string) =>
-    call<{ success: true; magicLink?: string }>("/api/auth/magic-link", {
+  /** Emails a sign-in link. The same mechanism as an invite link, for someone
+   *  who already has an account. */
+  requestSignInLink: (email: string) =>
+    call<{ success: true; expiresInMinutes: number }>("/api/auth/sign-in-link", {
       method: "POST",
       body: JSON.stringify({ email }),
     }),
 
-  /** Exchanges a magic-link token for the session cookie. */
-  verifyMagicLink: (token: string, invite?: string | null) =>
+  /** Exchanges a sign-in link token for the session cookie. */
+  consumeSignInLink: (token: string, invite?: string | null) =>
     call<{ success: true; created: boolean }>("/api/auth/verify", {
       method: "POST",
       body: JSON.stringify({ token, invite: invite ?? null }),

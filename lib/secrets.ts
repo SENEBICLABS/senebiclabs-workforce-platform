@@ -50,7 +50,9 @@ function load(name: string): Uint8Array {
 /** Signs clinician sessions. */
 export const jwtSecret = () => load("JWT_SECRET");
 
-/** Signs magic-link tokens. Separate, so a leak of one is not a leak of both. */
+/** Signs sign-in link tokens. Separate, so a leak of one is not a leak of
+ *  both. The env name still reads MAGIC_LINK because it is already set in
+ *  production and renaming it would break sign-in on deploy. */
 export const magicLinkSecret = () => load("MAGIC_LINK_SECRET");
 
 /**

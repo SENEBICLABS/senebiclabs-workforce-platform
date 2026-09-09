@@ -9,7 +9,7 @@ import "server-only";
  * distributed attack and should not be described as one.
  *
  * What it does buy: it stops one client hammering an endpoint in a loop, which
- * is the realistic shape of both magic-link email bombing and credential
+ * is the realistic shape of both sign-in link email bombing and credential
  * spraying, and it costs nothing to run. If this ever needs to be real, the
  * replacement is a shared store keyed the same way, and only this file changes.
  */
@@ -60,7 +60,7 @@ export function rateLimit(key: string, { max, windowSeconds }: Limit): LimitResu
  *
  * Behind Vercel the leftmost x-forwarded-for entry is the client. This is
  * spoofable in general, which is why it is only ever one half of the key: the
- * email address is the half that matters for magic links.
+ * email address is the half that matters for sign-in links.
  */
 export function clientIp(req: Request): string {
   const forwarded = req.headers.get("x-forwarded-for");

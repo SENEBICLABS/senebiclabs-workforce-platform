@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
  * Google's redirect back.
  *
  * Nothing here decides who may have an account — it establishes which address
- * Google vouched for, then hands that to the same gate the magic link uses.
+ * Google vouched for, then hands that to the same gate a sign-in link uses.
  */
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateMagicLink, MAGIC_LINK_EXPIRY_MINUTES } from "@/lib/auth";
+import { createSignInLink, SIGN_IN_LINK_EXPIRY_MINUTES } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
 import { findPendingInviteForEmail, normalizeEmail } from "@/lib/invites";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
@@ -22,15 +22,18 @@ const LOOKS_LIKE_EMAIL = /^[^@\s]+@[^@\s.]+\.[^@\s]+$/;
 const ACCEPTED = {
   success: true,
   message: "If that address can sign in, a link is on its way.",
+  // Reported rather than repeated in the page copy, which had drifted to
+  // "24 hours" and stayed there when the token dropped to fifteen minutes.
+  expiresInMinutes: SIGN_IN_LINK_EXPIRY_MINUTES,
 };
 
-async function sendMagicLinkEmail(email: string, path: string) {
+async function sendSignInLinkEmail(email: string, path: string) {
   if (!RESEND_API_KEY) {
     if (process.env.NODE_ENV === "production") {
       throw new Error("RESEND_API_KEY is not configured");
     }
     console.warn("RESEND_API_KEY not set — skipping email (development only)");
-    console.log(`✉️  Magic link for ${email}: ${APP_URL}${path}`);
+    console.log(`✉️  Sign-in link for ${email}: ${APP_URL}${path}`);
     return;
   }
 
@@ -47,7 +50,7 @@ async function sendMagicLinkEmail(email: string, path: string) {
       html: `
         <h2>Sign in to Senebiclabs</h2>
         <p>Use the link below to sign in. It works once and expires in
-           ${MAGIC_LINK_EXPIRY_MINUTES} minutes.</p>
+           ${SIGN_IN_LINK_EXPIRY_MINUTES} minutes.</p>
         <p><a href="${APP_URL}${path}" style="display:inline-block;padding:12px 24px;background:#0d0d0d;color:#22F0D5;text-decoration:none;border-radius:6px;font-weight:bold;">Sign in</a></p>
         <p style="margin-top:24px;color:#666;font-size:12px;">
           If you did not ask for this, you can ignore it. Nobody can sign in
@@ -90,8 +93,8 @@ export async function POST(req: NextRequest) {
   // Two keys. The address is the one that matters, because it is the thing
   // being mailed; the IP catches someone walking a list of addresses.
   for (const [key, limit] of [
-    [`magic:addr:${email}`, { max: 3, windowSeconds: 900 }],
-    [`magic:ip:${clientIp(req)}`, { max: 10, windowSeconds: 900 }],
+    [`signin:addr:${email}`, { max: 3, windowSeconds: 900 }],
+    [`signin:ip:${clientIp(req)}`, { max: 10, windowSeconds: 900 }],
   ] as const) {
     const { ok, retryAfter } = rateLimit(key, limit);
     if (!ok) {
@@ -108,18 +111,18 @@ export async function POST(req: NextRequest) {
     // nothing is sent unless the address could sign in, and the caller is told
     // the same thing either way.
     if (!(await mayReceiveLink(email))) {
-      console.warn(`[magic-link] refused, address is not known: ${email}`);
+      console.warn(`[sign-in-link] refused, address is not known: ${email}`);
       return NextResponse.json(ACCEPTED);
     }
 
-    const path = `/auth/verify?token=${await generateMagicLink(email)}`;
+    const path = `/auth/verify?token=${await createSignInLink(email)}`;
 
     try {
-      await sendMagicLinkEmail(email, path);
+      await sendSignInLinkEmail(email, path);
     } catch (err) {
       // A silent failure here shows someone "check your email" for a message
       // that was never sent, and locks them out with no error anywhere.
-      console.error("[magic-link] send failed", err);
+      console.error("[sign-in-link] send failed", err);
       return NextResponse.json(
         { error: "We could not send your sign-in link. Please try again in a moment." },
         { status: 502 }
@@ -128,7 +131,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(ACCEPTED);
   } catch (err) {
-    console.error("[magic-link] failed", err);
+    console.error("[sign-in-link] failed", err);
     return NextResponse.json(
       { error: "We could not send your sign-in link. Please try again in a moment." },
       { status: 500 }

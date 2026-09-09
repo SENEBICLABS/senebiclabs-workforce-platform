@@ -13,7 +13,7 @@ import {
 /**
  * The one gate.
  *
- * Every sign-in — magic link or Google — ends here, and this is the only place
+ * Every sign-in — sign-in link or Google — ends here, and this is the only place
  * a clinician row is created. Access is invite-only: an authenticated email
  * that is neither an existing member nor the subject of a live invite is
  * refused, and no account is left behind.

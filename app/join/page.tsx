@@ -59,7 +59,7 @@ function Join() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
-  const [devLink, setDevLink] = useState("");
+  const [expiresIn, setExpiresIn] = useState(15);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,8 +81,8 @@ function Join() {
     setLoading(true);
     setError("");
     try {
-      const data = await api.requestMagicLink(email);
-      if (data.magicLink) setDevLink(`${data.magicLink}&invite=${encodeURIComponent(token)}`);
+      const data = await api.requestSignInLink(email);
+      setExpiresIn(data.expiresInMinutes);
       setSent(true);
     } catch (err) {
       setError(
@@ -138,16 +138,9 @@ function Join() {
             <p className="mt-2 text-body text-muted">
               We sent a sign-in link to{" "}
               <span className="font-semibold text-ink">{email}</span>. Opening it
-              completes your registration.
+              completes your registration. It works once and expires in{" "}
+              {expiresIn} minutes.
             </p>
-            {devLink && (
-              <Button
-                className="mt-5 w-full"
-                onClick={() => (window.location.href = devLink)}
-              >
-                Open sign-in link
-              </Button>
-            )}
           </>
         ) : (
           <>

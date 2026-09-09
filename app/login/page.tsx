@@ -32,6 +32,7 @@ const ERRORS: Record<string, string> = {
 function SignIn() {
   const params = useSearchParams();
   const [email, setEmail] = useState("");
+  const [expiresIn, setExpiresIn] = useState(15);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
@@ -46,8 +47,8 @@ function SignIn() {
     setLoading(true);
     setError("");
     try {
-      const data = await api.requestMagicLink(email);
-      if (data.magicLink) setDevLink(data.magicLink);
+      const data = await api.requestSignInLink(email);
+      setExpiresIn(data.expiresInMinutes);
       setSent(true);
     } catch (err) {
       setError(
@@ -94,7 +95,7 @@ function SignIn() {
             <p className="mt-2 text-body text-muted">
               We sent a sign-in link to{" "}
               <span className="font-semibold text-ink">{email}</span>. It works
-              once and expires in 24 hours.
+              once and expires in {expiresIn} minutes.
             </p>
             {devLink && (
               <Button

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyMagicLink } from "@/lib/auth";
+import { consumeSignInLink } from "@/lib/auth";
 import { GATE_MESSAGE, signInOrReject } from "@/lib/auth-gate";
 import { SESSION_COOKIE } from "@/lib/session-cookie";
 
 /**
- * Exchanges a magic-link token for a session.
+ * Exchanges a sign-in link token for a session.
  *
  * Proving control of an address is not the same as being allowed in: the token
  * establishes the address, and the gate decides whether it may have an account.
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const link = await verifyMagicLink(token);
+    const link = await consumeSignInLink(token);
 
     if (!link.ok) {
       // "unavailable" means the token store could not be reached, which is our
