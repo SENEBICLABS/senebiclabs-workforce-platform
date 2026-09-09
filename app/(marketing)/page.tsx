@@ -1,16 +1,4 @@
 import type { Metadata } from "next";
-import {
-  CalendarClock,
-  CheckCheck,
-  CheckCircle2,
-  Globe,
-  Lock,
-  PenLine,
-  Scale,
-  ScanSearch,
-  Stethoscope,
-  Wallet,
-} from "lucide-react";
 import Link from "next/link";
 import { ApplyActions } from "@/components/landing/ApplyDialog";
 import { Testimonials } from "@/components/landing/Testimonials";
@@ -25,32 +13,26 @@ export const metadata: Metadata = {
 
 const EXPECTATIONS = [
   {
-    icon: Wallet,
     title: "Paid for what you already know",
     body: "Paid per reviewed case, at professional rates, with the rate visible before you take anything on.",
   },
   {
-    icon: CalendarClock,
     title: "Remote and flexible",
     body: "No shifts and no minimum hours. Pick up cases when you have time and stop when you do not.",
   },
   {
-    icon: Stethoscope,
     title: "Work inside your specialty",
     body: "You review in the areas you actually practise, against the guidelines you already work to.",
   },
   {
-    icon: Scale,
     title: "Real clinical rigour",
     body: "Several clinicians see each case and disagreements are adjudicated. Considered work, not volume piecework.",
   },
   {
-    icon: Lock,
     title: "Confidential by design",
     body: "Case material stays inside the platform. You see only the pools you have been given.",
   },
   {
-    icon: Globe,
     title: "Your judgment is the standard",
     body: "A correction you make today shapes how a model answers the same question for everyone who asks it next.",
   },
@@ -66,17 +48,14 @@ const EXPECTATIONS = [
  */
 const WORK = [
   {
-    icon: ScanSearch,
     title: "Judge an answer",
     body: "A case, and the answer a model gave for it. You say whether it holds up, choose what went wrong if it did not, rate how confident you are, and highlight the exact passage at fault. The rubric for that body of work sits beside the case while you read.",
   },
   {
-    icon: PenLine,
     title: "Write the answer yourself",
     body: "Where the model's answer will not do, or the case calls for one written from scratch, you write it. Structured fields where the work needs structure, prose where it needs prose.",
   },
   {
-    icon: CheckCheck,
     title: "Approve a colleague's",
     body: "Written work always goes to a second clinician, and never to its author. You approve it, edit it, or send it back saying what has to change. Sending back pays exactly what approving pays.",
   },
@@ -168,13 +147,7 @@ export default function Landing() {
             <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-3">
               {WORK.map((w) => (
                 <div key={w.title} className="text-center">
-                  <span
-                    aria-hidden="true"
-                    className="mx-auto flex h-8 w-8 items-center justify-center text-accent"
-                  >
-                    <w.icon size={22} strokeWidth={1.75} />
-                  </span>
-                  <h3 className="mt-4 text-section text-ink">{w.title}</h3>
+                  <h3 className="text-section text-ink">{w.title}</h3>
                   <p className="mt-1.5 text-body leading-relaxed text-muted">
                     {w.body}
                   </p>
@@ -205,13 +178,7 @@ export default function Landing() {
             <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
               {EXPECTATIONS.map((item) => (
                 <div key={item.title} className="text-center">
-                  <span
-                    aria-hidden="true"
-                    className="mx-auto flex h-8 w-8 items-center justify-center text-accent"
-                  >
-                    <item.icon size={22} strokeWidth={1.75} />
-                  </span>
-                  <h3 className="mt-4 text-section text-ink">{item.title}</h3>
+                  <h3 className="text-section text-ink">{item.title}</h3>
                   <p className="mt-1.5 text-body text-muted">{item.body}</p>
                 </div>
               ))}
@@ -225,15 +192,10 @@ export default function Landing() {
                 The bar is clinical experience. There is nothing to buy and no
                 training to complete first.
               </p>
-              <ul className="mx-auto mt-5 grid max-w-[600px] grid-cols-1 gap-2.5 sm:grid-cols-2">
+              <ul className="mx-auto mt-5 grid max-w-[620px] grid-cols-1 gap-y-2 sm:grid-cols-2">
                 {ELIGIBILITY.map((r) => (
-                  <li key={r} className="flex items-start justify-center gap-2.5 text-left">
-                    <CheckCircle2
-                      size={16}
-                      aria-hidden="true"
-                      className="mt-0.5 shrink-0 text-accent"
-                    />
-                    <span className="text-body text-muted">{r}</span>
+                  <li key={r} className="text-body text-muted">
+                    {r}
                   </li>
                 ))}
               </ul>

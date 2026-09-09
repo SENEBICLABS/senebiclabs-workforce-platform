@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Scale, Lock, Users, Workflow } from "lucide-react";
 import { ApplyActions } from "@/components/landing/ApplyDialog";
 
 export const metadata: Metadata = {
@@ -11,22 +10,18 @@ export const metadata: Metadata = {
 
 const PRINCIPLES = [
   {
-    icon: Users,
     title: "Clinicians, not annotators",
     body: "Every review is done by someone licensed and practising in the area they are reviewing. There is no general pool of workers reading medical cases, because the judgment we need is the judgment a clinician has and a layperson does not.",
   },
   {
-    icon: Scale,
     title: "Disagreement is signal",
     body: "Several clinicians see each case. Where they disagree, the case is adjudicated rather than settled by whichever answer got more votes. A split between two experienced clinicians usually means the case is genuinely hard, and that is worth recording rather than averaging away.",
   },
   {
-    icon: Workflow,
     title: "Written work is reviewed, not merged",
     body: "Where a clinician writes an answer rather than choosing one, a second clinician approves it, edits it, or sends it back. The approved text is delivered as one clinician's words. Two good answers to the same question are not votes to be blended.",
   },
   {
-    icon: Lock,
     title: "Confidential by construction",
     body: "Case material stays inside the platform. A clinician sees only the pools they have been given, access is a record that can be withdrawn, and nothing is downloadable. The confidentiality is enforced by the system rather than asked for in a policy.",
   },
@@ -93,13 +88,7 @@ export default function AboutUs() {
           <div className="mt-12 grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-2">
             {PRINCIPLES.map((p) => (
               <div key={p.title} className="text-center">
-                <span
-                  aria-hidden="true"
-                  className="mx-auto flex h-8 w-8 items-center justify-center text-accent"
-                >
-                  <p.icon size={22} strokeWidth={1.75} />
-                </span>
-                <h3 className="mt-4 text-section text-ink">{p.title}</h3>
+                <h3 className="text-section text-ink">{p.title}</h3>
                 <p className="mt-1.5 text-body leading-relaxed text-muted">
                   {p.body}
                 </p>

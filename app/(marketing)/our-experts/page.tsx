@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BadgeCheck, ClipboardCheck, ShieldCheck, UserCheck } from "lucide-react";
 import { ApplyActions } from "@/components/landing/ApplyDialog";
 import { ELIGIBILITY } from "@/lib/marketing-content";
 
@@ -34,22 +33,18 @@ const EXPERTS: Expert[] = [
 
 const VETTING = [
   {
-    icon: UserCheck,
     step: "Application",
     body: "A clinician applies with their name, specialty, credential and the country they practise in. Nothing is created at this point. An application is a request to be considered.",
   },
   {
-    icon: BadgeCheck,
     step: "Credential check",
     body: "We check the licence given against the register it was issued by. A licence that is not active, or not in the specialty claimed, does not proceed.",
   },
   {
-    icon: ClipboardCheck,
     step: "Calibration",
     body: "A short set of cases with known answers, written by the clinical leads for that body of work. It confirms that a reviewer reads cases the way the rubric expects before any real case reaches them.",
   },
   {
-    icon: ShieldCheck,
     step: "Invitation",
     body: "Only then is an invitation sent, to one named address, good once. That invitation is what creates an account. Nobody registers themselves.",
   },
@@ -118,13 +113,8 @@ export default function OurExperts() {
             <h3 className="text-section text-ink">What we require</h3>
             <ul className="mt-4 space-y-2.5">
               {ELIGIBILITY.map((r) => (
-                <li key={r} className="flex items-start justify-center gap-2.5 text-left">
-                  <BadgeCheck
-                    size={16}
-                    aria-hidden="true"
-                    className="mt-0.5 shrink-0 text-accent"
-                  />
-                  <span className="text-body text-muted">{r}</span>
+                <li key={r} className="text-body text-muted">
+                  {r}
                 </li>
               ))}
             </ul>
