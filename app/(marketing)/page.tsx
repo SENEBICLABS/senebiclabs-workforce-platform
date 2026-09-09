@@ -156,12 +156,13 @@ export default function Landing() {
         <section>
           <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
             <div className="text-center">
-              <h2 className="text-[26px] font-bold leading-tight text-ink">
-                What you would actually do
+              <h2 className="mx-auto max-w-[560px] text-[32px] leading-[1.15] text-ink sm:text-[38px]">
+                How real experts like you improve AI models
               </h2>
-              <p className="mx-auto mt-3 max-w-[520px] text-body text-muted">
-                Three shapes of work, depending on the case and the body of work
-                it belongs to.
+              <p className="mx-auto mt-4 max-w-[560px] text-[17px] leading-relaxed text-muted">
+                We depend on licensed clinicians, in the specialties they
+                actually practise, to improve medical AI. Here are some common
+                tasks you would do on Senebiclabs.
               </p>
             </div>
 
