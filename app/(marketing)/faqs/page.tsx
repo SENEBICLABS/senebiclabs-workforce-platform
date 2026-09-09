@@ -13,14 +13,14 @@ export default function FaqsPage() {
   return (
     <>
       <section>
-        <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
+        <div className="mx-auto w-full max-w-[1040px] px-5 py-24 text-center sm:py-32 lg:px-8">
           <p className="text-label uppercase text-muted">FAQs</p>
           <h1
-            className="mx-auto mt-4 max-w-[640px] text-[34px] leading-[1.15] text-ink sm:text-[44px]"
+            className="mx-auto mt-5 max-w-[880px] text-[42px] leading-[1.04] text-ink sm:text-[60px]"
           >
             Questions clinicians ask
           </h1>
-          <p className="mx-auto mt-5 max-w-[520px] text-[17px] leading-relaxed text-muted">
+          <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">
             If something here is not covered, write to us and we will answer it
             properly rather than point you at a form.
           </p>
@@ -28,19 +28,19 @@ export default function FaqsPage() {
       </section>
 
       <section>
-        <div className="mx-auto max-w-[680px] px-5 py-16 text-center lg:px-8">
+        <div className="mx-auto w-full max-w-[1040px] px-5 py-20 text-center sm:py-28 lg:px-8">
           <Faqs />
         </div>
       </section>
 
       <section>
-        <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
+        <div className="mx-auto w-full max-w-[1040px] px-5 py-24 text-center sm:py-32 lg:px-8">
           <h2
-            className="mx-auto max-w-[560px] text-[30px] leading-tight text-ink"
+            className="mx-auto max-w-[880px] text-[30px] leading-[1.1] text-ink sm:text-[38px]"
           >
             Put your clinical knowledge to paid work
           </h2>
-          <p className="mx-auto mt-3 max-w-[460px] text-body text-muted">
+          <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">
             Apply with your specialty and licence. We review every application.
           </p>
           <div className="mt-8">

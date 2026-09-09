@@ -73,14 +73,14 @@ export default function OurExperts() {
   return (
     <>
       <section>
-        <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
+        <div className="mx-auto w-full max-w-[1040px] px-5 py-24 text-center sm:py-32 lg:px-8">
           <p className="text-label uppercase text-muted">Our experts</p>
           <h1
-            className="mx-auto mt-4 max-w-[720px] text-[34px] leading-[1.15] text-ink sm:text-[44px]"
+            className="mx-auto mt-5 max-w-[880px] text-[42px] leading-[1.04] text-ink sm:text-[60px]"
           >
             Every judgment here has a licence behind it
           </h1>
-          <p className="mx-auto mt-5 max-w-[580px] text-[17px] leading-relaxed text-muted">
+          <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">
             Reviewing is done by clinicians who are licensed and practising in
             the area they are reviewing. Membership is vetted and by invitation,
             and this is what that means in practice.
@@ -90,8 +90,8 @@ export default function OurExperts() {
 
       {/* Who is here */}
       <section>
-        <div className="mx-auto max-w-[680px] px-5 py-16 text-center lg:px-8">
-          <h2 className="text-[26px] font-bold leading-tight text-ink">
+        <div className="mx-auto w-full max-w-[1040px] px-5 py-20 text-center sm:py-28 lg:px-8">
+          <h2 className="mx-auto max-w-[880px] text-[30px] leading-[1.1] text-ink sm:text-[38px]">
             Who reviews here
           </h2>
           <div className="mt-4 space-y-4 text-body leading-relaxed text-muted">
@@ -110,7 +110,7 @@ export default function OurExperts() {
           </div>
 
           <div className="mt-10 text-center">
-            <h3 className="text-section text-ink">What we require</h3>
+            <h3 className="text-[17px] leading-snug text-ink">What we require</h3>
             <ul className="mt-4 space-y-2.5">
               {ELIGIBILITY.map((r) => (
                 <li key={r} className="text-body text-muted">
@@ -124,17 +124,17 @@ export default function OurExperts() {
 
       {/* Vetting */}
       <section>
-        <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
+        <div className="mx-auto w-full max-w-[1040px] px-5 py-20 sm:py-28 lg:px-8">
           <div className="text-center">
-            <h2 className="text-[26px] font-bold leading-tight text-ink">
+            <h2 className="mx-auto max-w-[880px] text-[30px] leading-[1.1] text-ink sm:text-[38px]">
               How we vet
             </h2>
-            <p className="mx-auto mt-3 max-w-[520px] text-body text-muted">
+            <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">
               Four things happen between applying and seeing a real case.
             </p>
           </div>
 
-          <ol className="mx-auto mt-10 max-w-[760px] space-y-6">
+          <ol className="mx-auto mt-14 max-w-[720px] space-y-10">
             {VETTING.map((v, i) => (
               <li
                 key={v.step}
@@ -142,12 +142,12 @@ export default function OurExperts() {
               >
                 <span
                   aria-hidden="true"
-                  className="tnum text-label text-muted"
+                  className="tnum text-label text-accent"
                 >
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <div>
-                  <h3 className="text-section text-ink">{v.step}</h3>
+                  <h3 className="text-[17px] leading-snug text-ink">{v.step}</h3>
                   <p className="mt-1 text-body leading-relaxed text-muted">
                     {v.body}
                   </p>
@@ -161,14 +161,14 @@ export default function OurExperts() {
       {/* Profiles appear only once real clinicians have agreed to be named. */}
       {EXPERTS.length > 0 && (
         <section>
-          <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
-            <h2 className="text-center text-[26px] font-bold leading-tight text-ink">
+          <div className="mx-auto w-full max-w-[1040px] px-5 py-20 sm:py-28 lg:px-8">
+            <h2 className="mx-auto max-w-[880px] text-center text-[30px] leading-[1.1] text-ink sm:text-[38px]">
               Some of the clinicians who review here
             </h2>
-            <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-14 grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-3">
               {EXPERTS.map((e) => (
                 <div key={e.name} className="text-center">
-                  <p className="text-section text-ink">{e.name}</p>
+                  <p className="text-[17px] leading-snug text-ink">{e.name}</p>
                   <p className="mt-1 text-body text-muted">
                     {e.credential}, {e.specialty}
                   </p>
@@ -182,20 +182,20 @@ export default function OurExperts() {
 
       {/* Safeguards */}
       <section>
-        <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
+        <div className="mx-auto w-full max-w-[1040px] px-5 py-20 sm:py-28 lg:px-8">
           <div className="text-center">
-            <h2 className="text-[26px] font-bold leading-tight text-ink">
+            <h2 className="mx-auto max-w-[880px] text-[30px] leading-[1.1] text-ink sm:text-[38px]">
               How quality holds up
             </h2>
-            <p className="mx-auto mt-3 max-w-[540px] text-body text-muted">
+            <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">
               Vetting decides who gets in. These decide what happens afterwards.
             </p>
           </div>
 
-          <div className="mt-12 grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-2">
+          <div className="mt-14 grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-2">
             {SAFEGUARDS.map((s) => (
               <div key={s.title} className="text-center">
-                <h3 className="text-section text-ink">{s.title}</h3>
+                <h3 className="text-[17px] leading-snug text-ink">{s.title}</h3>
                 <p className="mt-1.5 text-body leading-relaxed text-muted">
                   {s.body}
                 </p>
@@ -206,13 +206,13 @@ export default function OurExperts() {
       </section>
 
       <section>
-        <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
+        <div className="mx-auto w-full max-w-[1040px] px-5 py-24 text-center sm:py-32 lg:px-8">
           <h2
-            className="mx-auto max-w-[560px] text-[30px] leading-tight text-ink"
+            className="mx-auto max-w-[880px] text-[30px] leading-[1.1] text-ink sm:text-[38px]"
           >
             Apply to review with us
           </h2>
-          <p className="mx-auto mt-3 max-w-[460px] text-body text-muted">
+          <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">
             Tell us your specialty and licence. We review every application.
           </p>
           <div className="mt-8">

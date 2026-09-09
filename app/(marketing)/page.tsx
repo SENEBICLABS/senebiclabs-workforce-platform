@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ApplyActions } from "@/components/landing/ApplyDialog";
+import {
+  Grid,
+  GridItem,
+  Hero,
+  MEASURE,
+  Section,
+  SectionHead,
+} from "@/components/landing/Section";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { Faqs } from "@/components/landing/Faqs";
 import { ELIGIBILITY } from "@/lib/marketing-content";
@@ -87,196 +95,140 @@ const STEPS = [
 export default function Landing() {
   return (
     <>
-        {/* Hero */}
-        <section>
-          <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8 lg:py-24">
-            <p className="text-label uppercase text-muted">
-              For licensed clinicians
+        <Hero>
+          <p className="text-label uppercase text-muted">
+            For licensed clinicians
+          </p>
+          <h1 className="mx-auto mt-5 max-w-[880px] text-[42px] leading-[1.04] text-ink sm:text-[60px]">
+            Your clinical expertise can shape the future of medical AI.
+          </h1>
+          {/* Three steps of one ink: the heading at full, this lead at 85%,
+              the rest at 72%. That is the whole hierarchy. */}
+          <div className={`${MEASURE.intro} mt-7 space-y-4 text-[17px] leading-relaxed text-muted`}>
+            <p className="text-strong">
+              Join medical experts around the world shaping the future of
+              medical AI.
             </p>
-            <h1
-              className="mx-auto mt-4 max-w-[760px] text-[38px] leading-[1.12] text-ink sm:text-[52px]"
-            >
-              Your clinical expertise can shape the future of medical AI.
-            </h1>
-            {/* Three paragraphs, so three elements. Blank lines inside a single
-                JSX text node collapse to spaces, which ran these together into
-                one block on the page. */}
-            {/* Three steps of one ink: the heading at full, this lead at 85%,
-                the rest at 72%. That is the whole hierarchy. */}
-            <div className="mx-auto mt-5 max-w-[600px] space-y-4 text-[17px] leading-relaxed text-muted">
-              <p className="text-strong">
-                Join medical experts around the world shaping the future of
-                medical AI.
-              </p>
-              <p>
-                Use your expertise to help build, evaluate, and improve the AI
-                systems that will shape the future of healthcare.
-              </p>
-              <p>
-                Work on your schedule. Get paid for your expertise. Help build
-                better medical AI.
-              </p>
-            </div>
-
-            <div className="mt-8">
-              <ApplyActions />
-            </div>
-
-            <p className="mt-5 text-[13px] text-muted">
-              Membership is vetted. Apply, and we send an invitation to the
-              clinicians we can offer work to.
+            <p>
+              Use your expertise to help build, evaluate, and improve the AI
+              systems that will shape the future of healthcare.
             </p>
           </div>
-        </section>
+
+          <div className="mt-10">
+            <ApplyActions />
+          </div>
+
+          <p className="mt-6 text-[13px] text-muted">
+            Membership is vetted. Apply, and we send an invitation to the
+            clinicians we can offer work to.
+          </p>
+        </Hero>
 
         {/* What the work is, before what it pays. A clinician deciding whether
             to apply wants to know what a case looks like first. */}
-        <section>
-          <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
-            <div className="text-center">
-              <h2 className="mx-auto max-w-[560px] text-[32px] leading-[1.15] text-ink sm:text-[38px]">
-                How real experts like you improve AI models
-              </h2>
-              <p className="mx-auto mt-4 max-w-[560px] text-[17px] leading-relaxed text-muted">
-                We depend on licensed clinicians, in the specialties they
-                actually practise, to improve medical AI. Here are some common
-                tasks you would do on Senebiclabs.
-              </p>
-            </div>
+        <Section>
+          <SectionHead
+            eyebrow="The work"
+            title="How real experts like you improve AI models"
+            intro="We depend on licensed clinicians, in the specialties they actually practise, to improve medical AI. Here are some common tasks you would do on Senebiclabs."
+          />
+          <Grid>
+            {WORK.map((w, i) => (
+              <GridItem key={w.title} index={i + 1} title={w.title}>
+                {w.body}
+              </GridItem>
+            ))}
+          </Grid>
+          <p className={`${MEASURE.intro} mt-14 text-center text-body text-muted`}>
+            Any case you cannot judge, you flag instead of guessing. It goes to
+            another clinician, and it pays the same as one you complete.
+          </p>
+        </Section>
 
-            <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-3">
-              {WORK.map((w) => (
-                <div key={w.title} className="text-center">
-                  <h3 className="text-section text-ink">{w.title}</h3>
-                  <p className="mt-1.5 text-body leading-relaxed text-muted">
-                    {w.body}
-                  </p>
-                </div>
-              ))}
-            </div>
+        <Section>
+          <SectionHead
+            eyebrow="What to expect"
+            title="Paid work that fits around clinical practice"
+            intro="And that changes what these systems tell people."
+          />
+          <Grid>
+            {EXPECTATIONS.map((item, i) => (
+              <GridItem key={item.title} index={i + 1} title={item.title}>
+                {item.body}
+              </GridItem>
+            ))}
+          </Grid>
+        </Section>
 
-            <p className="mx-auto mt-6 max-w-[620px] text-center text-body text-muted">
-              Any case you cannot judge, you flag instead of guessing. It goes to
-              another clinician, and it pays the same as one you complete.
-            </p>
-          </div>
-        </section>
-
-        {/* What you can expect */}
-        <section>
-          <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
-            <div className="text-center">
-              <h2 className="text-[26px] font-bold leading-tight text-ink">
-                What you can expect
-              </h2>
-              <p className="mx-auto mt-3 max-w-[500px] text-body text-muted">
-                Paid work that fits around clinical practice, and that changes
-                what these systems tell people.
-              </p>
-            </div>
-
-            <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
-              {EXPECTATIONS.map((item) => (
-                <div key={item.title} className="text-center">
-                  <h3 className="text-section text-ink">{item.title}</h3>
-                  <p className="mt-1.5 text-body text-muted">{item.body}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Eligibility sits with the offer, the way a fellowship page states
-                who may apply rather than giving it a section of its own. */}
-            <div className="mx-auto mt-14 max-w-[720px] text-center">
-              <h3 className="text-section text-ink">Who can apply</h3>
-              <p className="mx-auto mt-2 max-w-[440px] text-body text-muted">
-                The bar is clinical experience. There is nothing to buy and no
-                training to complete first.
-              </p>
-              <ul className="mx-auto mt-5 grid max-w-[620px] grid-cols-1 gap-y-2 sm:grid-cols-2">
-                {ELIGIBILITY.map((r) => (
-                  <li key={r} className="text-body text-muted">
-                    {r}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
+        {/* Eligibility sits with the offer, the way a fellowship page states
+            who may apply rather than giving it a section of its own. */}
+        <Section tight>
+          <SectionHead
+            eyebrow="Who can apply"
+            title="The bar is clinical experience"
+            intro="There is nothing to buy and no training to complete first."
+          />
+          <ul className="mx-auto mt-10 grid max-w-[640px] grid-cols-1 gap-y-3 text-center sm:grid-cols-2">
+            {ELIGIBILITY.map((r) => (
+              <li key={r} className="text-body text-muted">
+                {r}
+              </li>
+            ))}
+          </ul>
+        </Section>
 
         {/* Renders only once real quotes exist. */}
         <Testimonials />
 
-        {/* How it works */}
-        <section>
-          <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
-            <h2 className="text-center text-[26px] font-bold leading-tight text-ink">
-              How it works
-            </h2>
-
-            <ol className="mx-auto mt-10 max-w-[760px] space-y-6">
-              {STEPS.map((step, i) => (
-                <li
-                  key={step.title}
-                  className="flex flex-col items-center gap-1.5 text-center"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="tnum text-label text-muted"
-                  >
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <div>
-                    <h3 className="text-section text-ink">{step.title}</h3>
-                    <p className="mt-1 text-body text-muted">{step.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-
-            <div className="mt-10">
-              <ApplyActions />
-            </div>
+        <Section>
+          <SectionHead eyebrow="How it works" title="From applying to getting paid" />
+          <ol className="mx-auto mt-14 max-w-[720px] space-y-10">
+            {STEPS.map((step, i) => (
+              <li key={step.title} className="text-center">
+                <p aria-hidden="true" className="tnum text-label text-accent">
+                  {String(i + 1).padStart(2, "0")}
+                </p>
+                <h3 className="mt-3 text-[17px] leading-snug text-ink">
+                  {step.title}
+                </h3>
+                <p className={`${MEASURE.intro} mt-2 text-body leading-relaxed text-muted`}>
+                  {step.body}
+                </p>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-16">
+            <ApplyActions />
           </div>
-        </section>
+        </Section>
 
         {/* FAQs: the featured subset, with the rest a click away. */}
-        <section>
-          <div className="mx-auto max-w-[1100px] px-5 py-16 lg:px-8">
-            <h2 className="text-center text-[26px] font-bold leading-tight text-ink">
-              FAQs
-            </h2>
-
-            <div className="mx-auto mt-10 max-w-[720px]">
-              <Faqs featuredOnly />
-            </div>
-
-            <p className="mt-8 text-center text-body text-muted">
-              <Link
-                href="/faqs"
-                className="focusable rounded-btn font-semibold text-accent underline-offset-2 hover:underline"
-              >
-                Read all the questions
-              </Link>
-            </p>
+        <Section>
+          <SectionHead eyebrow="Questions" title="What clinicians ask" />
+          <div className="mx-auto mt-14 max-w-[680px] text-left">
+            <Faqs featuredOnly />
           </div>
-        </section>
-
-        {/* Closing band */}
-        <section>
-          <div className="mx-auto max-w-[1100px] px-5 py-20 text-center lg:px-8">
-            <h2
-              className="mx-auto max-w-[560px] text-[30px] leading-tight text-ink"
+          <p className="mt-10 text-center text-body text-muted">
+            <Link
+              href="/faqs"
+              className="focusable rounded-btn font-semibold text-accent underline-offset-2 hover:underline"
             >
-              Put your clinical knowledge to paid work
-            </h2>
-            <p className="mx-auto mt-3 max-w-[460px] text-body text-muted">
-              Apply with your specialty and licence. We review every application.
-            </p>
-            <div className="mt-8">
-              <ApplyActions />
-            </div>
+              Read all the questions
+            </Link>
+          </p>
+        </Section>
+
+        <Section>
+          <SectionHead
+            title="Put your clinical knowledge to paid work"
+            intro="Apply with your specialty and licence. We review every application."
+          />
+          <div className="mt-10">
+            <ApplyActions />
           </div>
-        </section>
+        </Section>
+
     </>
   );
 }
