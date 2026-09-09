@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BadgeCheck, ClipboardCheck, ShieldCheck, UserCheck } from "lucide-react";
-import { Card } from "@/components/ui/Card";
 import { ApplyActions } from "@/components/landing/ApplyDialog";
 import { ELIGIBILITY } from "@/lib/marketing-content";
 
@@ -115,7 +114,7 @@ export default function OurExperts() {
             </p>
           </div>
 
-          <div className="mt-8 rounded-card border border-hairline bg-surface p-6">
+          <div className="mt-10 text-center">
             <h3 className="text-section text-ink">What we require</h3>
             <ul className="mt-4 space-y-2.5">
               {ELIGIBILITY.map((r) => (
@@ -176,15 +175,15 @@ export default function OurExperts() {
             <h2 className="text-center text-[26px] font-bold leading-tight text-ink">
               Some of the clinicians who review here
             </h2>
-            <div className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
               {EXPERTS.map((e) => (
-                <Card key={e.name} className="h-full p-5">
+                <div key={e.name} className="text-center">
                   <p className="text-section text-ink">{e.name}</p>
                   <p className="mt-1 text-body text-muted">
                     {e.credential}, {e.specialty}
                   </p>
                   <p className="mt-0.5 text-[13px] text-muted">{e.country}</p>
-                </Card>
+                </div>
               ))}
             </div>
           </div>
@@ -203,14 +202,14 @@ export default function OurExperts() {
             </p>
           </div>
 
-          <div className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="mt-12 grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-2">
             {SAFEGUARDS.map((s) => (
-              <Card key={s.title} className="h-full p-5 text-center">
+              <div key={s.title} className="text-center">
                 <h3 className="text-section text-ink">{s.title}</h3>
                 <p className="mt-1.5 text-body leading-relaxed text-muted">
                   {s.body}
                 </p>
-              </Card>
+              </div>
             ))}
           </div>
         </div>

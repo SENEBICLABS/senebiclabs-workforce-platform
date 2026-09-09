@@ -1,4 +1,3 @@
-import { Card } from "@/components/ui/Card";
 
 /**
  * Clinician quotes.
@@ -30,9 +29,9 @@ export function Testimonials() {
           From clinicians on the platform
         </h2>
 
-        <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
           {QUOTES.map((q) => (
-            <Card key={q.name} className="h-full p-5">
+            <div key={q.name}>
               <blockquote className="text-body leading-relaxed text-ink">
                 {q.quote}
               </blockquote>
@@ -42,7 +41,7 @@ export function Testimonials() {
                   {q.credential}, {q.specialty}
                 </p>
               </footer>
-            </Card>
+            </div>
           ))}
         </div>
       </div>

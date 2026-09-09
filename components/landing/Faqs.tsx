@@ -8,21 +8,22 @@ import { FAQS, FAQ_CATEGORIES } from "@/lib/marketing-content";
  */
 function Item({ q, a }: { q: string; a: string }) {
   return (
-    <details className="group rounded-card border border-hairline bg-surface">
-      <summary className="focusable cursor-pointer list-none px-5 py-4 text-body font-semibold text-ink marker:hidden">
+    // No box and no rule. The plus sign carries the affordance and the spacing
+    // does the separating, so an open question is the only thing that changes
+    // shape when you click.
+    <details className="group py-1">
+      <summary className="focusable cursor-pointer list-none py-3 text-body font-semibold text-ink marker:hidden">
         <span className="flex items-center justify-between gap-4">
           {q}
           <span
             aria-hidden="true"
-            className="shrink-0 text-muted transition-transform duration-150 group-open:rotate-45"
+            className="shrink-0 text-accent transition-transform duration-150 group-open:rotate-45"
           >
             +
           </span>
         </span>
       </summary>
-      {/* No rule between question and answer. The gap does the separating, and
-          the footer's line is meant to be the only one on the site. */}
-      <p className="px-5 pb-5 text-body leading-relaxed text-muted">{a}</p>
+      <p className="pb-3 text-body leading-relaxed text-muted">{a}</p>
     </details>
   );
 }
@@ -31,7 +32,7 @@ function Item({ q, a }: { q: string; a: string }) {
 export function Faqs({ featuredOnly = false }: { featuredOnly?: boolean }) {
   if (featuredOnly) {
     return (
-      <div className="space-y-2.5">
+      <div className="space-y-3">
         {FAQS.filter((f) => f.featured).map((f) => (
           <Item key={f.q} q={f.q} a={f.a} />
         ))}
@@ -48,7 +49,7 @@ export function Faqs({ featuredOnly = false }: { featuredOnly?: boolean }) {
         return (
           <section key={category}>
             <h2 className="text-label uppercase text-muted">{category}</h2>
-            <div className="mt-4 space-y-2.5">
+            <div className="mt-4 space-y-3">
               {items.map((f) => (
                 <Item key={f.q} q={f.q} a={f.a} />
               ))}

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Scale, Lock, Users, Workflow } from "lucide-react";
-import { Card } from "@/components/ui/Card";
 import { ApplyActions } from "@/components/landing/ApplyDialog";
 
 export const metadata: Metadata = {
@@ -91,20 +90,20 @@ export default function AboutUs() {
             </p>
           </div>
 
-          <div className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="mt-12 grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-2">
             {PRINCIPLES.map((p) => (
-              <Card key={p.title} className="h-full p-5 text-center">
+              <div key={p.title} className="text-center">
                 <span
                   aria-hidden="true"
-                  className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent"
+                  className="mx-auto flex h-8 w-8 items-center justify-center text-accent"
                 >
-                  <p.icon size={17} />
+                  <p.icon size={22} strokeWidth={1.75} />
                 </span>
                 <h3 className="mt-4 text-section text-ink">{p.title}</h3>
                 <p className="mt-1.5 text-body leading-relaxed text-muted">
                   {p.body}
                 </p>
-              </Card>
+              </div>
             ))}
           </div>
         </div>

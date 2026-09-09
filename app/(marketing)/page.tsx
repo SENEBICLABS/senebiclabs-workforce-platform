@@ -12,7 +12,6 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
-import { Card } from "@/components/ui/Card";
 import { ApplyActions } from "@/components/landing/ApplyDialog";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { Faqs } from "@/components/landing/Faqs";
@@ -166,20 +165,20 @@ export default function Landing() {
               </p>
             </div>
 
-            <div className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-3">
               {WORK.map((w) => (
-                <Card key={w.title} className="h-full p-5 text-center">
+                <div key={w.title} className="text-center">
                   <span
                     aria-hidden="true"
-                    className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent"
+                    className="mx-auto flex h-8 w-8 items-center justify-center text-accent"
                   >
-                    <w.icon size={17} />
+                    <w.icon size={22} strokeWidth={1.75} />
                   </span>
                   <h3 className="mt-4 text-section text-ink">{w.title}</h3>
                   <p className="mt-1.5 text-body leading-relaxed text-muted">
                     {w.body}
                   </p>
-                </Card>
+                </div>
               ))}
             </div>
 
@@ -203,24 +202,24 @@ export default function Landing() {
               </p>
             </div>
 
-            <div className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
               {EXPECTATIONS.map((item) => (
-                <Card key={item.title} className="h-full p-5 text-center">
+                <div key={item.title} className="text-center">
                   <span
                     aria-hidden="true"
-                    className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent"
+                    className="mx-auto flex h-8 w-8 items-center justify-center text-accent"
                   >
-                    <item.icon size={17} />
+                    <item.icon size={22} strokeWidth={1.75} />
                   </span>
                   <h3 className="mt-4 text-section text-ink">{item.title}</h3>
                   <p className="mt-1.5 text-body text-muted">{item.body}</p>
-                </Card>
+                </div>
               ))}
             </div>
 
             {/* Eligibility sits with the offer, the way a fellowship page states
                 who may apply rather than giving it a section of its own. */}
-            <div className="mx-auto mt-10 max-w-[720px] rounded-card border border-hairline bg-surface p-6 text-center">
+            <div className="mx-auto mt-14 max-w-[720px] text-center">
               <h3 className="text-section text-ink">Who can apply</h3>
               <p className="mx-auto mt-2 max-w-[440px] text-body text-muted">
                 The bar is clinical experience. There is nothing to buy and no
