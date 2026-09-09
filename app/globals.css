@@ -21,7 +21,12 @@
    * darkest, because that is where contrast is worst.
    */
   --color-surface: #141C1A;
-  --color-canvas: #050908;
+  /* True black at the bottom of the page. Everything measured better against
+   * it than against the #050908 it replaces: a card lifts by 1.21 rather than
+   * 1.15, the accent reaches 14.49, and the gradient has more depth to run
+   * through. The one thing that gave up ground is the hairline, 1.51 to 1.44,
+   * which is still well clear. */
+  --color-canvas: #000000;
   --color-canvas-top: #0B100F;
   /* Monochrome, hierarchy by opacity, same as before but inverted to white.
    *
