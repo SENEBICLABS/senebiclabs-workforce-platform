@@ -3,43 +3,36 @@
 @theme {
   /* ---- Palette ----------------------------------------------------
    *
-   * Dark, teal and white.
+   * Black and teal. The ground is black and the teal is the only colour on
+   * the page, which is what makes it carry.
    *
-   * The dark is teal, not black. Chroma is the red-to-blue spread, and below
-   * about 20 the eye calls a colour grey or black however dark it is. An
-   * earlier version bottomed out at #020D0B, whose brightest channel is 13,
-   * so 13 was the most colour it could physically hold. It was black with a
-   * rumour of green. The whole dark end came up so the ground carries the
-   * hue itself: 37 on the deepest ground, 45 at the top of the gradient,
-   * 50 on a card.
+   * An earlier pass took the ground the other way, raising its chroma to 37
+   * so the dark itself would read teal. That was the wrong reading. A
+   * coloured ground competes with the accent sitting on it: at chroma 37 the
+   * accent measured 7.03 against a card, and against black it is 11.55. The
+   * accent is louder precisely because nothing around it is coloured.
    *
-   * Inverting the ground fixed the thing every light version of this palette
-   * fought. On a light ground all text has to be dark, so headings, body and
-   * accent compete for one narrow band, and the accent kept collapsing into
-   * the body colour. Here there is room below white for a whole scale and
-   * the accent can be a teal nothing else comes near.
+   * Near-black surfaces are compressed in luminance, so a card lifts off the
+   * ground by only 1.11 however it is chosen. That is normal for a dark
+   * interface and it is why hairline went up to 16%: on a black page the
+   * border does the separating and the fill only tints.
    *
-   * The ground runs canvas-top to canvas down the page. Light text is
-   * checked against the LIGHTEST surface rather than the darkest, because
-   * that is where contrast is worst. Raising the dark end therefore costs
-   * nothing in legibility; what it costs is the card's lift off the ground,
-   * and 1.29 at the top of the gradient is what set how far it could go.
+   * Light text is checked against the LIGHTEST surface rather than the
+   * darkest, because that is where contrast is worst.
    */
-  --color-surface: #17493F;
-  --color-canvas: #052A25;
-  --color-canvas-top: #0A3730;
+  --color-surface: #141C1A;
+  --color-canvas: #050908;
+  --color-canvas-top: #0B100F;
   /* Monochrome, hierarchy by opacity, same as before but inverted to white.
    *
    * Body can be as soft as it was asked to be. On the light palette 72% was
-   * the floor and 65% already failed. Here 62% measures 4.65 against the
-   * lightest surface it can land on, which is the chip. That margin is
-   * thinner than it was before the dark end came up, so 62% is now the
-   * floor rather than a comfortable choice. */
+   * the floor and 65% already failed. Against black there is room to spare:
+   * 62% measures 7.30 on a card, and 50% would still pass. */
   --color-ink: #FFFFFF;
   --color-strong: rgb(255 255 255 / 0.85);
   --color-muted: rgb(255 255 255 / 0.62);
   /* A border on dark is light at low alpha, not a colour of its own. */
-  --color-hairline: rgb(255 255 255 / 0.14);
+  --color-hairline: rgb(255 255 255 / 0.16);
   /* Electric rather than merely light. Brightness here is chroma, not
    * luminance: pushing toward white would raise the contrast number while
    * washing the colour out, which is the opposite of brighter. This is 206
@@ -49,9 +42,8 @@
   --color-accent: #22F0D5;
   /* Brighter on hover, not darker. On a dark ground, up is forward. */
   --color-accent-hover: #63FFEC;
-  /* Bounded on three sides: it has to lift off a card, hold accent text,
-   * and still hold body text. A brighter chip failed the last of those. */
-  --color-accent-soft: #195046;
+  /* A teal chip, so a pill still reads teal on an otherwise black page. */
+  --color-accent-soft: #0E332D;
   /* Fills are bright, so the type on them is the ground colour, not white.
    * White on accent measures 1.86 and is unreadable. */
   --color-on-fill: #03211C;
@@ -66,8 +58,8 @@
   --color-success-soft: #0B3527;
 
   /* Sidebar. Lighter than the canvas, so it reads as a raised panel. */
-  --color-rail: #0C332C;
-  --color-rail-hover: #17493F;
+  --color-rail: #070C0B;
+  --color-rail-hover: #141C1A;
   --color-rail-text: rgb(255 255 255 / 0.62);
 
   /* ---- Type ------------------------------------------------------- */
@@ -146,7 +138,7 @@ h1 {
 
 /**
  * The public pages carry the ground as one gradient down the whole page, from
- * the lighter teal at canvas-top into the deeper one at canvas. It is on a
+ * canvas-top into the deeper canvas. It is on a
  * utility rather than on body so the signed-in application stays flat: a
  * ground that shifts behind a case a clinician is reading for an hour is a
  * distraction, and the workspace has no use for it.
