@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ApplyActions } from "@/components/landing/ApplyDialog";
 import {
   Grid,
   GridItem,
@@ -9,6 +8,7 @@ import {
   Section,
   SectionHead,
 } from "@/components/landing/Section";
+import { SignInCta } from "@/components/landing/SignInCta";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { Faqs } from "@/components/landing/Faqs";
 import { ELIGIBILITY } from "@/lib/marketing-content";
@@ -16,7 +16,7 @@ import { ELIGIBILITY } from "@/lib/marketing-content";
 export const metadata: Metadata = {
   title: "Senebiclabs for clinicians",
   description:
-    "Paid remote work for licensed clinicians. Apply your clinical knowledge to reviewing medical AI, on your own schedule. Membership is vetted and by invitation.",
+    "Paid remote work for licensed clinicians. Put your clinical knowledge to work reviewing medical AI, on your own schedule. Membership is by invitation.",
 };
 
 const EXPECTATIONS = [
@@ -71,8 +71,8 @@ const WORK = [
 
 const STEPS = [
   {
-    title: "Apply",
-    body: "Tell us your specialty and your licence. It takes a couple of minutes.",
+    title: "Get invited",
+    body: "An invitation arrives by email, addressed to you, when there is work open in your specialty.",
   },
   {
     title: "Get verified",
@@ -116,17 +116,18 @@ export default function Landing() {
           </div>
 
           <div className="mt-10">
-            <ApplyActions />
+            <SignInCta />
           </div>
 
           <p className="mt-6 text-[13px] text-muted">
-            Membership is vetted. Apply, and we send an invitation to the
-            clinicians we can offer work to.
+            Membership is by invitation. If you have one, opening it is all it
+            takes.
           </p>
         </Hero>
 
         {/* What the work is, before what it pays. A clinician deciding whether
-            to apply wants to know what a case looks like first. */}
+            to accept an invitation wants to know what a case looks like
+            first. */}
         <Section>
           <SectionHead
             eyebrow="The work"
@@ -162,10 +163,10 @@ export default function Landing() {
         </Section>
 
         {/* Eligibility sits with the offer, the way a fellowship page states
-            who may apply rather than giving it a section of its own. */}
+            who it is for rather than giving it a section of its own. */}
         <Section tight>
           <SectionHead
-            eyebrow="Who can apply"
+            eyebrow="Who reviews here"
             title="The bar is clinical experience"
             intro="There is nothing to buy and no training to complete first."
           />
@@ -182,7 +183,7 @@ export default function Landing() {
         <Testimonials />
 
         <Section>
-          <SectionHead eyebrow="How it works" title="From applying to getting paid" />
+          <SectionHead eyebrow="How it works" title="From invitation to getting paid" />
           <ol className="mx-auto mt-14 max-w-[720px] space-y-10">
             {STEPS.map((step, i) => (
               <li key={step.title} className="text-center">
@@ -199,7 +200,7 @@ export default function Landing() {
             ))}
           </ol>
           <div className="mt-16">
-            <ApplyActions />
+            <SignInCta />
           </div>
         </Section>
 
@@ -222,10 +223,10 @@ export default function Landing() {
         <Section>
           <SectionHead
             title="Put your clinical knowledge to paid work"
-            intro="Apply with your specialty and licence. We review every application."
+            intro="Membership is by invitation. If a colleague has sent you one, it is waiting in your inbox."
           />
           <div className="mt-10">
-            <ApplyActions />
+            <SignInCta />
           </div>
         </Section>
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ApplyActions } from "@/components/landing/ApplyDialog";
+import { SignInCta } from "@/components/landing/SignInCta";
 
 export const metadata: Metadata = {
   title: "About us | Senebiclabs",
@@ -128,10 +128,11 @@ export default function AboutUs() {
             Put your clinical knowledge to paid work
           </h2>
           <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">
-            Apply with your specialty and licence. We review every application.
+            Membership is by invitation. If a colleague has sent you one, it is
+            waiting in your inbox.
           </p>
           <div className="mt-8">
-            <ApplyActions />
+            <SignInCta />
           </div>
           <p className="mt-6 text-body text-muted">
             <Link

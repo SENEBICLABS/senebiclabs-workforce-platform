@@ -23,17 +23,17 @@ export const FAQS: Faq[] = [
     category: "Joining",
     featured: true,
     q: "Can I sign up directly?",
-    a: "No. Membership is vetted and by invitation. You apply, we review your credentials, and if there is work that matches your specialty we email you an invitation. That invitation is what creates your account.",
+    a: "No. Membership is by invitation only. An invitation is sent to one named address by someone already working with us, and opening it is what creates your account. There is no public sign-up and no waiting list.",
   },
   {
     category: "Joining",
-    q: "What happens after I apply?",
-    a: "We check the licence you gave us against the register you are licensed with. If your specialty matches work we currently have, we send an invitation to the address on your application. If it does not, we keep the application rather than turning you away, and come back to you when it does.",
+    q: "How do I get an invitation?",
+    a: "From a clinician already reviewing with us, or from the team directly. Invitations go out when there is work open in a specialty, so they follow the work rather than a queue.",
   },
   {
     category: "Joining",
-    q: "How long does it take to hear back?",
-    a: "It depends on the work we have open at the time. Vetting is done by people rather than automatically, so it is not instant. There is nothing further you need to do once you have applied.",
+    q: "What happens when I open my invitation?",
+    a: "It takes you to a sign-in page where you continue with Google or with the address the invitation was sent to. Either one creates your account and takes you straight in. Nothing else is needed.",
   },
   {
     category: "Joining",
@@ -65,7 +65,7 @@ export const FAQS: Faq[] = [
     category: "The work",
     featured: true,
     q: "Which specialties do you work with?",
-    a: "A range, and it changes as new work arrives. If your specialty is not needed right now we keep your application on file rather than turning you away.",
+    a: "A range, and it changes as new work arrives. Invitations follow the work, so a specialty that is quiet now may open later.",
   },
   {
     category: "Pay",

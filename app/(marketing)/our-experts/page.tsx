@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ApplyActions } from "@/components/landing/ApplyDialog";
+import { SignInCta } from "@/components/landing/SignInCta";
 import { ELIGIBILITY } from "@/lib/marketing-content";
 
 export const metadata: Metadata = {
@@ -33,8 +33,8 @@ const EXPERTS: Expert[] = [
 
 const VETTING = [
   {
-    step: "Application",
-    body: "A clinician applies with their name, specialty, credential and the country they practise in. Nothing is created at this point. An application is a request to be considered.",
+    step: "Identified",
+    body: "A clinician is put forward, by someone already reviewing with us or by the clinical leads, with their specialty, credential and the country they practise in. Nothing is created at this point.",
   },
   {
     step: "Credential check",
@@ -105,7 +105,7 @@ export default function OurExperts() {
               The specialties represented change as new work arrives. Rather than
               publish a list that would be out of date by the time you read it,
               we would rather you told us yours. If we do not have work for it
-              now, the application stays on file until we do.
+              now, we come back to you when it opens.
             </p>
           </div>
 
@@ -130,7 +130,7 @@ export default function OurExperts() {
               How we vet
             </h2>
             <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">
-              Four things happen between applying and seeing a real case.
+              Four things happen before anyone sees a real case.
             </p>
           </div>
 
@@ -210,13 +210,13 @@ export default function OurExperts() {
           <h2
             className="mx-auto max-w-[880px] text-[30px] leading-[1.1] text-ink sm:text-[38px]"
           >
-            Apply to review with us
+Reviewing is by invitation
           </h2>
           <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">
-            Tell us your specialty and licence. We review every application.
+            Invitations go to named clinicians when work opens in their specialty.
           </p>
           <div className="mt-8">
-            <ApplyActions />
+            <SignInCta />
           </div>
           <p className="mt-6 text-body text-muted">
             <Link
