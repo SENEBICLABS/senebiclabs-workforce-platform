@@ -177,12 +177,25 @@ function Join() {
               </div>
             )}
 
+            {/* Two ways in, and neither sends another email. The invitation
+                already proved this address, so the email option is a single
+                click rather than a second link to wait for. */}
+            <div className="mt-6">
+              <GoogleButton
+                href={`/api/auth/google?invite=${encodeURIComponent(token)}`}
+                label="Continue with Google"
+              />
+            </div>
+
+            <OrDivider />
+
             <Button
+              variant="secondary"
               onClick={accept}
               loading={loading}
-              className="mt-6 h-11 w-full"
+              className="h-11 w-full"
             >
-              Accept invitation and continue
+              Continue with email
             </Button>
 
             {error && (
@@ -191,16 +204,9 @@ function Join() {
               </p>
             )}
 
-            <OrDivider />
-
-            <GoogleButton
-              href={`/api/auth/google?invite=${encodeURIComponent(token)}`}
-              label="Continue with Google"
-            />
-
             <p className="mt-4 text-center text-[12px] text-muted">
-              Signing in with Google links your Google account, so you can use
-              it next time instead of an emailed link.
+              Either way your account is created on this address. Google just
+              gives you a password-free way back in next time.
             </p>
           </>
       </Card>
