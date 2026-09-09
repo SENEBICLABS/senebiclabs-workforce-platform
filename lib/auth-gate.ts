@@ -1,4 +1,5 @@
 import "server-only";
+import { createHash } from "crypto";
 import { SignJWT } from "jose";
 import { supabaseAdmin } from "./supabase";
 import { grantDirectAccess } from "./access";
@@ -18,7 +19,7 @@ import {
  * refused, and no account is left behind.
  */
 
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
+import { jwtSecret } from "./secrets";
 
 export type GateFailure =
   | "no_invite"
@@ -46,12 +47,18 @@ async function issueSession(
   const sessionToken = await new SignJWT({ clinicianId, email })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("7d")
-    .sign(SECRET);
+    .sign(jwtSecret());
 
+  // The token is recorded as a SHA-256 hash rather than verbatim. This table
+  // is never read back for authentication, so the plaintext bought nothing,
+  // and storing it meant a database leak handed over every live session as a
+  // ready-to-use cookie value.
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-  const { error } = await supabaseAdmin
-    .from("sessions")
-    .insert({ clinician_id: clinicianId, token: sessionToken, expires_at: expiresAt });
+  const { error } = await supabaseAdmin.from("sessions").insert({
+    clinician_id: clinicianId,
+    token: createHash("sha256").update(sessionToken).digest("hex"),
+    expires_at: expiresAt,
+  });
 
   // 23505 means this exact token is already recorded — harmless.
   if (error && error.code !== "23505") {

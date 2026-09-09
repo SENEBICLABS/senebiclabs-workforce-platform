@@ -1,5 +1,6 @@
 import "server-only";
 import { SignJWT, jwtVerify, createRemoteJWKSet } from "jose";
+import { oauthStateSecret } from "./secrets";
 
 /**
  * Google sign-in, as a plain OAuth2 code flow.
@@ -13,10 +14,6 @@ import { SignJWT, jwtVerify, createRemoteJWKSet } from "jose";
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-const STATE_SECRET = new TextEncoder().encode(
-  process.env.MAGIC_LINK_SECRET || process.env.JWT_SECRET || "dev"
-);
-
 export const GOOGLE_REDIRECT_URI = `${APP_URL}/api/auth/google/callback`;
 
 export const googleConfigured = () => Boolean(CLIENT_ID && CLIENT_SECRET);
@@ -25,28 +22,53 @@ const JWKS = createRemoteJWKSet(
   new URL("https://www.googleapis.com/oauth2/v3/certs")
 );
 
+/** The cookie holding the nonce that binds a state to one browser. */
+export const OAUTH_NONCE_COOKIE = "oauth_nonce";
+
 /**
- * Signed state, carrying the invite token through the round trip.
+ * Signed state, carrying the invite token and a nonce through the round trip.
  *
- * Signing it means Google cannot be used to smuggle an arbitrary invite token
- * back into the callback, and it doubles as CSRF protection.
+ * The signature alone was never CSRF protection, though it used to claim to
+ * be. Anyone could call /api/auth/google, be handed a validly signed state,
+ * and feed it to the callback: the token proved only that this server minted
+ * it, not that it was minted for the browser presenting it. That is login
+ * CSRF, and it lets an attacker complete a flow that silently signs a victim
+ * into the attacker's account.
+ *
+ * The nonce fixes it. Half lives in the state, half in an httpOnly cookie the
+ * attacker cannot set on the victim's browser, and the callback refuses unless
+ * they match.
  */
-export async function buildState(inviteToken?: string | null): Promise<string> {
-  return new SignJWT({ invite: inviteToken ?? null })
+export async function buildState(
+  inviteToken: string | null,
+  nonce: string
+): Promise<string> {
+  return new SignJWT({ invite: inviteToken ?? null, nonce })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("15m")
-    .sign(STATE_SECRET);
+    .sign(oauthStateSecret());
 }
 
 export async function readState(
   state: string
-): Promise<{ invite: string | null } | null> {
+): Promise<{ invite: string | null; nonce: string | null } | null> {
   try {
-    const { payload } = await jwtVerify(state, STATE_SECRET);
-    return { invite: (payload.invite as string | null) ?? null };
+    const { payload } = await jwtVerify(state, oauthStateSecret());
+    return {
+      invite: (payload.invite as string | null) ?? null,
+      nonce: (payload.nonce as string | null) ?? null,
+    };
   } catch {
     return null;
   }
+}
+
+/** Length-safe comparison, so a mismatch leaks nothing through timing. */
+export function nonceMatches(a: string | null | undefined, b: string | null | undefined) {
+  if (!a || !b || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
 }
 
 export function authorizeUrl(state: string): string {

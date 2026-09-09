@@ -1,107 +1,137 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateMagicLink } from "@/lib/auth";
+import { generateMagicLink, MAGIC_LINK_EXPIRY_MINUTES } from "@/lib/auth";
+import { supabaseAdmin } from "@/lib/supabase";
+import { findPendingInviteForEmail, normalizeEmail } from "@/lib/invites";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@senebiclabs.com";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-async function sendMagicLinkEmail(email: string, magicLinkUrl: string) {
+/** Deliberately loose. The real check is whether the address is known to us. */
+const LOOKS_LIKE_EMAIL = /^[^@\s]+@[^@\s.]+\.[^@\s]+$/;
+
+/**
+ * The same answer whatever happened.
+ *
+ * Never says whether the address is a member. Membership here is a fact about
+ * a named clinician, and an endpoint that distinguishes "sent" from "no such
+ * account" hands anyone a way to test whether a particular doctor works with
+ * us. That matters more than usual for an invite-only platform.
+ */
+const ACCEPTED = {
+  success: true,
+  message: "If that address can sign in, a link is on its way.",
+};
+
+async function sendMagicLinkEmail(email: string, path: string) {
   if (!RESEND_API_KEY) {
-    // In development the link comes back in the response, so there is still a
-    // way in. In production there is not: an unconfigured key must fail loudly
-    // rather than look like a sent email.
     if (process.env.NODE_ENV === "production") {
       throw new Error("RESEND_API_KEY is not configured");
     }
     console.warn("RESEND_API_KEY not set — skipping email (development only)");
+    console.log(`✉️  Magic link for ${email}: ${APP_URL}${path}`);
     return;
   }
 
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: email,
-        subject: "Your Senebiclabs Magic Link",
-        html: `
-          <h2>Welcome to Senebiclabs</h2>
-          <p>Click the link below to sign in to your account:</p>
-          <a href="${APP_URL}${magicLinkUrl}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
-            Sign In
-          </a>
-          <p style="margin-top: 24px; color: #666; font-size: 12px;">
-            This link will expire in 24 hours. If you didn't request this, you can safely ignore this email.
-          </p>
-        `,
-      }),
-    });
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+    },
+    body: JSON.stringify({
+      from: FROM_EMAIL,
+      to: email,
+      subject: "Your Senebiclabs sign-in link",
+      html: `
+        <h2>Sign in to Senebiclabs</h2>
+        <p>Use the link below to sign in. It works once and expires in
+           ${MAGIC_LINK_EXPIRY_MINUTES} minutes.</p>
+        <p><a href="${APP_URL}${path}" style="display:inline-block;padding:12px 24px;background:#0d0d0d;color:#22F0D5;text-decoration:none;border-radius:6px;font-weight:bold;">Sign in</a></p>
+        <p style="margin-top:24px;color:#666;font-size:12px;">
+          If you did not ask for this, you can ignore it. Nobody can sign in
+          without opening the link from this mailbox.
+        </p>
+      `,
+    }),
+  });
 
-    if (!response.ok) {
-      const error = await response.json();
-      console.error("Resend API error:", error);
-      throw new Error("Failed to send email");
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Failed to send magic link email:", error);
-    throw error;
+  if (!res.ok) {
+    throw new Error(`Resend rejected the send: ${res.status} ${await res.text()}`);
   }
 }
 
-export async function POST(req: NextRequest) {
-  const { email } = await req.json();
+/** A link is only ever sent to someone who could actually get through the gate. */
+async function mayReceiveLink(email: string): Promise<boolean> {
+  const { data } = await supabaseAdmin
+    .from("clinicians")
+    .select("id")
+    .ilike("email", email)
+    .limit(1);
+  if (data && data.length > 0) return true;
 
-  if (!email || !email.includes("@")) {
-    return NextResponse.json(
-      { error: "Invalid email address" },
-      { status: 400 }
-    );
+  return Boolean(await findPendingInviteForEmail(email));
+}
+
+export async function POST(req: NextRequest) {
+  let raw: unknown;
+  try {
+    raw = (await req.json())?.email;
+  } catch {
+    return NextResponse.json({ error: "Malformed request." }, { status: 400 });
+  }
+
+  if (typeof raw !== "string" || !LOOKS_LIKE_EMAIL.test(raw.trim())) {
+    return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
+  }
+  const email = normalizeEmail(raw);
+
+  // Two keys. The address is the one that matters, because it is the thing
+  // being mailed; the IP catches someone walking a list of addresses.
+  for (const [key, limit] of [
+    [`magic:addr:${email}`, { max: 3, windowSeconds: 900 }],
+    [`magic:ip:${clientIp(req)}`, { max: 10, windowSeconds: 900 }],
+  ] as const) {
+    const { ok, retryAfter } = rateLimit(key, limit);
+    if (!ok) {
+      return NextResponse.json(
+        { error: "Too many sign-in requests. Try again shortly." },
+        { status: 429, headers: { "retry-after": String(retryAfter) } }
+      );
+    }
   }
 
   try {
-    const magicLinkToken = await generateMagicLink(email);
-    const magicLinkUrl = `/auth/verify?token=${magicLinkToken}`;
+    // The endpoint used to mail a link to any address given to it, which made
+    // it a free relay for sending Senebiclabs-branded mail to strangers. Now
+    // nothing is sent unless the address could sign in, and the caller is told
+    // the same thing either way.
+    if (!(await mayReceiveLink(email))) {
+      console.warn(`[magic-link] refused, address is not known: ${email}`);
+      return NextResponse.json(ACCEPTED);
+    }
 
-    // If the email does not go out, say so. Reporting success here would show
-    // a clinician "check your email" for a message that was never sent, and
-    // lock them out with no error anywhere for anyone to see.
+    const path = `/auth/verify?token=${await generateMagicLink(email)}`;
+
     try {
-      await sendMagicLinkEmail(email, magicLinkUrl);
-    } catch (emailError) {
-      console.error("[magic-link] send failed:", emailError);
+      await sendMagicLinkEmail(email, path);
+    } catch (err) {
+      // A silent failure here shows someone "check your email" for a message
+      // that was never sent, and locks them out with no error anywhere.
+      console.error("[magic-link] send failed", err);
       return NextResponse.json(
-        {
-          error:
-            "We could not send your sign-in link. Please try again in a moment, or contact support if it keeps happening.",
-        },
+        { error: "We could not send your sign-in link. Please try again in a moment." },
         { status: 502 }
       );
     }
 
-    // For development, still return the link in response
-    if (process.env.NODE_ENV === "development") {
-      console.log(`✉️  Magic link for ${email}:`);
-      console.log(`${APP_URL}${magicLinkUrl}`);
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: "Magic link sent to email",
-      magicLink:
-        process.env.NODE_ENV === "development" ? magicLinkUrl : undefined,
-    });
-  } catch (error) {
-    console.error("Signup error:", error);
+    return NextResponse.json(ACCEPTED);
+  } catch (err) {
+    console.error("[magic-link] failed", err);
     return NextResponse.json(
-      { error: "Failed to create account" },
+      { error: "We could not send your sign-in link. Please try again in a moment." },
       { status: 500 }
     );
   }
 }
-

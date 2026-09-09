@@ -1,106 +1,121 @@
+import "server-only";
+import { createHash, randomBytes } from "crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { supabaseAdmin } from "./supabase";
+import { jwtSecret, magicLinkSecret } from "./secrets";
 
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
-const MAGIC_LINK_SECRET = new TextEncoder().encode(
-  process.env.MAGIC_LINK_SECRET!
-);
-const MAGIC_LINK_EXPIRY = parseInt(process.env.MAGIC_LINK_EXPIRY_HOURS || "24");
+/**
+ * Magic-link tokens.
+ *
+ * Two things used to be wrong here, and both were invisible from the outside:
+ *
+ * 1. The link was good for 24 hours and could be replayed the whole time. The
+ *    error text already claimed "or has already been used", which was not
+ *    true: verification checked a signature and an expiry and nothing else. A
+ *    link sitting in a mailbox, a forwarded message or a proxy log was a
+ *    working key for a day.
+ *
+ * 2. createOrGetClinician lived in this file and created an account for any
+ *    address handed to it, with no invite anywhere in sight. Nothing called
+ *    it, which is the only reason it was not a hole, and it has been deleted
+ *    rather than left for someone to wire up in good faith.
+ *
+ * A link is now single-use and short-lived. Every token carries a jti that is
+ * claimed in the database on first use; the second attempt loses the race and
+ * is refused.
+ */
 
-// Generate a magic link token
+/**
+ * Fifteen minutes. Long enough to open a mail client, short enough that a
+ * leaked link is usually already dead.
+ */
+const EXPIRY_MINUTES = (() => {
+  const raw = parseInt(process.env.MAGIC_LINK_EXPIRY_MINUTES ?? "", 10);
+  return Number.isFinite(raw) && raw > 0 && raw <= 60 ? raw : 15;
+})();
+
+export const MAGIC_LINK_EXPIRY_MINUTES = EXPIRY_MINUTES;
+
+/** Tokens are stored as hashes, so the table is not a bag of working keys. */
+const hash = (value: string) => createHash("sha256").update(value).digest("hex");
+
 export async function generateMagicLink(email: string): Promise<string> {
-  const token = await new SignJWT({ email })
+  return new SignJWT({ email })
     .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime(`${MAGIC_LINK_EXPIRY}h`)
-    .sign(MAGIC_LINK_SECRET);
-
-  return token;
+    .setJti(randomBytes(16).toString("base64url"))
+    .setIssuedAt()
+    .setExpirationTime(`${EXPIRY_MINUTES}m`)
+    .sign(magicLinkSecret());
 }
 
-// Verify a magic link token
+export type MagicLinkFailure = "invalid" | "used" | "unavailable";
+
+/**
+ * Verifies a magic link and spends it.
+ *
+ * The claim is an insert against a unique jti, so two requests carrying the
+ * same link race and exactly one wins. Fails closed: if the table is missing
+ * the sign-in is refused rather than silently falling back to the replayable
+ * behaviour this was written to remove.
+ */
 export async function verifyMagicLink(
   token: string
-): Promise<{ email: string } | null> {
+): Promise<{ ok: true; email: string } | { ok: false; reason: MagicLinkFailure }> {
+  let email: string;
+  let jti: string;
+  let expiresAt: string;
+
   try {
-    const verified = await jwtVerify(token, MAGIC_LINK_SECRET);
-    return { email: verified.payload.email as string };
-  } catch {
-    return null;
-  }
-}
-
-// Create or get clinician, then create a session
-export async function createOrGetClinician(email: string): Promise<string> {
-  // Check if clinician exists
-  const { data: existing, error: existError } = await supabaseAdmin
-    .from("clinicians")
-    .select("id")
-    .eq("email", email)
-    .single();
-
-  if (existError && existError.code !== "PGRST116") {
-    console.error("Error checking existing clinician:", existError);
-    throw existError;
-  }
-
-  let clinicianId: string;
-
-  if (existing) {
-    clinicianId = existing.id;
-  } else {
-    // Create new clinician
-    const accessCode = Math.random().toString(36).substring(2, 10).toUpperCase();
-    const { data: newClinician, error } = await supabaseAdmin
-      .from("clinicians")
-      .insert({
-        email,
-        name: email.split("@")[0],
-        access_code: accessCode,
-        active: true,
-      })
-      .select("id")
-      .single();
-
-    if (error) {
-      console.error("Error creating clinician:", error);
-      throw error;
+    const { payload } = await jwtVerify(token, magicLinkSecret());
+    if (typeof payload.email !== "string" || typeof payload.jti !== "string") {
+      return { ok: false, reason: "invalid" };
     }
-    clinicianId = newClinician.id;
+    email = payload.email;
+    jti = payload.jti;
+    expiresAt = new Date((payload.exp ?? 0) * 1000).toISOString();
+  } catch {
+    return { ok: false, reason: "invalid" };
   }
 
-  // Create session token
-  const sessionToken = await new SignJWT({ clinicianId, email })
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime("7d")
-    .sign(SECRET);
-
-  // Store session in DB (optional, for audit) — idempotent
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-  const { error: sessionError } = await supabaseAdmin.from("sessions").insert({
-    clinician_id: clinicianId,
-    token: sessionToken,
+  const { error } = await supabaseAdmin.from("magic_link_tokens").insert({
+    jti: hash(jti),
+    email,
     expires_at: expiresAt,
   });
 
-  // Ignore duplicate key errors (double-click on magic link)
-  if (sessionError && sessionError.code !== "23505") {
-    console.error("Error creating session:", sessionError);
-    throw sessionError;
+  if (error) {
+    // 23505: this link has already been spent.
+    if (error.code === "23505") return { ok: false, reason: "used" };
+
+    // 42P01 / PGRST205: migration 008 has not been applied. Refusing is the
+    // only safe answer, because the alternative is accepting a link that can
+    // then be replayed for the rest of its life.
+    console.error(
+      "[magic-link] could not claim token. If this is a missing relation, " +
+        "apply migrations/008_magic_link_tokens.sql.",
+      error
+    );
+    return { ok: false, reason: "unavailable" };
   }
 
-  return sessionToken;
+  return { ok: true, email };
 }
 
-// Verify session token
+/**
+ * Verifies a session token's signature.
+ *
+ * Signed with JWT_SECRET, not the magic-link secret: different lifetime and a
+ * different blast radius, so a leak of one is not a leak of both.
+ */
 export async function verifySessionToken(
   token: string
 ): Promise<{ clinicianId: string; email: string } | null> {
   try {
-    const verified = await jwtVerify(token, SECRET);
-    return {
-      clinicianId: verified.payload.clinicianId as string,
-      email: verified.payload.email as string,
-    };
+    const { payload } = await jwtVerify(token, jwtSecret());
+    if (typeof payload.clinicianId !== "string" || typeof payload.email !== "string") {
+      return null;
+    }
+    return { clinicianId: payload.clinicianId, email: payload.email };
   } catch {
     return null;
   }

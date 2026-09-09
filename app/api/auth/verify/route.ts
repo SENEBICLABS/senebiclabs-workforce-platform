@@ -27,16 +27,29 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const magicLinkData = await verifyMagicLink(token);
+    const link = await verifyMagicLink(token);
 
-    if (!magicLinkData) {
+    if (!link.ok) {
+      // "unavailable" means the token store could not be reached, which is our
+      // fault rather than theirs, and is retryable.
+      if (link.reason === "unavailable") {
+        return NextResponse.json(
+          { error: "We could not sign you in just now. Please try again in a moment." },
+          { status: 503 }
+        );
+      }
       return NextResponse.json(
-        { error: "This link has expired or has already been used." },
+        {
+          error:
+            link.reason === "used"
+              ? "This link has already been used. Request a new one."
+              : "This link is no longer valid. Request a new one.",
+        },
         { status: 401 }
       );
     }
 
-    const result = await signInOrReject(magicLinkData.email, invite);
+    const result = await signInOrReject(link.email, invite);
 
     if (!result.ok) {
       return NextResponse.json(

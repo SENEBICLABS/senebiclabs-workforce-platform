@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
+import { authSecretsReady, jwtSecret } from "@/lib/secrets";
 
 /**
  * Edge guards for two very different surfaces.
@@ -15,8 +16,16 @@ import { jwtVerify } from "jose";
  * still does the authoritative check; this is purely for a clean logged-out UX.
  * Onboarding routes (/login, /join, /welcome, /auth/verify) stay public.
  */
+/**
+ * No fallback secret.
+ *
+ * This used to default to the literal "missing-jwt-secret", which is a public
+ * constant in a public repository: with JWT_SECRET unset in an environment,
+ * anyone could sign themselves an ops token or a clinician session. If the
+ * secret is missing now, nothing is let through.
+ */
 function secret() {
-  return new TextEncoder().encode(process.env.JWT_SECRET ?? "missing-jwt-secret");
+  return jwtSecret();
 }
 
 export async function middleware(req: NextRequest) {
@@ -27,7 +36,7 @@ export async function middleware(req: NextRequest) {
     if (pathname === "/ops/unlock") return NextResponse.next();
 
     const token = req.cookies.get("ops_session")?.value;
-    const configured = Boolean(process.env.OPS_API_KEY);
+    const configured = Boolean(process.env.OPS_API_KEY) && authSecretsReady().ok;
     if (token && configured) {
       try {
         const { payload } = await jwtVerify(token, secret());
@@ -44,7 +53,7 @@ export async function middleware(req: NextRequest) {
 
   // ── Clinician app: redirect a logged-out / expired visitor to sign-in. ──
   const session = req.cookies.get("sessionToken")?.value;
-  if (session) {
+  if (session && authSecretsReady().ok) {
     try {
       await jwtVerify(session, secret());
       return NextResponse.next(); // valid session — let the page render
