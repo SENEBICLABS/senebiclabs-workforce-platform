@@ -43,6 +43,8 @@ const GATE_ERRORS: Record<string, string> = {
   invite_used: "This invitation has already been used.",
   invite_expired: "This invitation has expired.",
   no_invite: "This invitation is no longer valid.",
+  unavailable:
+    "We could not complete your registration just now. Your invitation is still valid, so please try again in a moment.",
   email_unverified:
     "That Google account has no verified email. Verify it with Google, or use the email option.",
   google_failed: "Google sign-in did not complete. Try again.",

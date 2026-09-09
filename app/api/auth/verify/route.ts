@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     if (!result.ok) {
       return NextResponse.json(
         { error: GATE_MESSAGE[result.reason], reason: result.reason },
-        { status: 403 }
+        { status: result.reason === "unavailable" ? 503 : 403 }
       );
     }
 

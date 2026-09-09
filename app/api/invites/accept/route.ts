@@ -63,9 +63,11 @@ export async function POST(req: NextRequest) {
   const result = await signInOrReject(found.invite.invited_email, token);
 
   if (!result.ok) {
+    // "unavailable" is our failure, not theirs, and retrying will work once it
+    // is fixed. A 403 would tell them they are not allowed in, which is wrong.
     return NextResponse.json(
       { error: GATE_MESSAGE[result.reason], reason: result.reason },
-      { status: 403 }
+      { status: result.reason === "unavailable" ? 503 : 403 }
     );
   }
 

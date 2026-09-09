@@ -24,6 +24,8 @@ const ERRORS: Record<string, string> = {
   email_unverified:
     "That Google account has no verified email address. Verify it with Google, or use the email option below.",
   google_cancelled: "Google sign-in was cancelled.",
+  unavailable:
+    "We could not complete your sign-in just now. Please try again in a moment.",
   google_failed: "Google sign-in did not complete. Try again.",
   google_unavailable:
     "Google sign-in is not available right now. Use the email option below.",

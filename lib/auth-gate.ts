@@ -27,7 +27,9 @@ export type GateFailure =
   | "email_mismatch"
   | "invite_used"
   | "invite_expired"
-  | "inactive";
+  | "inactive"
+  /** We could not complete the sign-in. Their fault in no way; retryable. */
+  | "unavailable";
 
 export type GateResult =
   | {
@@ -40,14 +42,28 @@ export type GateResult =
     }
   | { ok: false; reason: GateFailure };
 
+/**
+ * Mints a session, or returns null if it cannot.
+ *
+ * Deliberately does not throw. Signing needs JWT_SECRET, and a missing or
+ * too-short one is a configuration fault that used to surface as a 500 from
+ * deep inside account creation, after the account had been made and the invite
+ * already spent. Returning null lets the caller unwind properly.
+ */
 async function issueSession(
   clinicianId: string,
   email: string
-): Promise<string> {
-  const sessionToken = await new SignJWT({ clinicianId, email })
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime("7d")
-    .sign(jwtSecret());
+): Promise<string | null> {
+  let sessionToken: string;
+  try {
+    sessionToken = await new SignJWT({ clinicianId, email })
+      .setProtectedHeader({ alg: "HS256" })
+      .setExpirationTime("7d")
+      .sign(jwtSecret());
+  } catch (err) {
+    console.error("[gate] could not sign a session token", err);
+    return null;
+  }
 
   // The token is recorded as a SHA-256 hash rather than verbatim. This table
   // is never read back for authentication, so the plaintext bought nothing,
@@ -102,11 +118,13 @@ export async function signInOrReject(
     // Top up anyone who predates direct access, so no one is stranded on an
     // empty dashboard waiting for a calibration that is switched off.
     await grantDirectAccess(existing.id);
+    const sessionToken = await issueSession(existing.id, existing.email);
+    if (!sessionToken) return { ok: false, reason: "unavailable" };
     return {
       ok: true,
       clinicianId: existing.id,
       email: existing.email,
-      sessionToken: await issueSession(existing.id, existing.email),
+      sessionToken,
       created: false,
     };
   }
@@ -150,6 +168,19 @@ export async function signInOrReject(
     return { ok: false, reason: "no_invite" };
   }
 
+  // Mint the session before spending the invite.
+  //
+  // This ordering matters more than it looks. When signing came after, a
+  // failure here left the account created and the invitation consumed, so the
+  // clinician could neither get in nor try again: their link reported "already
+  // used" for ever. Now nothing is spent until everything that can fail has
+  // succeeded, and a retry works.
+  const sessionToken = await issueSession(created.id, created.email);
+  if (!sessionToken) {
+    await supabaseAdmin.from("clinicians").delete().eq("id", created.id);
+    return { ok: false, reason: "unavailable" };
+  }
+
   // Spend the invite. If someone else just spent it, undo the account so an
   // invite can never yield two members.
   const consumed = await consumeInvite(invite.id, created.id);
@@ -168,7 +199,7 @@ export async function signInOrReject(
     ok: true,
     clinicianId: created.id,
     email: created.email,
-    sessionToken: await issueSession(created.id, created.email),
+    sessionToken,
     created: true,
   };
 }
@@ -182,4 +213,6 @@ export const GATE_MESSAGE: Record<GateFailure, string> = {
   invite_used: "This invite has already been used.",
   invite_expired: "This invite has expired. Ask for a new one.",
   inactive: "This account is not active. Contact support if you think that is wrong.",
+  unavailable:
+    "We could not complete your sign-in just now. Please try again in a moment.",
 };
