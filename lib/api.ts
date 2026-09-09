@@ -138,6 +138,13 @@ export const api = {
       body: JSON.stringify({ email }),
     }),
 
+  /** Accepts an invitation and returns with the session cookie already set. */
+  acceptInvite: (token: string) =>
+    call<{ success: true; email: string; created: boolean }>(
+      "/api/invites/accept",
+      { method: "POST", body: JSON.stringify({ token }) }
+    ),
+
   /** Exchanges a sign-in link token for the session cookie. */
   consumeSignInLink: (token: string, invite?: string | null) =>
     call<{ success: true; created: boolean }>("/api/auth/verify", {

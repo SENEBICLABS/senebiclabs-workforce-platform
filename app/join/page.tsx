@@ -55,11 +55,8 @@ function Join() {
   const bounced = params.get("error");
 
   const [state, setState] = useState<Validation | null>(null);
-  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [sent, setSent] = useState(false);
-  const [expiresIn, setExpiresIn] = useState(15);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,7 +65,6 @@ function Join() {
       .then((d: Validation) => {
         if (cancelled) return;
         setState(d);
-        if (d.valid && d.invited_email) setEmail(d.invited_email);
       })
       .catch(() => !cancelled && setState({ valid: false, problem: "not_found" }));
     return () => {
@@ -76,21 +72,28 @@ function Join() {
     };
   }, [token]);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  /**
+   * Accepts the invitation and goes straight into the platform.
+   *
+   * No second email. The invite arrived at one mailbox and opening it already
+   * proves control of that address, which is the same thing a sign-in link
+   * proves. Asking for another round trip to establish it twice is where
+   * people give up.
+   */
+  const accept = async () => {
     setLoading(true);
     setError("");
     try {
-      const data = await api.requestSignInLink(email);
-      setExpiresIn(data.expiresInMinutes);
-      setSent(true);
+      const data = await api.acceptInvite(token);
+      // replace, not push: the invite token should not sit in history behind
+      // a back button on a shared machine.
+      window.location.replace(data.created ? "/welcome" : "/dashboard");
     } catch (err) {
       setError(
         err instanceof ApiError
           ? err.message
-          : "We could not send your sign-in link."
+          : "We could not complete your registration. Try again in a moment."
       );
-    } finally {
       setLoading(false);
     }
   };
@@ -132,18 +135,7 @@ function Join() {
   return (
     <AuthShell footer="By joining you agree to review case material in confidence.">
       <Card className="p-6">
-        {sent ? (
-          <>
-            <h1 className="text-section text-ink">Check your email</h1>
-            <p className="mt-2 text-body text-muted">
-              We sent a sign-in link to{" "}
-              <span className="font-semibold text-ink">{email}</span>. Opening it
-              completes your registration. It works once and expires in{" "}
-              {expiresIn} minutes.
-            </p>
-          </>
-        ) : (
-          <>
+        <>
             <p className="text-label uppercase text-muted">
               You have been invited
             </p>
@@ -185,48 +177,32 @@ function Join() {
               </div>
             )}
 
-            <div className="mt-5">
-              <GoogleButton
-                href={`/api/auth/google?invite=${encodeURIComponent(token)}`}
-                label="Continue with Google"
-              />
-            </div>
+            <Button
+              onClick={accept}
+              loading={loading}
+              className="mt-6 h-11 w-full"
+            >
+              Accept invitation and continue
+            </Button>
+
+            {error && (
+              <p role="alert" className="mt-3 text-[13px] text-danger">
+                {error}
+              </p>
+            )}
 
             <OrDivider />
 
-            <form onSubmit={submit}>
-              <label
-                htmlFor="join-email"
-                className="mb-1.5 block text-label uppercase text-muted"
-              >
-                Email address
-              </label>
-              <input
-                id="join-email"
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                aria-invalid={Boolean(error)}
-                className={`focusable h-11 w-full rounded-card border bg-surface px-3 text-body text-ink ${
-                  error ? "border-danger" : "border-hairline"
-                }`}
-              />
-              <p className="mt-1.5 text-[12px] text-muted">
-                Must match the invited address.
-              </p>
-              {error && (
-                <p role="alert" className="mt-2 text-[13px] text-danger">
-                  {error}
-                </p>
-              )}
-              <Button type="submit" loading={loading} className="mt-4 h-11 w-full">
-                Continue with email
-              </Button>
-            </form>
+            <GoogleButton
+              href={`/api/auth/google?invite=${encodeURIComponent(token)}`}
+              label="Continue with Google"
+            />
+
+            <p className="mt-4 text-center text-[12px] text-muted">
+              Signing in with Google links your Google account, so you can use
+              it next time instead of an emailed link.
+            </p>
           </>
-        )}
       </Card>
     </AuthShell>
   );
