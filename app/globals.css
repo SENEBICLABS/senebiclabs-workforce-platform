@@ -3,36 +3,37 @@
 @theme {
   /* ---- Palette ----------------------------------------------------
    *
-   * Black and teal. The ground is black and the teal is the only colour on
-   * the page, which is what makes it carry.
+   * Black and teal. The ground is black and the teal is the only colour in
+   * the system, which is what makes it carry. An earlier pass tried the
+   * opposite, tinting the ground itself to chroma 37 so the dark would read
+   * teal, and it worked against itself: the accent measured 7.03 against a
+   * card then, and 13.41 now. The teal is loud precisely because nothing
+   * around it is coloured.
    *
-   * An earlier pass took the ground the other way, raising its chroma to 37
-   * so the dark itself would read teal. That was the wrong reading. A
-   * coloured ground competes with the accent sitting on it: at chroma 37 the
-   * accent measured 7.03 against a card, and against black it is 11.55. The
-   * accent is louder precisely because nothing around it is coloured.
+   * The neutral ramp is three levels, pure neutral, no tint at any of them:
    *
-   * Near-black surfaces are compressed in luminance, so a card lifts off the
-   * ground by only 1.11 however it is chosen. That is normal for a dark
-   * interface and it is why hairline went up to 16%: on a black page the
-   * border does the separating and the fill only tints.
+   *   canvas       #000000   the page
+   *   canvas-top   #060606   barely-raised
+   *   surface      #0D0D0D   raised
+   *
+   * The steps between them are deliberately tiny, 1.04 and 1.08, so a fill
+   * alone cannot separate anything. The hairline does that instead, which is
+   * why it sits at 16%: it measures 1.55 against a raised surface and 1.44
+   * against the page. On a black interface the border is the structure and
+   * the fill only says which layer you are on.
    *
    * Light text is checked against the LIGHTEST surface rather than the
-   * darkest, because that is where contrast is worst.
+   * darkest, because that is where contrast is worst. Here that is the teal
+   * chip, not any of the neutrals.
    */
-  --color-surface: #141C1A;
-  /* True black at the bottom of the page. Everything measured better against
-   * it than against the #050908 it replaces: a card lifts by 1.21 rather than
-   * 1.15, the accent reaches 14.49, and the gradient has more depth to run
-   * through. The one thing that gave up ground is the hairline, 1.51 to 1.44,
-   * which is still well clear. */
+  --color-surface: #0D0D0D;
   --color-canvas: #000000;
-  --color-canvas-top: #0B100F;
+  --color-canvas-top: #060606;
   /* Monochrome, hierarchy by opacity, same as before but inverted to white.
    *
    * Body can be as soft as it was asked to be. On the light palette 72% was
-   * the floor and 65% already failed. Against black there is room to spare:
-   * 62% measures 7.30 on a card, and 50% would still pass. */
+   * the floor and 65% already failed. Here there is room to spare: 62%
+   * measures 6.22 against the lightest surface, and 50% would still pass. */
   --color-ink: #FFFFFF;
   --color-strong: rgb(255 255 255 / 0.85);
   --color-muted: rgb(255 255 255 / 0.62);
@@ -47,7 +48,8 @@
   --color-accent: #22F0D5;
   /* Brighter on hover, not darker. On a dark ground, up is forward. */
   --color-accent-hover: #63FFEC;
-  /* A teal chip, so a pill still reads teal on an otherwise black page. */
+  /* The one exception to the neutral ramp. A pill has to read as teal rather
+   * than as another grey step, so the chip keeps its colour. */
   --color-accent-soft: #0E332D;
   /* Fills are bright, so the type on them is the ground colour, not white.
    * White on accent measures 1.86 and is unreadable. */
@@ -62,9 +64,9 @@
   --color-success: #6EE7B7;
   --color-success-soft: #0B3527;
 
-  /* Sidebar. Lighter than the canvas, so it reads as a raised panel. */
-  --color-rail: #070C0B;
-  --color-rail-hover: #141C1A;
+  /* Sidebar, on the same ramp: barely-raised at rest, raised on hover. */
+  --color-rail: #060606;
+  --color-rail-hover: #0D0D0D;
   --color-rail-text: rgb(255 255 255 / 0.62);
 
   /* ---- Type ------------------------------------------------------- */
@@ -143,10 +145,12 @@ h1 {
 
 /**
  * The public pages carry the ground as one gradient down the whole page, from
- * canvas-top into the deeper canvas. It is on a
- * utility rather than on body so the signed-in application stays flat: a
- * ground that shifts behind a case a clinician is reading for an hour is a
- * distraction, and the workspace has no use for it.
+ * canvas-top into canvas. On the neutral ramp that is a 1.04 step, so it is
+ * felt rather than seen, which is the intent.
+ *
+ * It is on a utility rather than on body so the signed-in application stays
+ * flat: a ground that shifts behind a case a clinician is reading for an hour
+ * is a distraction, and the workspace has no use for it.
  */
 .ground-blend {
   background-image: linear-gradient(
