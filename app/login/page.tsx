@@ -119,7 +119,7 @@ function SignIn() {
           <>
             <h1 className="text-section text-ink">Sign in</h1>
             <p className="mt-1 text-body text-muted">
-              Welcome back. Use whichever you signed up with.
+              Welcome back. Use whichever you joined with.
             </p>
 
             {notice && (
@@ -162,9 +162,22 @@ function SignIn() {
                   {error}
                 </p>
               )}
-              <Button type="submit" loading={loading} className="mt-4 h-11 w-full">
-                Email me a sign-in link
+              {/* This one genuinely does send mail, unlike the invitation page
+                  where the link in hand already proved the address. The label
+                  says so rather than borrowing "Continue with email" and
+                  leaving someone waiting on a screen that will not move. */}
+              <Button
+                type="submit"
+                variant="secondary"
+                loading={loading}
+                className="mt-4 h-11 w-full"
+              >
+                Send me a sign-in link
               </Button>
+              <p className="mt-2 text-center text-[12px] text-muted">
+                We will email a link that signs you in. No password to
+                remember, and nothing to set up.
+              </p>
             </form>
           </>
         )}
