@@ -4,11 +4,11 @@
   /* ---- Palette ----------------------------------------------------
    *
    * Black and teal. The ground is black and the teal is the only colour in
-   * the system, which is what makes it carry. An earlier pass tried the
-   * opposite, tinting the ground itself to chroma 37 so the dark would read
-   * teal, and it worked against itself: the accent measured 7.03 against a
-   * card then, and 13.41 now. The teal is loud precisely because nothing
-   * around it is coloured.
+   * the system, which is what lets a quiet teal still carry. An earlier pass
+   * tried the opposite, tinting the ground itself to chroma 37 so the dark
+   * would read teal, and it worked against itself: the accent managed 7.03
+   * against a card then, and a much softer accent manages 8.63 now. Colour
+   * reads loudest when nothing around it is competing.
    *
    * The neutral ramp is three levels, pure neutral, no tint at any of them:
    *
@@ -39,20 +39,29 @@
   --color-muted: rgb(255 255 255 / 0.62);
   /* A border on dark is light at low alpha, not a colour of its own. */
   --color-hairline: rgb(255 255 255 / 0.16);
-  /* Electric rather than merely light. Brightness here is chroma, not
-   * luminance: pushing toward white would raise the contrast number while
-   * washing the colour out, which is the opposite of brighter. This is 206
-   * steps of red-to-blue spread against the 167 it replaces, and it reads
-   * as more teal, not more pale. On a dark ground it costs nothing, since
-   * there is no contrast ceiling to run into going up. */
-  --color-accent: #22F0D5;
+  /* A human teal, not an electric one.
+   *
+   * Three things separate the two, and the previous #22F0D5 was at the
+   * extreme of all of them: its brightest channel sat at 240, near the top
+   * of the range, and its chroma at 206, near the widest possible. That is
+   * the recipe for a terminal green rather than something a clinician would
+   * want to look at for an hour. This sits at 191 and 112, still leaning
+   * green rather than cyan, which is the side of teal that reads as living
+   * rather than lit.
+   *
+   * It also stops fighting the semantics. Those are soft pastels, and a
+   * neon accent beside them looked like two palettes in one interface.
+   *
+   * There is no contrast cost worth naming: 8.63 against a card, where the
+   * neon managed 13.41 and nobody needed the difference. */
+  --color-accent: #4FBFA4;
   /* Brighter on hover, not darker. On a dark ground, up is forward. */
-  --color-accent-hover: #63FFEC;
+  --color-accent-hover: #6ADABD;
   /* The one exception to the neutral ramp. A pill has to read as teal rather
    * than as another grey step, so the chip keeps its colour. */
   --color-accent-soft: #0E332D;
-  /* Fills are bright, so the type on them is the ground colour, not white.
-   * White on accent measures 1.86 and is unreadable. */
+  /* Fills are light, so the type on them is dark rather than white. White on
+   * the accent measures 2.6 and is unreadable; this measures 7.53. */
   --color-on-fill: #03211C;
   /* Semantics invert too: the colour is light and the chip is dark. */
   --color-warning: #FBBF24;
