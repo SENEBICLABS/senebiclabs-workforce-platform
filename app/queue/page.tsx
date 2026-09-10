@@ -23,7 +23,7 @@ const SORT_LABEL: Record<SortKey, string> = {
 };
 
 const SELECT =
-  "focusable h-9 rounded-btn border border-hairline bg-surface px-3 text-[13px] text-ink transition-colors hover:bg-canvas";
+  "focusable h-9 rounded-btn border border-hairline bg-surface px-3 text-[13px] text-ink transition-colors hover:bg-accent-soft";
 
 const CALIBRATION_ENABLED =
   process.env.NEXT_PUBLIC_CALIBRATION_ENABLED === "true";
@@ -187,7 +187,7 @@ export default function QueuePage() {
                       return (
                         <tr
                           key={pool.id}
-                          className="border-b border-hairline transition-colors last:border-b-0 hover:bg-canvas"
+                          className="border-b border-hairline transition-colors last:border-b-0 hover:bg-accent-soft"
                         >
                           <th scope="row" className="max-w-[320px] px-5 py-4 font-normal">
                             <span className="block text-body font-semibold text-ink">

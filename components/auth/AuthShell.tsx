@@ -48,7 +48,7 @@ export function GoogleButton({
   return (
     <a
       href={href}
-      className="focusable flex h-11 w-full items-center justify-center gap-2.5 rounded-btn border border-hairline bg-surface text-[14px] font-semibold text-ink transition-colors hover:bg-canvas"
+      className="focusable flex h-11 w-full items-center justify-center gap-2.5 rounded-btn border border-hairline bg-surface text-[14px] font-semibold text-ink transition-colors hover:bg-accent-soft"
     >
       <GoogleMark />
       {label}

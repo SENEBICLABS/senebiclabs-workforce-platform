@@ -92,7 +92,7 @@ export function ReviewField({
                   className={`flex cursor-pointer items-center gap-3 rounded-card border px-3 py-2.5 transition-colors ${
                     selected
                       ? "border-accent bg-accent-soft"
-                      : `${border} hover:bg-canvas`
+                      : `${border} hover:bg-accent-soft`
                   }`}
                 >
                   <input
@@ -161,7 +161,7 @@ export function ReviewField({
       {field.type === "flag" && (
         <label
           className={`flex cursor-pointer items-center gap-3 rounded-card border px-3 py-2.5 transition-colors ${
-            value ? "border-accent bg-accent-soft" : `${border} hover:bg-canvas`
+            value ? "border-accent bg-accent-soft" : `${border} hover:bg-accent-soft`
           }`}
         >
           <input
@@ -188,7 +188,7 @@ export function ReviewField({
                   className={`flex flex-1 cursor-pointer items-center justify-center rounded-card border px-3 py-2.5 transition-colors ${
                     selected
                       ? "border-accent bg-accent-soft font-semibold"
-                      : `${border} hover:bg-canvas`
+                      : `${border} hover:bg-accent-soft`
                   }`}
                 >
                   <input
@@ -301,7 +301,7 @@ function SpanPicker({
             key={label}
             type="button"
             onClick={() => capture(label)}
-            className="focusable rounded-btn border border-hairline bg-surface px-3 py-1.5 text-[13px] font-semibold text-ink transition-colors hover:bg-canvas"
+            className="focusable rounded-btn border border-hairline bg-surface px-3 py-1.5 text-[13px] font-semibold text-ink transition-colors hover:bg-accent-soft"
           >
             Tag selection as {label}
           </button>

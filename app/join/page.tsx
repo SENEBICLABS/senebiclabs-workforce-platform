@@ -125,7 +125,7 @@ function Join() {
           <p className="mt-2 text-body text-muted">{copy.body}</p>
           <a
             href="/login"
-            className="focusable mt-5 inline-flex h-10 items-center justify-center rounded-btn border border-hairline bg-surface px-4 text-[14px] font-semibold text-ink transition-colors hover:bg-canvas"
+            className="focusable mt-5 inline-flex h-10 items-center justify-center rounded-btn border border-hairline bg-surface px-4 text-[14px] font-semibold text-ink transition-colors hover:bg-accent-soft"
           >
             Go to sign in
           </a>

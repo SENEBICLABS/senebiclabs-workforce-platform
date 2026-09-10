@@ -93,7 +93,7 @@ export default function AgreementPage() {
           </div>
         </Card>
 
-        <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-card border border-hairline bg-surface p-4 transition-colors hover:bg-canvas">
+        <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-card border border-hairline bg-surface p-4 transition-colors hover:bg-accent-soft">
           <input
             type="checkbox"
             checked={accepted}

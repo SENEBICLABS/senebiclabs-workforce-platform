@@ -55,7 +55,7 @@ function Sidebar() {
                   className={`focusable flex items-center gap-3 rounded-btn border-l-2 px-3 py-2 text-body transition-colors duration-150 ${
                     active
                       ? "border-accent bg-rail-hover font-semibold text-white"
-                      : "border-transparent text-rail-text hover:bg-rail-hover hover:text-white"
+                      : "border-transparent text-rail-text hover:bg-rail-hover hover:text-accent"
                   }`}
                 >
                   <Icon size={17} aria-hidden="true" className="shrink-0" />
@@ -154,7 +154,7 @@ function TopBar({ title }: { title: string }) {
               aria-expanded={menuOpen}
               aria-haspopup="menu"
               aria-label="Account menu"
-              className="focusable flex items-center gap-1.5 rounded-btn p-1 transition-colors hover:bg-canvas"
+              className="focusable flex items-center gap-1.5 rounded-btn p-1 transition-colors hover:bg-accent-soft"
             >
               <span
                 aria-hidden="true"
@@ -200,14 +200,14 @@ function TopBar({ title }: { title: string }) {
                     href="/account"
                     role="menuitem"
                     onClick={() => setMenuOpen(false)}
-                    className="focusable block px-4 py-2 text-[13px] text-ink transition-colors hover:bg-canvas"
+                    className="focusable block px-4 py-2 text-[13px] text-ink transition-colors hover:bg-accent-soft"
                   >
                     Account
                   </Link>
                   <button
                     role="menuitem"
                     onClick={signOut}
-                    className="focusable w-full px-4 py-2 text-left text-[13px] text-ink transition-colors hover:bg-canvas"
+                    className="focusable w-full px-4 py-2 text-left text-[13px] text-ink transition-colors hover:bg-accent-soft"
                   >
                     Sign out
                   </button>

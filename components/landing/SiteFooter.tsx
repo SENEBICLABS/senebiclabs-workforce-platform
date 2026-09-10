@@ -31,7 +31,7 @@ export function SiteFooter() {
             <Link
               key={item.href}
               href={item.href}
-              className="focusable rounded-btn text-[13px] text-muted transition-colors hover:text-ink"
+              className="focusable rounded-btn text-[13px] text-muted transition-colors hover:text-accent"
             >
               {item.label}
             </Link>

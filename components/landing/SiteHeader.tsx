@@ -76,7 +76,7 @@ export function SiteHeader() {
               href={item.href}
               aria-current={pathname === item.href ? "page" : undefined}
               className={`focusable rounded-btn transition-colors ${
-                pathname === item.href ? "text-ink" : "text-muted hover:text-ink"
+                pathname === item.href ? "text-accent" : "text-muted hover:text-accent"
               }`}
             >
               {item.label}
@@ -89,7 +89,7 @@ export function SiteHeader() {
               call to action exactly, with the only verb this site has. */}
           <Link
             href="/login"
-            className="focusable hidden rounded-full bg-ink px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-canvas transition-opacity hover:opacity-85 md:inline-block"
+            className="focusable hidden rounded-full bg-accent px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-on-fill transition-colors hover:bg-accent-hover md:inline-block"
           >
             Sign in
           </Link>
@@ -99,7 +99,7 @@ export function SiteHeader() {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
-            className="focusable flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hairline bg-transparent text-ink transition-colors hover:bg-white/[0.06] md:hidden"
+            className="focusable flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hairline bg-transparent text-ink transition-colors hover:border-accent hover:bg-accent-soft md:hidden"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
               {menuOpen ? (
@@ -133,7 +133,7 @@ export function SiteHeader() {
           <Link
             href="/login"
             onClick={() => setMenuOpen(false)}
-            className="focusable mt-4 self-start rounded-full bg-ink px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-canvas"
+            className="focusable mt-4 self-start rounded-full bg-accent px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-on-fill transition-colors hover:bg-accent-hover"
           >
             Sign in
           </Link>

@@ -209,6 +209,6 @@ body {
   border-radius: 999px;
   border: 3px solid var(--color-canvas);
 }
-/* Brighter than the hairline the thumb is drawn in, so hovering firms it up.
-   On dark the direction reverses: up is forward, not down. */
-::-webkit-scrollbar-thumb:hover { background: rgb(255 255 255 / 0.3); }
+/* The thumb is drawn in the teal hairline; hovering firms it up rather than
+   turning it white. On dark the direction reverses: up is forward. */
+::-webkit-scrollbar-thumb:hover { background: rgb(79 191 164 / 0.55); }

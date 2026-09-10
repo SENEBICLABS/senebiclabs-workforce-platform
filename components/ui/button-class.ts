@@ -14,7 +14,7 @@ export const VARIANT: Record<Variant, string> = {
   primary: "bg-accent text-on-fill hover:bg-accent-hover disabled:hover:bg-accent",
   secondary:
     "bg-surface text-ink border border-hairline hover:bg-accent-soft disabled:hover:bg-surface",
-  ghost: "bg-transparent text-muted hover:text-ink hover:bg-canvas",
+  ghost: "bg-transparent text-muted hover:bg-accent-soft hover:text-accent",
   danger: "bg-danger text-on-fill hover:brightness-110",
 };
 
