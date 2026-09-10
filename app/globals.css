@@ -3,37 +3,33 @@
 @theme {
   /* ---- Palette ----------------------------------------------------
    *
-   * Black and teal. The ground is black and the teal is the only colour in
-   * the system, which is what lets a quiet teal still carry. An earlier pass
-   * tried the opposite, tinting the ground itself to chroma 37 so the dark
-   * would read teal, and it worked against itself: the accent managed 7.03
-   * against a card then, and a much softer accent manages 8.63 now. Colour
-   * reads loudest when nothing around it is competing.
+   * A dark teal theme. The ground carries the colour, not just the accent.
    *
-   * The neutral ramp is three levels, pure neutral, no tint at any of them:
+   * A teal accent on a black page reads as a black theme with one coloured
+   * element in it. For the page itself to read teal, the surfaces have to be
+   * teal, and that runs into a hard limit: chroma can never exceed the
+   * brightest channel, so a very dark ground is necessarily a grey one.
+   * #000000 can hold no colour at all, and #04100E only twelve steps of it,
+   * which the eye still calls black. Thirty-five is where it turns.
    *
-   *   canvas       #000000   the page
-   *   canvas-top   #060606   barely-raised
-   *   surface      #0D0D0D   raised
+   *   canvas       #072A24   chroma 35   the page
+   *   canvas-top   #0B342E   chroma 41   barely-raised
+   *   surface      #0F3E37   chroma 47   raised
    *
-   * The steps between them are deliberately tiny, 1.04 and 1.08, so a fill
-   * alone cannot separate anything. The hairline does that instead, which is
-   * why it sits at 16%: it measures 1.55 against a raised surface and 1.44
-   * against the page. On a black interface the border is the structure and
-   * the fill only says which layer you are on.
+   * That is the whole trade: the ramp had to come up in lightness to hold a
+   * hue at all. What it costs is text margin, since light text is measured
+   * against the LIGHTEST surface. White at 62% measures 5.60 on a card here
+   * against 7.30 on black, and the accent 5.28 against 8.63. Both still
+   * clear, with room, and the page reads as teal rather than as black.
    *
-   * Light text is checked against the LIGHTEST surface rather than the
-   * darkest, because that is where contrast is worst. Here that is the teal
-   * chip, not any of the neutrals.
+   * The steps between the three levels stay small, so the hairline does the
+   * separating. White at 16% composites over a teal ground as teal, which is
+   * why the borders belong here without being given a colour of their own.
    */
-  --color-surface: #0D0D0D;
-  --color-canvas: #000000;
-  --color-canvas-top: #060606;
-  /* Monochrome, hierarchy by opacity, same as before but inverted to white.
-   *
-   * Body can be as soft as it was asked to be. On the light palette 72% was
-   * the floor and 65% already failed. Here there is room to spare: 62%
-   * measures 6.22 against the lightest surface, and 50% would still pass. */
+  --color-surface: #0F3E37;
+  --color-canvas: #072A24;
+  --color-canvas-top: #0B342E;
+  /* Monochrome text, hierarchy by opacity. */
   --color-ink: #FFFFFF;
   --color-strong: rgb(255 255 255 / 0.85);
   --color-muted: rgb(255 255 255 / 0.62);
@@ -57,8 +53,9 @@
   --color-accent: #4FBFA4;
   /* Brighter on hover, not darker. On a dark ground, up is forward. */
   --color-accent-hover: #6ADABD;
-  /* The one exception to the neutral ramp. A pill has to read as teal rather
-   * than as another grey step, so the chip keeps its colour. */
+  /* Recessed rather than raised. On a teal ground a lighter chip would have
+   * pushed accent text down to 4.46; sitting below the card keeps it at 6.09
+   * and still reads as a distinct surface. */
   --color-accent-soft: #0E332D;
   /* Fills are light, so the type on them is dark rather than white. White on
    * the accent measures 2.6 and is unreadable; this measures 7.53. */
@@ -74,8 +71,8 @@
   --color-success-soft: #0B3527;
 
   /* Sidebar, on the same ramp: barely-raised at rest, raised on hover. */
-  --color-rail: #060606;
-  --color-rail-hover: #0D0D0D;
+  --color-rail: #0B342E;
+  --color-rail-hover: #0F3E37;
   --color-rail-text: rgb(255 255 255 / 0.62);
 
   /* ---- Type ------------------------------------------------------- */
