@@ -3,6 +3,7 @@ import { verifySessionToken } from "@/lib/auth";
 import { SESSION_COOKIE } from "@/lib/session-cookie";
 import { supabaseAdmin } from "@/lib/supabase";
 import { createAndSendInvite, normalizeEmail } from "@/lib/invites";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -59,10 +60,57 @@ async function resolveInviter(req: NextRequest): Promise<
   };
 }
 
+/**
+ * What one inviter may send.
+ *
+ * Every invitation puts branded mail from our domain into a stranger's inbox,
+ * so this is the same abuse the sign-in link endpoint already guards against:
+ * a free relay, paid for in Resend reputation, which is shared across every
+ * transactional email the platform sends. The difference is only that the
+ * caller here is a trusted member — and can_invite exists precisely so it can
+ * be granted, which is the moment a careless script or a stolen session starts
+ * to matter.
+ *
+ * Two limits because they catch different things. The daily cap bounds how
+ * much mail one account can put out before anyone notices. The burst window
+ * makes scripting it slow enough to be spotted first. A real inviting
+ * clinician sends a handful a week, so both are far above normal use.
+ */
+const INVITE_LIMITS = [
+  { suffix: "day", max: 20, windowSeconds: 86_400 },
+  { suffix: "burst", max: 5, windowSeconds: 600 },
+] as const;
+
 export async function POST(req: NextRequest) {
   const inviter = await resolveInviter(req);
   if (!inviter.ok) {
     return NextResponse.json({ error: inviter.error }, { status: inviter.status });
+  }
+
+  // Keyed on the inviter, not the caller's address: the identity is known here,
+  // unlike the anonymous endpoints, and it is the thing you would suspend. The
+  // operator-key path has no inviter id and falls back to IP rather than being
+  // exempt, because that key is what an attacker would use if they had it.
+  const who = inviter.inviterId ?? `ops:${clientIp(req)}`;
+
+  for (const { suffix, ...limit } of INVITE_LIMITS) {
+    const { ok, retryAfter } = rateLimit(`invite:${suffix}:${who}`, limit);
+    if (!ok) {
+      console.warn(`[invites] ${suffix} limit hit by ${who}`);
+      // A 429 rather than something quieter. Dropping it silently, or
+      // answering with a fake success, would leave a member believing
+      // colleagues had been invited when nothing was sent — the same failure
+      // as the "an invite is already waiting" message this endpoint used to
+      // return. The copy reads as a guard rail because the caller is a
+      // colleague rather than a stranger.
+      return NextResponse.json(
+        {
+          error:
+            "That is a lot of invitations at once. The limit protects our email sending reputation. Try again shortly, or ask an operator to raise it.",
+        },
+        { status: 429, headers: { "retry-after": String(retryAfter) } }
+      );
+    }
   }
 
   let email: string;
