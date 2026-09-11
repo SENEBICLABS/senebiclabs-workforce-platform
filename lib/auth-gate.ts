@@ -3,6 +3,7 @@ import { createHash } from "crypto";
 import { SignJWT } from "jose";
 import { supabaseAdmin } from "./supabase";
 import { grantDirectAccess } from "./access";
+import { findClinicianByEmail, type Clinician } from "./clinicians";
 import {
   consumeInvite,
   findPendingInviteForEmail,
@@ -50,17 +51,57 @@ export type GateResult =
   | { ok: false; reason: GateFailure };
 
 /**
- * Mints a session, or returns null if it cannot.
+ * Mints a session for a clinician, having first proved the row is the address
+ * that authenticated.
+ *
+ * The invariant lives here rather than at the lookup because this is where the
+ * consequence is. An exact lookup already guarantees it, so the check is a
+ * tripwire: if anyone later reintroduces a fuzzy match, or adds a caller that
+ * resolves a clinician some other way, they are caught before a session is
+ * minted rather than after. That is not hypothetical — every clinician lookup
+ * in this codebase had drifted to .ilike, which returned a DIFFERENT member's
+ * row for an address containing "_" or "%", and this function then signed a
+ * token for it.
+ *
+ * It takes the row rather than an id and an email so the two cannot be
+ * mismatched by a caller, and the authenticated address is a separate argument
+ * of the same type only in the sense that it is a string — the parameters are
+ * ordered so a transposition changes meaning rather than silently comparing a
+ * value to itself.
+ *
+ * There is deliberately no unguarded variant. Anything that needs a session
+ * comes through here.
+ *
+ * Reports which of its two failures happened rather than returning a bare
+ * null, because they mean opposite things to the person signing in. A signing
+ * fault is ours and retryable; a mismatch is not, and telling someone to try
+ * again would be wrong in both directions.
  *
  * Deliberately does not throw. Signing needs JWT_SECRET, and a missing or
  * too-short one is a configuration fault that used to surface as a 500 from
  * deep inside account creation, after the account had been made and the invite
- * already spent. Returning null lets the caller unwind properly.
+ * already spent. Returning a result lets the caller unwind properly.
  */
-async function issueSession(
-  clinicianId: string,
-  email: string
-): Promise<string | null> {
+type Issued =
+  | { ok: true; token: string }
+  | { ok: false; reason: Extract<GateFailure, "unavailable" | "lookup_mismatch"> };
+
+async function issueSessionFor(
+  authenticatedEmail: string,
+  row: Pick<Clinician, "id" | "email">
+): Promise<Issued> {
+  if (normalizeEmail(row.email) !== normalizeEmail(authenticatedEmail)) {
+    console.error(
+      `[gate] REFUSED to issue a session. Authenticated as ${authenticatedEmail} ` +
+        `but the clinician row is ${row.email}. These must be identical; a ` +
+        "mismatch means a non-exact lookup or an attack."
+    );
+    return { ok: false, reason: "lookup_mismatch" };
+  }
+
+  const clinicianId = row.id;
+  const email = row.email;
+
   let sessionToken: string;
   try {
     sessionToken = await new SignJWT({ clinicianId, email })
@@ -69,7 +110,7 @@ async function issueSession(
       .sign(jwtSecret());
   } catch (err) {
     console.error("[gate] could not sign a session token", err);
-    return null;
+    return { ok: false, reason: "unavailable" };
   }
 
   // The token is recorded as a SHA-256 hash rather than verbatim. This table
@@ -88,7 +129,7 @@ async function issueSession(
     console.error("[gate] session insert failed", error);
   }
 
-  return sessionToken;
+  return { ok: true, token: sessionToken };
 }
 
 /**
@@ -111,51 +152,26 @@ export async function signInOrReject(
   // that error, which read as "no such member" and refused a real clinician for
   // want of an invite. The oldest row wins, so a member keeps the account their
   // history hangs off. Migration 005 stops duplicates arising.
-  // .eq, not .ilike. supabase-js passes the value through as a LIKE pattern
-  // and does not escape it, so "_" and "%" in an address were wildcards. An
-  // authenticated address whose pattern matched a member returned THAT
-  // member's row, and the session below is issued for the row rather than for
-  // the address that authenticated. Underscores are ordinary in email local
-  // parts on any domain but Gmail.
-  const { data: matches } = await supabaseAdmin
-    .from("clinicians")
-    .select("id, email, active")
-    .eq("email", email)
-    .order("created_at", { ascending: true })
-    .limit(1);
-
-  const existing = matches?.[0];
+  const existing = await findClinicianByEmail(email);
 
   if (existing) {
-    // The row must BE the address that authenticated.
-    //
-    // .eq already guarantees this, which is exactly why the assertion is worth
-    // having: it costs one comparison and it is the thing that catches a future
-    // refactor reintroducing a fuzzy match, before that match can hand out
-    // somebody else's session. The invite path below has always carried this
-    // check. The member path never did, and it is the path that needs no invite.
-    //
-    // It sits above grantDirectAccess deliberately. That call writes, and on a
-    // mismatch it would be writing pool access for the wrong clinician.
-    if (normalizeEmail(existing.email) !== email) {
-      console.error(
-        `[gate] REFUSED. Lookup for ${email} returned ${existing.email}. ` +
-          "These must be identical; a mismatch means a non-exact lookup or an attack."
-      );
-      return { ok: false, reason: "lookup_mismatch" };
-    }
-
     if (existing.active === false) return { ok: false, reason: "inactive" };
+
+    // Issued before anything is granted. issueSessionFor is what proves this
+    // row is the address that authenticated, and grantDirectAccess writes, so
+    // running it first would mean writing pool access for the wrong clinician
+    // in exactly the case the proof exists to catch.
+    const issued = await issueSessionFor(email, existing);
+    if (!issued.ok) return { ok: false, reason: issued.reason };
+
     // Top up anyone who predates direct access, so no one is stranded on an
     // empty dashboard waiting for a calibration that is switched off.
     await grantDirectAccess(existing.id);
-    const sessionToken = await issueSession(existing.id, existing.email);
-    if (!sessionToken) return { ok: false, reason: "unavailable" };
     return {
       ok: true,
       clinicianId: existing.id,
       email: existing.email,
-      sessionToken,
+      sessionToken: issued.token,
       created: false,
     };
   }
@@ -206,10 +222,10 @@ export async function signInOrReject(
   // clinician could neither get in nor try again: their link reported "already
   // used" for ever. Now nothing is spent until everything that can fail has
   // succeeded, and a retry works.
-  const sessionToken = await issueSession(created.id, created.email);
-  if (!sessionToken) {
+  const issued = await issueSessionFor(email, created);
+  if (!issued.ok) {
     await supabaseAdmin.from("clinicians").delete().eq("id", created.id);
-    return { ok: false, reason: "unavailable" };
+    return { ok: false, reason: issued.reason };
   }
 
   // Spend the invite. If someone else just spent it, undo the account so an
@@ -230,7 +246,7 @@ export async function signInOrReject(
     ok: true,
     clinicianId: created.id,
     email: created.email,
-    sessionToken,
+    sessionToken: issued.token,
     created: true,
   };
 }

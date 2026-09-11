@@ -2,6 +2,7 @@ import "server-only";
 import { randomBytes } from "crypto";
 import { supabaseAdmin } from "./supabase";
 import { sendInviteEmail } from "./send-invite";
+import { findClinicianByEmail } from "./clinicians";
 
 /**
  * Invites.
@@ -186,18 +187,12 @@ export async function createAndSendInvite(
     return { ok: false, status: 400, error: "That does not look like an email address." };
   }
 
-  // .eq, not .ilike. supabase-js does not escape the value, so "_" and "%" in
-  // an address were wildcards: this guard could report "already has an account"
-  // about a DIFFERENT address and block a legitimate invite. Not a security
-  // hole like the two auth lookups were, but the same shape as the bug below —
-  // a truthful-sounding refusal telling the inviter to stop when they should
-  // carry on. Exact is safe because migration 009 makes lowercase an invariant
-  // rather than a convention.
-  const { data: existing } = await supabaseAdmin
-    .from("clinicians")
-    .select("id")
-    .eq("email", address)
-    .maybeSingle();
+  // Through the shared lookup. Under the .ilike this used to use, a wildcard
+  // could report "already has an account" about a DIFFERENT address and block a
+  // legitimate invite — not a security hole like the two auth lookups were, but
+  // the same shape as the bug below: a truthful-sounding refusal telling the
+  // inviter to stop when they should carry on.
+  const existing = await findClinicianByEmail(address);
 
   if (existing) {
     return { ok: false, status: 409, error: "That address already has an account." };

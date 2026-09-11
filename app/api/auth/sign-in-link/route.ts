@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSignInLink, SIGN_IN_LINK_EXPIRY_MINUTES } from "@/lib/auth";
-import { supabaseAdmin } from "@/lib/supabase";
+import { findClinicianByEmail } from "@/lib/clinicians";
 import { findPendingInviteForEmail, normalizeEmail } from "@/lib/invites";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 
@@ -67,17 +67,17 @@ async function sendSignInLinkEmail(email: string, path: string) {
 
 /** A link is only ever sent to someone who could actually get through the gate. */
 async function mayReceiveLink(email: string): Promise<boolean> {
-  // .eq, not .ilike. This is the authorisation check, and the link is then
-  // mailed to the address that was typed. Under .ilike those could be two
-  // different people: a typed address containing "_" or "%" was a pattern that
-  // authorised against a member's row, while delivery went to the attacker's
-  // mailbox. One request, so rate limiting never came into it.
-  const { data } = await supabaseAdmin
-    .from("clinicians")
-    .select("id")
-    .eq("email", email)
-    .limit(1);
-  if (data && data.length > 0) return true;
+  // Through the shared lookup, which is exact. This is the authorisation
+  // check and the link is then mailed to the address that was typed, so under
+  // the .ilike this used to use, those could be two different people: a typed
+  // address containing "_" or "%" was a pattern that authorised against a
+  // member's row while delivery went to the attacker's mailbox. One request,
+  // so rate limiting never came into it.
+  //
+  // Note this address is unverified form input, unlike the gate's, which
+  // something has already vouched for. Nothing here proves identity; it only
+  // decides whether a link is worth sending.
+  if (await findClinicianByEmail(email)) return true;
 
   return Boolean(await findPendingInviteForEmail(email));
 }
