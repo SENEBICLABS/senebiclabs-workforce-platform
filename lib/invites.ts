@@ -120,6 +120,48 @@ export type InviteFailure =
   | { ok: false; status: number; error: string };
 
 /**
+ * Expires invites for one address that have aged out.
+ *
+ * The partial unique index idx_invites_one_pending covers every row where
+ * status = 'pending', whatever expires_at says, because an index predicate
+ * must be IMMUTABLE and now() is not. So a lapsed invite goes on occupying the
+ * single pending slot that address gets, and the next invite to it collides
+ * with a row that loadInvite and findPendingInviteForEmail both already treat
+ * as dead. Nothing else sweeps it, so the address becomes permanently
+ * un-invitable. Expiry has to be written down for the index to agree with what
+ * the rest of the code believes.
+ *
+ * Adding `and expires_at > now()` to the index predicate is not an option, and
+ * declaring an IMMUTABLE wrapper around now() to get past the error is worse
+ * than the bug: an index records what was true at write time and would never
+ * revisit rows as the clock moved, so its contents would silently disagree
+ * with its own predicate.
+ *
+ * Returns false if the update itself failed, so the caller can tell "the slot
+ * is genuinely taken" from "we could not clear it".
+ */
+async function expireLapsedInvites(address: string): Promise<boolean> {
+  const { error } = await supabaseAdmin
+    .from("invites")
+    .update({ status: "expired" })
+    // Confined to the one non-terminal state. An accepted invite from three
+    // weeks ago also has expires_at in the past; flipping it to 'expired' would
+    // destroy the record of who accepted and when, and leave accepted_by
+    // pointing at a real clinician on a row labelled expired. Never rewrite a
+    // terminal state, whatever the other columns say. consumeInvite carries the
+    // same predicate for the same reason.
+    .eq("status", "pending")
+    .eq("invited_email", address)
+    .lt("expires_at", new Date().toISOString());
+
+  if (error) {
+    console.error("[invites] could not expire lapsed rows", error);
+    return false;
+  }
+  return true;
+}
+
+/**
  * Creates a single-use invite and emails the link.
  *
  * The one implementation behind both the clinician-facing endpoint and /ops, so
@@ -144,15 +186,26 @@ export async function createAndSendInvite(
     return { ok: false, status: 400, error: "That does not look like an email address." };
   }
 
+  // .eq, not .ilike. supabase-js does not escape the value, so "_" and "%" in
+  // an address were wildcards: this guard could report "already has an account"
+  // about a DIFFERENT address and block a legitimate invite. Not a security
+  // hole like the two auth lookups were, but the same shape as the bug below —
+  // a truthful-sounding refusal telling the inviter to stop when they should
+  // carry on. Exact is safe because migration 009 makes lowercase an invariant
+  // rather than a convention.
   const { data: existing } = await supabaseAdmin
     .from("clinicians")
     .select("id")
-    .ilike("email", address)
+    .eq("email", address)
     .maybeSingle();
 
   if (existing) {
     return { ok: false, status: 409, error: "That address already has an account." };
   }
+
+  // Clear any lapsed invite for this address first, or its row is still
+  // holding the single pending slot the unique index allows.
+  const expiryRan = await expireLapsedInvites(address);
 
   const token = newInviteToken();
   const expiresAt = new Date(
@@ -173,7 +226,40 @@ export async function createAndSendInvite(
 
   if (error) {
     if (error.code === "23505") {
-      return { ok: false, status: 409, error: "That address already has an invite waiting." };
+      // Stale rows were expired above, so a collision should mean a genuinely
+      // live invitation. Confirm it rather than assert it.
+      const live = await findPendingInviteForEmail(address);
+
+      if (live) {
+        const when = live.expires_at
+          ? new Date(live.expires_at).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "long",
+            })
+          : null;
+        return {
+          ok: false,
+          status: 409,
+          error: when
+            ? `That address already has an invitation open until ${when}. Revoke it if you want to send a new one.`
+            : "That address already has an invitation open.",
+        };
+      }
+
+      // A collision with nothing live behind it: either the expiry update
+      // failed, or a lapsed row is still holding the slot. Saying "an
+      // invitation is waiting" would be the original bug again, telling the
+      // inviter to stop when retrying is the correct action. 503 says retry,
+      // 409 says do not.
+      console.error(
+        `[invites] collision with no live invite for ${address}; ` +
+          `expiry step ${expiryRan ? "ran" : "FAILED"}`
+      );
+      return {
+        ok: false,
+        status: 503,
+        error: "We could not send that invitation just now. Please try again in a moment.",
+      };
     }
     console.error("[invites] insert failed", error);
     return { ok: false, status: 500, error: "We could not create that invite." };
