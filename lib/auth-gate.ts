@@ -29,7 +29,14 @@ export type GateFailure =
   | "invite_expired"
   | "inactive"
   /** We could not complete the sign-in. Their fault in no way; retryable. */
-  | "unavailable";
+  | "unavailable"
+  /**
+   * The row we matched is not the address that authenticated.
+   *
+   * Unreachable while the lookup is exact, which is the point: it exists to
+   * catch a future lookup that is not.
+   */
+  | "lookup_mismatch";
 
 export type GateResult =
   | {
@@ -104,16 +111,40 @@ export async function signInOrReject(
   // that error, which read as "no such member" and refused a real clinician for
   // want of an invite. The oldest row wins, so a member keeps the account their
   // history hangs off. Migration 005 stops duplicates arising.
+  // .eq, not .ilike. supabase-js passes the value through as a LIKE pattern
+  // and does not escape it, so "_" and "%" in an address were wildcards. An
+  // authenticated address whose pattern matched a member returned THAT
+  // member's row, and the session below is issued for the row rather than for
+  // the address that authenticated. Underscores are ordinary in email local
+  // parts on any domain but Gmail.
   const { data: matches } = await supabaseAdmin
     .from("clinicians")
     .select("id, email, active")
-    .ilike("email", email)
+    .eq("email", email)
     .order("created_at", { ascending: true })
     .limit(1);
 
   const existing = matches?.[0];
 
   if (existing) {
+    // The row must BE the address that authenticated.
+    //
+    // .eq already guarantees this, which is exactly why the assertion is worth
+    // having: it costs one comparison and it is the thing that catches a future
+    // refactor reintroducing a fuzzy match, before that match can hand out
+    // somebody else's session. The invite path below has always carried this
+    // check. The member path never did, and it is the path that needs no invite.
+    //
+    // It sits above grantDirectAccess deliberately. That call writes, and on a
+    // mismatch it would be writing pool access for the wrong clinician.
+    if (normalizeEmail(existing.email) !== email) {
+      console.error(
+        `[gate] REFUSED. Lookup for ${email} returned ${existing.email}. ` +
+          "These must be identical; a mismatch means a non-exact lookup or an attack."
+      );
+      return { ok: false, reason: "lookup_mismatch" };
+    }
+
     if (existing.active === false) return { ok: false, reason: "inactive" };
     // Top up anyone who predates direct access, so no one is stranded on an
     // empty dashboard waiting for a calibration that is switched off.
@@ -215,4 +246,8 @@ export const GATE_MESSAGE: Record<GateFailure, string> = {
   inactive: "This account is not active. Contact support if you think that is wrong.",
   unavailable:
     "We could not complete your sign-in just now. Please try again in a moment.",
+  // Deliberately says nothing about why. A mismatch is a bug or an attack, and
+  // neither wants a description of the mechanism.
+  lookup_mismatch:
+    "We could not verify this account. Please contact support.",
 };

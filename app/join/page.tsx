@@ -47,6 +47,7 @@ const GATE_ERRORS: Record<string, string> = {
     "We could not complete your registration just now. Your invitation is still valid, so please try again in a moment.",
   email_unverified:
     "That Google account has no verified email. Verify it with Google, or use the email option.",
+  lookup_mismatch: "We could not verify this account. Please contact support.",
   google_failed: "Google sign-in did not complete. Try again.",
   google_cancelled: "Google sign-in was cancelled.",
 };

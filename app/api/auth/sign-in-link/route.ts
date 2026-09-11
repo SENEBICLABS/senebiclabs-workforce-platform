@@ -67,10 +67,15 @@ async function sendSignInLinkEmail(email: string, path: string) {
 
 /** A link is only ever sent to someone who could actually get through the gate. */
 async function mayReceiveLink(email: string): Promise<boolean> {
+  // .eq, not .ilike. This is the authorisation check, and the link is then
+  // mailed to the address that was typed. Under .ilike those could be two
+  // different people: a typed address containing "_" or "%" was a pattern that
+  // authorised against a member's row, while delivery went to the attacker's
+  // mailbox. One request, so rate limiting never came into it.
   const { data } = await supabaseAdmin
     .from("clinicians")
     .select("id")
-    .ilike("email", email)
+    .eq("email", email)
     .limit(1);
   if (data && data.length > 0) return true;
 
