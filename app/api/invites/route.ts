@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifySessionToken } from "@/lib/auth";
 import { SESSION_COOKIE } from "@/lib/session-cookie";
 import { supabaseAdmin } from "@/lib/supabase";
-import { createAndSendInvite, normalizeEmail } from "@/lib/invites";
+import {
+  countInvitesCreatedBy,
+  createAndSendInvite,
+  INVITE_CAP_WINDOW_SECONDS,
+  INVITE_DAILY_CAP,
+  normalizeEmail,
+} from "@/lib/invites";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -71,15 +77,19 @@ async function resolveInviter(req: NextRequest): Promise<
  * be granted, which is the moment a careless script or a stolen session starts
  * to matter.
  *
- * Two limits because they catch different things. The daily cap bounds how
- * much mail one account can put out before anyone notices. The burst window
- * makes scripting it slow enough to be spotted first. A real inviting
- * clinician sends a handful a week, so both are far above normal use.
+ * Two limits, enforced two different ways, because they want different things.
+ *
+ * The burst check stays in memory. Its job is to make a script conspicuous,
+ * not to bound damage, so a per-instance approximation is fine and costs
+ * nothing. Five in ten minutes is far above what anyone invites by hand.
+ *
+ * The daily cap counts rows. It is the number that bounds how much mail a
+ * compromised account can send, and an in-memory limiter whose effective cap
+ * is the limit times however many serverless instances are warm would not
+ * bound it. One indexed count against a small table on a human-rate action is
+ * imperceptible; this is not a hot path.
  */
-const INVITE_LIMITS = [
-  { suffix: "day", max: 20, windowSeconds: 86_400 },
-  { suffix: "burst", max: 5, windowSeconds: 600 },
-] as const;
+const BURST = { max: 5, windowSeconds: 600 } as const;
 
 export async function POST(req: NextRequest) {
   const inviter = await resolveInviter(req);
@@ -93,24 +103,36 @@ export async function POST(req: NextRequest) {
   // exempt, because that key is what an attacker would use if they had it.
   const who = inviter.inviterId ?? `ops:${clientIp(req)}`;
 
-  for (const { suffix, ...limit } of INVITE_LIMITS) {
-    const { ok, retryAfter } = rateLimit(`invite:${suffix}:${who}`, limit);
-    if (!ok) {
-      console.warn(`[invites] ${suffix} limit hit by ${who}`);
-      // A 429 rather than something quieter. Dropping it silently, or
-      // answering with a fake success, would leave a member believing
-      // colleagues had been invited when nothing was sent — the same failure
-      // as the "an invite is already waiting" message this endpoint used to
-      // return. The copy reads as a guard rail because the caller is a
-      // colleague rather than a stranger.
-      return NextResponse.json(
-        {
-          error:
-            "That is a lot of invitations at once. The limit protects our email sending reputation. Try again shortly, or ask an operator to raise it.",
-        },
-        { status: 429, headers: { "retry-after": String(retryAfter) } }
-      );
-    }
+  // A 429 rather than something quieter. Dropping it silently, or answering
+  // with a fake success, would leave a member believing colleagues had been
+  // invited when nothing was sent — the same failure as the "an invite is
+  // already waiting" message this endpoint used to return. The copy reads as a
+  // guard rail because the caller is a colleague rather than a stranger.
+  const refuse = (retryAfter: number, detail: string) =>
+    NextResponse.json(
+      {
+        error: `${detail} The limit protects our email sending reputation. Try again shortly, or ask an operator to raise it.`,
+      },
+      { status: 429, headers: { "retry-after": String(retryAfter) } }
+    );
+
+  const burst = rateLimit(`invite:burst:${who}`, BURST);
+  if (!burst.ok) {
+    console.warn(`[invites] burst limit hit by ${who}`);
+    return refuse(burst.retryAfter, "That is a lot of invitations at once.");
+  }
+
+  // Counted from the rows, so restarting a server or spreading requests across
+  // instances does not reset it.
+  const sentToday = await countInvitesCreatedBy(inviter.inviterId);
+  if (sentToday !== null && sentToday >= INVITE_DAILY_CAP) {
+    console.warn(
+      `[invites] daily cap hit by ${who}: ${sentToday}/${INVITE_DAILY_CAP} in the last 24h`
+    );
+    return refuse(
+      INVITE_CAP_WINDOW_SECONDS,
+      `That is ${sentToday} invitations in a day, which is the limit.`
+    );
   }
 
   let email: string;

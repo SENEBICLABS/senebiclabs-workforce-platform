@@ -14,6 +14,100 @@ import { findClinicianByEmail } from "./clinicians";
 
 export const INVITE_TTL_DAYS = 7;
 
+/** What one inviter may send in a rolling day. */
+export const INVITE_DAILY_CAP = 20;
+export const INVITE_CAP_WINDOW_SECONDS = 86_400;
+
+/**
+ * How many invitations an inviter has created inside the window.
+ *
+ * The daily cap counts rows rather than trusting the in-memory limiter,
+ * because the two limits want different properties. The burst limit only has
+ * to make a script conspicuous, so a per-instance approximation is fine and
+ * free. This one is the number that bounds how much branded mail a compromised
+ * account can put into the world, and a limiter whose effective cap is the
+ * limit times however many serverless instances happen to be warm does not
+ * bound anything. It has to be true, so it comes from the data.
+ *
+ * EVERY status counts, including revoked.
+ *
+ * A revoked row is either a send we failed or an invitation an operator
+ * withdrew, and nothing in the schema distinguishes them — createAndSendInvite
+ * and the ops revoke endpoint write the same value. So any status-based rule
+ * would be guessing at which happened.
+ *
+ * Counting all of them is the right side to err on. What damages sending
+ * reputation is attempts, not deliveries: a hard bounce costs more than a
+ * successful send, and a failed send has already been attempted by the time
+ * the row is revoked. Excluding revoked rows would let someone mint cap-free
+ * invitations by inducing failures, which is precisely the abuse the cap
+ * exists for. The cost of the other error is bounded and loud: if our sending
+ * is broken, a member hits a cap they did not earn, which is a visible symptom
+ * of an outage an operator can see and raise. Under-counting is a quiet hole;
+ * over-counting is a noisy inconvenience.
+ *
+ * If that fairness ever bites, the fix is to make the distinction reachable —
+ * a revoked_reason, or a separate status for a failed send — not to guess it
+ * from 'revoked'.
+ *
+ * Returns null if the count could not be taken. The caller lets the invite
+ * through in that case: the insert needs the same database a moment later, so
+ * refusing here buys nothing the insert will not do for itself.
+ */
+export async function countInvitesCreatedBy(
+  inviterId: string | null,
+  windowSeconds = INVITE_CAP_WINDOW_SECONDS
+): Promise<number | null> {
+  const since = new Date(Date.now() - windowSeconds * 1000).toISOString();
+
+  let q = supabaseAdmin
+    .from("invites")
+    .select("id", { count: "exact", head: true })
+    .gte("created_at", since);
+
+  // Operator-console invitations carry no inviter, so they are capped as one
+  // group rather than being exempt.
+  q = inviterId ? q.eq("invited_by", inviterId) : q.is("invited_by", null);
+
+  const { count, error } = await q;
+  if (error) {
+    console.error("[invites] could not count for the cap", error);
+    return null;
+  }
+  return count ?? 0;
+}
+
+/**
+ * Invitations created per inviter in the window, busiest first.
+ *
+ * The operator view of the same fact the cap enforces. Built on the same rows
+ * so the two cannot disagree: what an operator sees is what the cap counted.
+ */
+export async function invitesCreatedPerInviter(
+  windowSeconds = INVITE_CAP_WINDOW_SECONDS
+): Promise<{ inviterId: string | null; count: number }[]> {
+  const since = new Date(Date.now() - windowSeconds * 1000).toISOString();
+
+  const { data, error } = await supabaseAdmin
+    .from("invites")
+    .select("invited_by")
+    .gte("created_at", since);
+
+  if (error) {
+    console.error("[invites] could not summarise senders", error);
+    return [];
+  }
+
+  const tally = new Map<string | null, number>();
+  for (const row of data ?? []) {
+    const key = (row.invited_by as string | null) ?? null;
+    tally.set(key, (tally.get(key) ?? 0) + 1);
+  }
+  return [...tally.entries()]
+    .map(([inviterId, count]) => ({ inviterId, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
 /**
  * Invite tokens rest as a hash, never verbatim.
  *
