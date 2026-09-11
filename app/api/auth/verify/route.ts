@@ -49,7 +49,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await signInOrReject(link.email, invite);
+    // A single-use link was consumed at this address, which is what vouches
+    // for it here.
+    const result = await signInOrReject({
+      kind: "authenticated",
+      email: link.email,
+      invite,
+    });
 
     if (!result.ok) {
       return NextResponse.json(

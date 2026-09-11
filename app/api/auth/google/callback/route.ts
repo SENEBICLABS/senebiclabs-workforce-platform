@@ -52,7 +52,13 @@ export async function GET(req: NextRequest) {
   // An unverified Google address proves nothing about who controls it.
   if (!identity.emailVerified) return back("error=email_unverified");
 
-  const result = await signInOrReject(identity.email, carried.invite);
+  // Google verified this address, so the gate's comparison against the
+  // invitation is a real one.
+  const result = await signInOrReject({
+    kind: "authenticated",
+    email: identity.email,
+    invite: carried.invite,
+  });
 
   if (!result.ok) {
     const where = carried.invite

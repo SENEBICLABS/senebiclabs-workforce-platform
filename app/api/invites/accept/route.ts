@@ -58,9 +58,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // The address comes from the invite row, never from the request body, so a
-  // caller cannot aim someone else's invitation at an address of their own.
-  const result = await signInOrReject(found.invite.invited_email, token);
+  // The token is the credential. Nothing has authenticated anybody: the
+  // invitation went to one mailbox and holding the link is the whole proof.
+  // The gate reads the address off the invite row itself, so a caller cannot
+  // aim someone else's invitation at an address of their own.
+  const result = await signInOrReject({ kind: "invite_token", token });
 
   if (!result.ok) {
     // "unavailable" is our failure, not theirs, and retrying will work once it

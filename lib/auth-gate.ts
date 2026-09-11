@@ -24,7 +24,12 @@ import { jwtSecret } from "./secrets";
 
 export type GateFailure =
   | "no_invite"
-  /** Signed in as someone other than the person invited. */
+  /**
+   * Signed in as someone other than the person invited.
+   *
+   * Only reachable for an "authenticated" credential. A bearer redemption has
+   * no second address to disagree with.
+   */
   | "email_mismatch"
   | "invite_used"
   | "invite_expired"
@@ -133,18 +138,51 @@ async function issueSessionFor(
 }
 
 /**
- * Resolves an authenticated email into a session, or refuses.
+ * What the caller is holding, which is not the same kind of thing every time.
  *
- * `inviteToken` is supplied when the person arrived through a /join link. It
- * tightens the check rather than replacing it: the authenticated address must
- * be the one that was invited, so forwarding an invite does not hand over
- * access.
+ * "authenticated" means a third party vouched for the address: Google verified
+ * it, or a single-use sign-in link was consumed at it. An invite token may ride
+ * along, and the gate then checks the invitation was issued to that address, so
+ * forwarding a link does not hand over access.
+ *
+ * "invite_token" means the token IS the credential. Nobody has authenticated
+ * anything: possession of a link emailed to one mailbox is the entire proof.
+ * The address is read from the invite row, so there is no second party to
+ * compare it against.
+ *
+ * This distinction used to live in how each caller happened to spell its
+ * arguments. Two paths passed an independently authenticated address and one
+ * passed the invite row's own address back in, which made the email check
+ * compare a value to itself — a guard that read as covering three paths while
+ * covering two. Naming the credential makes that unwriteable rather than
+ * merely documented: an invite_token caller has no email field to supply.
  */
-export async function signInOrReject(
-  rawEmail: string,
-  inviteToken?: string | null
-): Promise<GateResult> {
-  const email = normalizeEmail(rawEmail);
+export type Credential =
+  | { kind: "authenticated"; email: string; invite?: string | null }
+  | { kind: "invite_token"; token: string };
+
+/** Resolves a credential into a session, or refuses. */
+export async function signInOrReject(cred: Credential): Promise<GateResult> {
+  // Resolve the credential down to an address and, where there is one, the
+  // invitation it arrived with. Everything after this point is common.
+  let email: string;
+  let presentedInvite: string | null = null;
+
+  if (cred.kind === "invite_token") {
+    const found = await loadInvite(cred.token);
+    if (found.problem === "used") return { ok: false, reason: "invite_used" };
+    if (found.problem === "expired") return { ok: false, reason: "invite_expired" };
+    if (found.problem || !found.invite) return { ok: false, reason: "no_invite" };
+
+    // No comparison here, and none is possible: the type carries no
+    // authenticated address to compare the row against. Holding the token is
+    // the proof, which is the deliberate bargain of a one-click invitation.
+    email = normalizeEmail(found.invite.invited_email);
+    presentedInvite = cred.token;
+  } else {
+    email = normalizeEmail(cred.email);
+    presentedInvite = cred.invite ?? null;
+  }
 
   // 1. Already a member.
   //
@@ -179,14 +217,19 @@ export async function signInOrReject(
   // 2. Not a member — an invite is the only way in.
   let invite = null;
 
-  if (inviteToken) {
-    const found = await loadInvite(inviteToken);
+  if (presentedInvite) {
+    const found = await loadInvite(presentedInvite);
     if (found.problem === "used") return { ok: false, reason: "invite_used" };
     if (found.problem === "expired") return { ok: false, reason: "invite_expired" };
     if (found.problem || !found.invite) return { ok: false, reason: "no_invite" };
 
     // The link is not a bearer token for whoever opens it.
-    if (normalizeEmail(found.invite.invited_email) !== email) {
+    //
+    // Reachable only for an authenticated credential. On the invite_token path
+    // the address came from this same row moments ago, so the comparison would
+    // be vacuous — which is why email_mismatch cannot occur there, and why the
+    // type keeps that path from supplying an address at all.
+    if (cred.kind === "authenticated" && normalizeEmail(found.invite.invited_email) !== email) {
       return { ok: false, reason: "email_mismatch" };
     }
     invite = found.invite;
