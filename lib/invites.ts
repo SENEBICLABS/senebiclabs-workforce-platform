@@ -1,5 +1,5 @@
 import "server-only";
-import { randomBytes } from "crypto";
+import { createHash, randomBytes } from "crypto";
 import { supabaseAdmin } from "./supabase";
 import { sendInviteEmail } from "./send-invite";
 import { findClinicianByEmail } from "./clinicians";
@@ -14,9 +14,25 @@ import { findClinicianByEmail } from "./clinicians";
 
 export const INVITE_TTL_DAYS = 7;
 
+/**
+ * Invite tokens rest as a hash, never verbatim.
+ *
+ * The token is a bearer credential, not a hint: POSTing one to
+ * /api/invites/accept creates the account and returns a session, with nothing
+ * else required. The check in auth-gate that looks like it prevents that
+ * compares the invite row's address to itself on this path, so possession of
+ * the token is the whole proof. A row therefore has to be a record of an
+ * invitation issued rather than a working key, which is the same reasoning
+ * migration 008 applied to sign-in tokens — and those are single-use and
+ * fifteen minutes long, and were hashed anyway.
+ */
+const hashToken = (token: string) =>
+  createHash("sha256").update(token).digest("hex");
+
 export interface Invite {
   id: string;
-  token: string;
+  /** SHA-256 of the token. The token itself exists only in the email. */
+  token_hash: string;
   invited_email: string;
   invited_by: string | null;
   status: "pending" | "accepted" | "expired" | "revoked";
@@ -49,7 +65,7 @@ export async function loadInvite(
   const { data } = await supabaseAdmin
     .from("invites")
     .select("*")
-    .eq("token", token)
+    .eq("token_hash", hashToken(token))
     .maybeSingle();
 
   const invite = data as Invite | null;
@@ -178,7 +194,7 @@ export async function createAndSendInvite(
   inviterId: string | null,
   inviterName: string
 ): Promise<
-  | { ok: true; invite: { id: string; invited_email: string; expires_at: string | null; token: string } }
+  | { ok: true; invite: { id: string; invited_email: string; expires_at: string | null } }
   | InviteFailure
 > {
   const address = normalizeEmail(email);
@@ -210,13 +226,13 @@ export async function createAndSendInvite(
   const { data: invite, error } = await supabaseAdmin
     .from("invites")
     .insert({
-      token,
+      token_hash: hashToken(token),
       invited_email: address,
       invited_by: inviterId,
       status: "pending",
       expires_at: expiresAt,
     })
-    .select("id, token, invited_email, expires_at")
+    .select("id, invited_email, expires_at")
     .single();
 
   if (error) {
@@ -261,7 +277,10 @@ export async function createAndSendInvite(
   }
 
   try {
-    await sendInviteEmail(address, invite.token, inviterName);
+    // From the local variable, never read back off the row: the row holds only
+    // a hash now, and this is the last point at which the token exists outside
+    // the recipient's mailbox.
+    await sendInviteEmail(address, token, inviterName);
   } catch (err) {
     console.error("[invites] send failed", err);
     await supabaseAdmin.from("invites").update({ status: "revoked" }).eq("id", invite.id);
