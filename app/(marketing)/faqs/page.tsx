@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Faqs } from "@/components/landing/Faqs";
-import { SignInCta } from "@/components/landing/SignInCta";
 
 export const metadata: Metadata = {
   title: "FAQs | Senebiclabs",
@@ -44,9 +43,6 @@ export default function FaqsPage() {
             Membership is by invitation. If a colleague has sent you one, it is
             waiting in your inbox.
           </p>
-          <div className="mt-8">
-            <SignInCta />
-          </div>
           <p className="mt-6 text-body text-muted">
             <Link
               href="/about-us"

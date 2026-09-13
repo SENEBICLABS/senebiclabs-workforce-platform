@@ -16,9 +16,15 @@ import { BrandMark } from "./BrandMark";
  *   at rest      black at 30%, no border
  *   scrolled     black at 72%, a hairline, and a shadow to lift it off the page
  *
- * The row is a three-column grid, which is what keeps the links optically
- * centred regardless of how wide the brand or the call to action get. Centring
- * them with flex would shift them every time either side changed.
+ * The row is a 1fr / auto / 1fr grid, which keeps the links centred on the page
+ * rather than in whatever space the brand leaves. The outer columns are always
+ * equal, so there is nothing for the links to be pushed off-centre by — which
+ * matters now there is nothing on the right on desktop.
+ *
+ * No sign-in link, on purpose. Membership is by invitation and these pages are
+ * written for people without an account, so a sign-in button would ask every
+ * reader to do the one thing they cannot. Members come back through a bookmarked
+ * dashboard, which redirects to sign-in when a session has lapsed.
  */
 
 const NAV = [
@@ -55,10 +61,10 @@ export function SiteHeader() {
           : "border border-transparent bg-black/30"
       }`}
     >
-      <div className="grid h-[58px] grid-cols-[auto_1fr_auto] items-center px-4 md:h-[68px] md:px-6">
+      <div className="grid h-[58px] grid-cols-[1fr_auto_1fr] items-center px-4 md:h-[68px] md:px-6">
         <Link
           href="/"
-          className="focusable flex items-center gap-2.5 rounded-btn text-[15px] font-medium tracking-[0.06em] text-ink"
+          className="focusable flex items-center gap-2.5 justify-self-start rounded-btn text-[15px] font-medium tracking-[0.06em] text-ink"
         >
           <span className="grid h-[22px] w-[22px] place-items-center">
             <BrandMark />
@@ -84,16 +90,7 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
-          {/* Mono, uppercase and tracked, on a white pill. The marketing site's
-              call to action exactly, with the only verb this site has. */}
-          <Link
-            href="/login"
-            className="focusable hidden rounded-full bg-accent px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-on-fill transition-colors hover:bg-accent-hover md:inline-block"
-          >
-            Sign in
-          </Link>
-
+        <div className="flex items-center gap-3 justify-self-end">
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
@@ -130,13 +127,6 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
-          <Link
-            href="/login"
-            onClick={() => setMenuOpen(false)}
-            className="focusable mt-4 self-start rounded-full bg-accent px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-on-fill transition-colors hover:bg-accent-hover"
-          >
-            Sign in
-          </Link>
         </nav>
       )}
     </header>

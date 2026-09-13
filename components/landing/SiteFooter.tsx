@@ -26,7 +26,6 @@ export function SiteFooter() {
             { href: "/about-us", label: "About us" },
             { href: "/our-experts", label: "Our experts" },
             { href: "/faqs", label: "FAQs" },
-            { href: "/login", label: "Sign in" },
           ].map((item) => (
             <Link
               key={item.href}

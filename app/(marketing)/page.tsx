@@ -8,7 +8,6 @@ import {
   Section,
   SectionHead,
 } from "@/components/landing/Section";
-import { SignInCta } from "@/components/landing/SignInCta";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { Faqs } from "@/components/landing/Faqs";
 import { ELIGIBILITY } from "@/lib/marketing-content";
@@ -115,9 +114,6 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="mt-10">
-            <SignInCta />
-          </div>
 
           <p className="mt-6 text-[13px] text-muted">
             Membership is by invitation. If you have one, opening it is all it
@@ -199,9 +195,6 @@ export default function Landing() {
               </li>
             ))}
           </ol>
-          <div className="mt-16">
-            <SignInCta />
-          </div>
         </Section>
 
         {/* FAQs: the featured subset, with the rest a click away. */}
@@ -225,9 +218,6 @@ export default function Landing() {
             title="Put your clinical knowledge to paid work"
             intro="Membership is by invitation. If a colleague has sent you one, it is waiting in your inbox."
           />
-          <div className="mt-10">
-            <SignInCta />
-          </div>
         </Section>
 
     </>

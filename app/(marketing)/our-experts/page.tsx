@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SignInCta } from "@/components/landing/SignInCta";
 import { ELIGIBILITY } from "@/lib/marketing-content";
 
 export const metadata: Metadata = {
@@ -215,9 +214,6 @@ Reviewing is by invitation
           <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">
             Invitations go to named clinicians when work opens in their specialty.
           </p>
-          <div className="mt-8">
-            <SignInCta />
-          </div>
           <p className="mt-6 text-body text-muted">
             <Link
               href="/faqs"

@@ -68,6 +68,16 @@ export default function WelcomePage() {
         >
           Go to your dashboard
         </Button>
+
+        {/* The public site has no sign-in button, by design: membership is by
+            invitation and those pages are written for people who do not have
+            an account. So this is the one moment to tell a new member how to
+            get back. Any signed-in page redirects to sign-in when a session
+            has lapsed, which is what makes the bookmark enough. */}
+        <p className="mt-4 text-center text-[13px] text-muted">
+          Bookmark your dashboard to come back. If you are signed out, it will
+          take you straight to sign in.
+        </p>
       </div>
     </div>
   );
