@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandMark } from "./BrandMark";
-import { RequestAccessDialog } from "./RequestAccess";
 
 /**
  * The public site's header, matched to senebiclabs.com.
@@ -28,6 +27,9 @@ import { RequestAccessDialog } from "./RequestAccess";
  * Requesting access is something they can do: it tells us who they are, and an
  * operator decides whether to invite them. Members come back through a
  * bookmarked dashboard, which redirects to sign-in when a session has lapsed.
+ *
+ * Request access is a link to its own page, /request-access, not a dialog, so
+ * it has a URL that can be shared and opened directly.
  */
 
 const NAV = [
@@ -40,7 +42,6 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [requestOpen, setRequestOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -58,7 +59,6 @@ export function SiteHeader() {
   }, []);
 
   return (
-    <>
     <header
       className={`fixed inset-x-4 top-3 z-50 rounded-[14px] backdrop-blur-[16px] transition-[background-color,border-color,box-shadow] duration-200 md:inset-x-10 md:top-5 ${
         scrolled
@@ -98,13 +98,13 @@ export function SiteHeader() {
         <div className="flex items-center gap-3 justify-self-end">
           {/* Mono, uppercase and tracked on a pill: the marketing site's call to
               action, pointed at the one thing a reader here can actually do. */}
-          <button
-            type="button"
-            onClick={() => setRequestOpen(true)}
+          <Link
+            href="/request-access"
+            aria-current={pathname === "/request-access" ? "page" : undefined}
             className="focusable hidden rounded-full bg-accent px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-on-fill transition-colors hover:bg-accent-hover md:inline-block"
           >
             Request access
-          </button>
+          </Link>
 
           <button
             type="button"
@@ -142,24 +142,16 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
-          <button
-            type="button"
-            onClick={() => {
-              setMenuOpen(false);
-              setRequestOpen(true);
-            }}
+          <Link
+            href="/request-access"
+            aria-current={pathname === "/request-access" ? "page" : undefined}
+            onClick={() => setMenuOpen(false)}
             className="focusable mt-4 self-start rounded-full bg-accent px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-on-fill transition-colors hover:bg-accent-hover"
           >
             Request access
-          </button>
+          </Link>
         </nav>
       )}
     </header>
-
-    {/* Rendered once, outside the header, and portalled to the body, so it is
-        not trapped by the header's backdrop-filter and survives the mobile menu
-        closing as it opens. */}
-    <RequestAccessDialog open={requestOpen} onClose={() => setRequestOpen(false)} />
-    </>
   );
 }
