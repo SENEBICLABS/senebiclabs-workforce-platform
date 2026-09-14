@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { createAccessRequest, parseAccessRequest } from "@/lib/access-requests";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,8 @@ export const dynamic = "force-dynamic";
  *   - It never emails the address it was given. The only mail it can cause
  *     goes to one fixed operator inbox, so it cannot be used to send our mail
  *     to strangers.
+ *   - It requires a Cloudflare Turnstile check, so a flood of automated
+ *     submissions cannot fill the list with invented people.
  *   - It is rate limited per client and per address, and carries a honeypot
  *     field that people never see and form-filling bots tend to complete.
  */
@@ -50,6 +53,22 @@ export async function POST(req: NextRequest) {
   const parsed = parseAccessRequest(body);
   if (!parsed.ok) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
+
+  // The bot check. After validation, because Cloudflare accepts each token only
+  // once and a typo in a field should not spend it; before anything counts
+  // against the address or touches the database.
+  const human = await verifyTurnstile((body as Record<string, unknown>).turnstile_token);
+  if (!human.ok) {
+    return human.reason === "unavailable"
+      ? NextResponse.json(
+          { error: "We could not check your request just now. Please try again in a moment." },
+          { status: 503 }
+        )
+      : NextResponse.json(
+          { error: "Please complete the security check and try again." },
+          { status: 400 }
+        );
   }
 
   const byAddress = rateLimit(`access:addr:${parsed.value.email}`, {

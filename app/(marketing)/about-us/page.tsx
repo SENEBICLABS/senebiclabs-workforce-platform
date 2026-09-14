@@ -127,7 +127,7 @@ export default function AboutUs() {
             Put your clinical knowledge to paid work
           </h2>
           <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">
-            Membership is by invitation, and every request for access is reviewed by hand.
+            Membership is by invitation for now. Request access and we will email you when we open to clinicians.
           </p>
           <p className="mt-6 text-body text-muted">
             <Link

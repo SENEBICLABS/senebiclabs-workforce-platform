@@ -71,7 +71,7 @@ const WORK = [
 const STEPS = [
   {
     title: "Request access",
-    body: "Tell us your name, your specialty and the country you practise in. It takes a minute.",
+    body: "Tell us your name, your specialty and the country you practise in. We will email you when we open to clinicians.",
   },
   {
     title: "Get verified",
@@ -120,7 +120,7 @@ export default function Landing() {
 
 
           <p className="mt-6 text-[13px] text-muted">
-            Membership is by invitation, and every request is reviewed by hand.
+            Membership is by invitation for now. Request access and we will email you when we open to clinicians.
           </p>
         </Hero>
 
@@ -219,7 +219,7 @@ export default function Landing() {
         <Section>
           <SectionHead
             title="Put your clinical knowledge to paid work"
-            intro="Membership is by invitation, and every request for access is reviewed by hand."
+            intro="Membership is by invitation for now. Request access and we will email you when we open to clinicians."
           />
         </Section>
 

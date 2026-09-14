@@ -23,12 +23,12 @@ export const FAQS: Faq[] = [
     category: "Joining",
     featured: true,
     q: "Can I sign up directly?",
-    a: "No. Membership is by invitation only. You can request access by telling us who you are: we review every request by hand, and reach out with an invitation when there is work that fits. The invitation is what creates your account.",
+    a: "Not yet. Membership is by invitation for now. You can request access by telling us who you are, and we will email you when Senebiclabs opens to clinicians. Nothing is created until then.",
   },
   {
     category: "Joining",
     q: "How do I get an invitation?",
-    a: "Request access from the top of any page, or be introduced by a clinician already reviewing with us. We assess each request, and invitations go out when there is work open in a specialty, so they follow the work rather than a queue.",
+    a: "For now, invitations go to a small group of clinicians we work with directly. Request access from the top of any page and you will be on the list: we will email you when we open to clinicians.",
   },
   {
     category: "Joining",

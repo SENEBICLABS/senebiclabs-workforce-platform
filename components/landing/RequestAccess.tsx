@@ -1,19 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Script from "next/script";
 import { Button } from "@/components/ui/Button";
 
 /**
  * The Request access form, rendered on its own page at /request-access.
  *
- * Membership is by invitation. This is how someone who found the site tells us
- * who they are. It asks only what a stranger can reasonably be asked, says
- * plainly that it is a request and not an account, and promises no reply:
- * silence has to be an acceptable outcome rather than a broken one.
+ * Joining a list, not applying. Requests are kept until Senebiclabs opens to
+ * clinicians, so the form promises exactly one thing: an email when that
+ * happens. It asks only what a stranger can reasonably be asked, and says what
+ * the email address will be used for, since that is the one use we make of it.
+ *
+ * A Cloudflare Turnstile check sits above the button. The API refuses a
+ * submission without a valid token, so the widget is what keeps a flood of
+ * bots from filling the list with invented people. When no site key is
+ * configured (local development) the widget is left out and the server skips
+ * the check to match; in production the server refuses without its key.
  *
  * On success the form is replaced in place by the confirmation, so the page
  * keeps its heading and the reader is not sent anywhere new.
  */
+
+const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+interface TurnstileApi {
+  render(el: HTMLElement, options: Record<string, unknown>): string;
+  reset(widgetId: string): void;
+  remove(widgetId: string): void;
+}
+
+declare global {
+  interface Window {
+    turnstile?: TurnstileApi;
+  }
+}
 
 interface Field {
   name: string;
@@ -48,7 +69,7 @@ const FIELDS: Field[] = [
     autoComplete: "url",
     placeholder: "linkedin.com/in/your-name",
     optional: true,
-    hint: "It helps us assess your request quickly.",
+    hint: "It helps us know who you are.",
   },
 ];
 
@@ -61,6 +82,53 @@ export function RequestAccessForm() {
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
 
+  const [token, setToken] = useState("");
+  const [checkError, setCheckError] = useState("");
+  const box = useRef<HTMLDivElement>(null);
+  const widgetId = useRef<string | null>(null);
+
+  /**
+   * Renders the widget once, into the box, if everything it needs is present.
+   * Called when the script becomes ready and on every mount, because either
+   * can happen first: on a first visit the script loads after the form mounts,
+   * and on a return visit it is already there when the form mounts again.
+   */
+  const renderWidget = useCallback(() => {
+    if (!SITE_KEY || !window.turnstile || !box.current || widgetId.current) return;
+    widgetId.current = window.turnstile.render(box.current, {
+      sitekey: SITE_KEY,
+      theme: "dark",
+      action: "request-access",
+      callback: (t: string) => {
+        setToken(t);
+        setCheckError("");
+      },
+      "expired-callback": () => setToken(""),
+      "error-callback": () => {
+        setToken("");
+        setCheckError(
+          "The security check could not load. Please refresh the page, or allow challenges.cloudflare.com if you use a blocker."
+        );
+      },
+    });
+  }, []);
+
+  const removeWidget = () => {
+    if (widgetId.current && window.turnstile) window.turnstile.remove(widgetId.current);
+    widgetId.current = null;
+  };
+
+  useEffect(() => {
+    renderWidget();
+    return removeWidget;
+  }, [renderWidget]);
+
+  /** A token is good once. After any failed attempt, get a fresh one. */
+  const resetWidget = () => {
+    if (widgetId.current && window.turnstile) window.turnstile.reset(widgetId.current);
+    setToken("");
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
@@ -69,16 +137,19 @@ export function RequestAccessForm() {
       const res = await fetch("/api/access-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...values, website }),
+        body: JSON.stringify({ ...values, website, turnstile_token: token }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(body?.error ?? "We could not send your request just now. Please try again.");
+        if (SITE_KEY) resetWidget();
         return;
       }
+      removeWidget();
       setDone(true);
     } catch {
       setError("We could not reach the server. Please check your connection.");
+      if (SITE_KEY) resetWidget();
     } finally {
       setBusy(false);
     }
@@ -89,15 +160,14 @@ export function RequestAccessForm() {
       // Announced when it replaces the form, so a screen reader hears the
       // outcome rather than silence after pressing the button.
       <div role="status" className="text-center">
-        <h2 className="text-[24px] leading-tight text-ink">Request received</h2>
+        <h2 className="text-[24px] leading-tight text-ink">You are on the list</h2>
         <p className="mt-4 text-body leading-relaxed text-muted">
-          Thank you. Every request is reviewed by hand. If there is work that
-          fits your specialty, we will get in touch at{" "}
-          <span className="font-semibold text-ink">{values.email}</span>.
+          Thank you. We will email{" "}
+          <span className="font-semibold text-ink">{values.email}</span> when
+          Senebiclabs opens to clinicians.
         </p>
         <p className="mt-3 text-[13px] text-muted">
-          There is nothing more you need to do, and no account has been
-          created. You will hear from us if we can offer you work.
+          There is nothing more you need to do, and no account has been created.
         </p>
       </div>
     );
@@ -105,6 +175,19 @@ export function RequestAccessForm() {
 
   return (
     <form onSubmit={submit} className="text-left">
+      {SITE_KEY && (
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+          strategy="afterInteractive"
+          onReady={renderWidget}
+          onError={() =>
+            setCheckError(
+              "The security check could not load. Please refresh the page, or allow challenges.cloudflare.com if you use a blocker."
+            )
+          }
+        />
+      )}
+
       <div className="space-y-5">
         {FIELDS.map((f) => (
           <div key={f.name}>
@@ -155,17 +238,27 @@ export function RequestAccessForm() {
         />
       </div>
 
-      {error && (
+      {/* The widget's own height, reserved so the button does not jump when
+          it appears. */}
+      {SITE_KEY && <div ref={box} className="mt-7 flex min-h-[65px] justify-center" />}
+
+      {(checkError || error) && (
         <p role="alert" className="mt-5 text-[13px] text-danger">
-          {error}
+          {checkError || error}
         </p>
       )}
 
-      <Button type="submit" loading={busy} className="mt-7 h-11 w-full">
+      <Button
+        type="submit"
+        loading={busy}
+        disabled={Boolean(SITE_KEY) && !token}
+        className="mt-6 h-11 w-full"
+      >
         Request access
       </Button>
       <p className="mt-3 text-center text-[12px] text-muted">
-        This is a request, not an account. Nothing is created until we invite you.
+        Joining the list does not create an account. We will only use your
+        email to tell you when we open.
       </p>
     </form>
   );
