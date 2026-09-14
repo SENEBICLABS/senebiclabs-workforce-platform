@@ -23,12 +23,12 @@ export const FAQS: Faq[] = [
     category: "Joining",
     featured: true,
     q: "Can I sign up directly?",
-    a: "No. Membership is by invitation only. An invitation is sent to one named address by someone already working with us, and opening it is what creates your account. There is no public sign-up and no waiting list.",
+    a: "No. Membership is by invitation only. You can request access by telling us who you are: we review every request by hand, and reach out with an invitation when there is work that fits. The invitation is what creates your account.",
   },
   {
     category: "Joining",
     q: "How do I get an invitation?",
-    a: "From a clinician already reviewing with us, or from the team directly. Invitations go out when there is work open in a specialty, so they follow the work rather than a queue.",
+    a: "Request access from the top of any page, or be introduced by a clinician already reviewing with us. We assess each request, and invitations go out when there is work open in a specialty, so they follow the work rather than a queue.",
   },
   {
     category: "Joining",

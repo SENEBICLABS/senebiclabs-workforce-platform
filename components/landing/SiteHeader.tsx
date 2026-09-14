@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandMark } from "./BrandMark";
+import { RequestAccessDialog } from "./RequestAccess";
 
 /**
  * The public site's header, matched to senebiclabs.com.
@@ -21,10 +22,12 @@ import { BrandMark } from "./BrandMark";
  * equal, so there is nothing for the links to be pushed off-centre by — which
  * matters now there is nothing on the right on desktop.
  *
- * No sign-in link, on purpose. Membership is by invitation and these pages are
- * written for people without an account, so a sign-in button would ask every
- * reader to do the one thing they cannot. Members come back through a bookmarked
- * dashboard, which redirects to sign-in when a session has lapsed.
+ * The one call to action is Request access, and the absence of a sign-in link
+ * is deliberate. These pages are written for people without an account, so a
+ * sign-in button would ask every reader to do the one thing they cannot.
+ * Requesting access is something they can do: it tells us who they are, and an
+ * operator decides whether to invite them. Members come back through a
+ * bookmarked dashboard, which redirects to sign-in when a session has lapsed.
  */
 
 const NAV = [
@@ -37,6 +40,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [requestOpen, setRequestOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -54,6 +58,7 @@ export function SiteHeader() {
   }, []);
 
   return (
+    <>
     <header
       className={`fixed inset-x-4 top-3 z-50 rounded-[14px] backdrop-blur-[16px] transition-[background-color,border-color,box-shadow] duration-200 md:inset-x-10 md:top-5 ${
         scrolled
@@ -91,6 +96,16 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-3 justify-self-end">
+          {/* Mono, uppercase and tracked on a pill: the marketing site's call to
+              action, pointed at the one thing a reader here can actually do. */}
+          <button
+            type="button"
+            onClick={() => setRequestOpen(true)}
+            className="focusable hidden rounded-full bg-accent px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-on-fill transition-colors hover:bg-accent-hover md:inline-block"
+          >
+            Request access
+          </button>
+
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
@@ -127,8 +142,24 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
+          <button
+            type="button"
+            onClick={() => {
+              setMenuOpen(false);
+              setRequestOpen(true);
+            }}
+            className="focusable mt-4 self-start rounded-full bg-accent px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-on-fill transition-colors hover:bg-accent-hover"
+          >
+            Request access
+          </button>
         </nav>
       )}
     </header>
+
+    {/* Rendered once, outside the header, and portalled to the body, so it is
+        not trapped by the header's backdrop-filter and survives the mobile menu
+        closing as it opens. */}
+    <RequestAccessDialog open={requestOpen} onClose={() => setRequestOpen(false)} />
+    </>
   );
 }

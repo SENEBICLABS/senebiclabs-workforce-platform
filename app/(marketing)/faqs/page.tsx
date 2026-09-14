@@ -40,8 +40,7 @@ export default function FaqsPage() {
             Put your clinical knowledge to paid work
           </h2>
           <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">
-            Membership is by invitation. If a colleague has sent you one, it is
-            waiting in your inbox.
+            Membership is by invitation, and every request for access is reviewed by hand.
           </p>
           <p className="mt-6 text-body text-muted">
             <Link

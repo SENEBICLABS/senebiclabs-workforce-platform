@@ -73,6 +73,15 @@ interface Pool {
 interface Invite {
   id: string; email: string; invited_by: string; sent: string; expires: string | null; expired: boolean;
 }
+interface AccessRequest {
+  id: string; full_name: string; email: string; specialty: string; credential: string;
+  country: string; profile_url: string | null; referred_by: string | null; created_at: string;
+}
+
+/** The host alone, which is what an operator needs to judge a profile link at a glance. */
+const hostOf = (url: string) => {
+  try { return new URL(url).host; } catch { return "link"; }
+};
 
 /* ── access picker ───────────────────────────────────────────────── */
 
@@ -152,6 +161,7 @@ export default function OpsConsole() {
   const [clinicians, setClinicians] = useState<Clinician[]>([]);
   const [pools, setPools] = useState<Pool[]>([]);
   const [invites, setInvites] = useState<Invite[]>([]);
+  const [requests, setRequests] = useState<AccessRequest[]>([]);
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -159,13 +169,14 @@ export default function OpsConsole() {
   const [inviteEmail, setInviteEmail] = useState("");
 
   const load = useCallback(async () => {
-    const [o, c, p, i] = await Promise.all([
+    const [o, c, p, i, r] = await Promise.all([
       ops<Overview>("/overview"),
       ops<{ clinicians: Clinician[] }>(`/clinicians${search ? `?q=${encodeURIComponent(search)}` : ""}`),
       ops<{ pools: Pool[] }>("/pools"),
       ops<{ invites: Invite[] }>("/invites"),
+      ops<{ requests: AccessRequest[] }>("/access-requests"),
     ]);
-    setOverview(o); setClinicians(c.clinicians); setPools(p.pools); setInvites(i.invites);
+    setOverview(o); setClinicians(c.clinicians); setPools(p.pools); setInvites(i.invites); setRequests(r.requests);
   }, [search]);
 
   useEffect(() => { load().catch(() => {}); }, [load]);
@@ -300,6 +311,62 @@ export default function OpsConsole() {
                 </td>
               </tr>
             ))}
+          </tbody>
+        </table>
+      </Section>
+
+      {/* Access requests — above invites, because this is where invitations start. */}
+      <Section title={`Access requests${requests.length ? ` (${requests.length})` : ""}`}>
+        <table className="w-full min-w-[1080px]">
+          <thead><tr>
+            <th className={head}>Name</th><th className={head}>Email</th><th className={head}>Specialty</th>
+            <th className={head}>Credential</th><th className={head}>Country</th><th className={head}>Profile</th>
+            <th className={head}>Referred by</th><th className={head}>Received</th><th className={head} />
+          </tr></thead>
+          <tbody>
+            {requests.map((r) => (
+              <tr key={r.id} className={rowLine}>
+                <td className={`${cell} text-white`}>{r.full_name}</td>
+                <td className={`${cell} text-[#A8BDBA]`}>{r.email}</td>
+                <td className={`${cell} text-white`}>{r.specialty}</td>
+                <td className={`${cell} text-[#A8BDBA]`}>{r.credential}</td>
+                <td className={`${cell} text-[#A8BDBA]`}>{r.country}</td>
+                <td className={cell}>
+                  {r.profile_url ? (
+                    // Validated as http(s) at the API and by the table's CHECK,
+                    // and opened without a referrer or opener handle.
+                    <a href={r.profile_url} target="_blank" rel="noopener noreferrer nofollow"
+                      className="text-[#6ADABD] underline-offset-2 hover:underline">
+                      {hostOf(r.profile_url)}
+                    </a>
+                  ) : (
+                    <span className="text-[#A8BDBA]">—</span>
+                  )}
+                </td>
+                <td className={`${cell} text-[#A8BDBA]`}>{r.referred_by ?? "—"}</td>
+                <td className={`${cell} text-[#A8BDBA]`}>{fmt(r.created_at)}</td>
+                <td className={`${cell} whitespace-nowrap text-right`}>
+                  <button className={btnPrimary} disabled={busy === `req-${r.id}`}
+                    onClick={() => act(`req-${r.id}`,
+                      () => ops(`/access-requests/${r.id}/invite`, { method: "POST" }),
+                      `Invitation sent to ${r.email}.`)}>
+                    Invite
+                  </button>{" "}
+                  <button className={btn} disabled={busy === `req-${r.id}`}
+                    onClick={() => {
+                      if (!confirm(`Decline the request from ${r.full_name}? They will not be notified.`)) return;
+                      act(`req-${r.id}`,
+                        () => ops(`/access-requests/${r.id}/decline`, { method: "POST" }),
+                        `Request from ${r.email} declined.`);
+                    }}>
+                    Decline
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {requests.length === 0 && (
+              <tr><td colSpan={9} className={`${cell} text-[#A8BDBA]`}>No requests waiting.</td></tr>
+            )}
           </tbody>
         </table>
       </Section>

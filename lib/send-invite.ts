@@ -58,7 +58,8 @@ export async function sendInviteEmail(
   }
 }
 
-function escapeHtml(value: string): string {
+/** Shared by every email that interpolates text somebody else typed. */
+export function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!
   );

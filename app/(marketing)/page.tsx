@@ -70,8 +70,8 @@ const WORK = [
 
 const STEPS = [
   {
-    title: "Get invited",
-    body: "An invitation arrives by email, addressed to you, when there is work open in your specialty.",
+    title: "Request access",
+    body: "Tell us who you are: your specialty, your licence and where you practise. It takes a couple of minutes.",
   },
   {
     title: "Get verified",
@@ -80,6 +80,10 @@ const STEPS = [
   {
     title: "Calibrate",
     body: "A short set of cases in your specialty, so we can match you to the right work.",
+  },
+  {
+    title: "Get invited",
+    body: "If there is work that fits your specialty, an invitation arrives by email, addressed to you.",
   },
   {
     title: "Review",
@@ -116,8 +120,7 @@ export default function Landing() {
 
 
           <p className="mt-6 text-[13px] text-muted">
-            Membership is by invitation. If you have one, opening it is all it
-            takes.
+            Membership is by invitation, and every request is reviewed by hand.
           </p>
         </Hero>
 
@@ -179,7 +182,7 @@ export default function Landing() {
         <Testimonials />
 
         <Section>
-          <SectionHead eyebrow="How it works" title="From invitation to getting paid" />
+          <SectionHead eyebrow="How it works" title="From request to getting paid" />
           <ol className="mx-auto mt-14 max-w-[720px] space-y-10">
             {STEPS.map((step, i) => (
               <li key={step.title} className="text-center">
@@ -216,7 +219,7 @@ export default function Landing() {
         <Section>
           <SectionHead
             title="Put your clinical knowledge to paid work"
-            intro="Membership is by invitation. If a colleague has sent you one, it is waiting in your inbox."
+            intro="Membership is by invitation, and every request for access is reviewed by hand."
           />
         </Section>
 
