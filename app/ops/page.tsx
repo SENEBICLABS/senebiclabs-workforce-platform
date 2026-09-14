@@ -74,13 +74,13 @@ interface Invite {
   id: string; email: string; invited_by: string; sent: string; expires: string | null; expired: boolean;
 }
 interface AccessRequest {
-  id: string; full_name: string; email: string; specialty: string; credential: string;
-  country: string; profile_url: string | null; referred_by: string | null; created_at: string;
+  id: string; full_name: string; email: string; specialty: string;
+  country: string; linkedin_url: string | null; created_at: string;
 }
 
-/** The host alone, which is what an operator needs to judge a profile link at a glance. */
-const hostOf = (url: string) => {
-  try { return new URL(url).host; } catch { return "link"; }
+/** The profile path alone, e.g. /in/dr-ama — enough to recognise it at a glance. */
+const linkedinPath = (url: string) => {
+  try { return new URL(url).pathname.replace(/\/$/, "") || "profile"; } catch { return "profile"; }
 };
 
 /* ── access picker ───────────────────────────────────────────────── */
@@ -315,13 +315,14 @@ export default function OpsConsole() {
         </table>
       </Section>
 
-      {/* Access requests — above invites, because this is where invitations start. */}
+      {/* Access requests. Review only: nothing here sends an invitation. If
+          someone is a fit, reach out, then invite them from Invites below. */}
       <Section title={`Access requests${requests.length ? ` (${requests.length})` : ""}`}>
-        <table className="w-full min-w-[1080px]">
+        <table className="w-full min-w-[880px]">
           <thead><tr>
             <th className={head}>Name</th><th className={head}>Email</th><th className={head}>Specialty</th>
-            <th className={head}>Credential</th><th className={head}>Country</th><th className={head}>Profile</th>
-            <th className={head}>Referred by</th><th className={head}>Received</th><th className={head} />
+            <th className={head}>Country</th><th className={head}>LinkedIn</th>
+            <th className={head}>Received</th><th className={head} />
           </tr></thead>
           <tbody>
             {requests.map((r) => (
@@ -329,43 +330,33 @@ export default function OpsConsole() {
                 <td className={`${cell} text-white`}>{r.full_name}</td>
                 <td className={`${cell} text-[#A8BDBA]`}>{r.email}</td>
                 <td className={`${cell} text-white`}>{r.specialty}</td>
-                <td className={`${cell} text-[#A8BDBA]`}>{r.credential}</td>
                 <td className={`${cell} text-[#A8BDBA]`}>{r.country}</td>
                 <td className={cell}>
-                  {r.profile_url ? (
-                    // Validated as http(s) at the API and by the table's CHECK,
-                    // and opened without a referrer or opener handle.
-                    <a href={r.profile_url} target="_blank" rel="noopener noreferrer nofollow"
+                  {r.linkedin_url ? (
+                    // Only https on linkedin.com gets this far — the API and the
+                    // table's CHECK both hold that line — and it opens without a
+                    // referrer or opener handle.
+                    <a href={r.linkedin_url} target="_blank" rel="noopener noreferrer nofollow"
                       className="text-[#6ADABD] underline-offset-2 hover:underline">
-                      {hostOf(r.profile_url)}
+                      {linkedinPath(r.linkedin_url)}
                     </a>
                   ) : (
                     <span className="text-[#A8BDBA]">—</span>
                   )}
                 </td>
-                <td className={`${cell} text-[#A8BDBA]`}>{r.referred_by ?? "—"}</td>
                 <td className={`${cell} text-[#A8BDBA]`}>{fmt(r.created_at)}</td>
                 <td className={`${cell} whitespace-nowrap text-right`}>
-                  <button className={btnPrimary} disabled={busy === `req-${r.id}`}
-                    onClick={() => act(`req-${r.id}`,
-                      () => ops(`/access-requests/${r.id}/invite`, { method: "POST" }),
-                      `Invitation sent to ${r.email}.`)}>
-                    Invite
-                  </button>{" "}
                   <button className={btn} disabled={busy === `req-${r.id}`}
-                    onClick={() => {
-                      if (!confirm(`Decline the request from ${r.full_name}? They will not be notified.`)) return;
-                      act(`req-${r.id}`,
-                        () => ops(`/access-requests/${r.id}/decline`, { method: "POST" }),
-                        `Request from ${r.email} declined.`);
-                    }}>
-                    Decline
+                    onClick={() => act(`req-${r.id}`,
+                      () => ops(`/access-requests/${r.id}/review`, { method: "POST" }),
+                      `Request from ${r.email} marked reviewed.`)}>
+                    Mark reviewed
                   </button>
                 </td>
               </tr>
             ))}
             {requests.length === 0 && (
-              <tr><td colSpan={9} className={`${cell} text-[#A8BDBA]`}>No requests waiting.</td></tr>
+              <tr><td colSpan={7} className={`${cell} text-[#A8BDBA]`}>No requests waiting.</td></tr>
             )}
           </tbody>
         </table>

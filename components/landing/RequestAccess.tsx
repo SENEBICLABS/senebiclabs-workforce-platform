@@ -8,17 +8,19 @@ import { Button } from "@/components/ui/Button";
 /**
  * Requesting access.
  *
- * Membership is by invitation. This is how a clinician without one tells us who
- * they are, so that someone can assess them and reach out. It says plainly that
- * it is a request and not an account, and it promises no reply: most requests
- * will arrive when there is no work in that specialty, and silence has to be an
- * acceptable outcome rather than a broken one.
+ * Membership is by invitation. This is how someone who found the site tells us
+ * who they are, so that we can assess them and reach out. It asks only what a
+ * stranger can reasonably be asked, says plainly that it is a request and not
+ * an account, and promises no reply: most requests will arrive when there is no
+ * work in that specialty, and silence has to be an acceptable outcome rather
+ * than a broken one.
  */
 
 interface Field {
   name: string;
   label: string;
   type: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   autoComplete: string;
   placeholder: string;
   optional?: boolean;
@@ -27,27 +29,27 @@ interface Field {
 
 const FIELDS: Field[] = [
   { name: "full_name", label: "Full name", type: "text", autoComplete: "name", placeholder: "Dr Amara Osei" },
-  { name: "email", label: "Email", type: "email", autoComplete: "email", placeholder: "you@hospital.org" },
+  {
+    name: "email",
+    label: "Email",
+    type: "email",
+    autoComplete: "email",
+    placeholder: "you@example.com",
+    hint: "A personal address is fine. Use one you check.",
+  },
   { name: "specialty", label: "Specialty", type: "text", autoComplete: "off", placeholder: "Internal medicine" },
-  { name: "credential", label: "Credential or licence type", type: "text", autoComplete: "off", placeholder: "MD, MBBS, NP" },
   { name: "country", label: "Country of practice", type: "text", autoComplete: "country-name", placeholder: "Ghana" },
   {
-    name: "profile_url",
-    label: "Profile link",
-    type: "url",
-    autoComplete: "url",
-    placeholder: "https://",
-    optional: true,
-    hint: "LinkedIn, or your page at a hospital or practice. It is the quickest way for us to verify you.",
-  },
-  {
-    name: "referred_by",
-    label: "Referred by",
+    name: "linkedin_url",
+    label: "LinkedIn",
+    // Text rather than url: people paste "linkedin.com/in/name" without a
+    // scheme, which a url input would refuse. The server adds the scheme.
     type: "text",
-    autoComplete: "off",
-    placeholder: "A colleague's name",
+    inputMode: "url",
+    autoComplete: "url",
+    placeholder: "linkedin.com/in/your-name",
     optional: true,
-    hint: "If someone already reviewing with us suggested you get in touch.",
+    hint: "It helps us assess your request quickly.",
   },
 ];
 
@@ -192,7 +194,7 @@ export function RequestAccessDialog({
         <div>
           <p className="text-body text-muted">
             Thank you. Every request is reviewed by hand. If there is work that
-            fits your specialty, we will email an invitation to{" "}
+            fits your specialty, we will get in touch at{" "}
             <span className="font-semibold text-ink">{values.email}</span>.
           </p>
           <p className="mt-3 text-[13px] text-muted">
@@ -204,11 +206,10 @@ export function RequestAccessDialog({
           </Button>
         </div>
       ) : (
-        <form onSubmit={submit} noValidate={false}>
+        <form onSubmit={submit}>
           <p className="text-body text-muted">
-            Senebiclabs is invite-only. Tell us who you are and we will assess
-            your request, and reach out with an invitation when there is work
-            that fits.
+            Senebiclabs is invite-only. Tell us who you are, and we will reach
+            out with an invitation when there is work that fits your specialty.
           </p>
 
           <div className="mt-5 space-y-4">
@@ -225,6 +226,7 @@ export function RequestAccessDialog({
                   id={`ra-${f.name}`}
                   name={f.name}
                   type={f.type}
+                  inputMode={f.inputMode}
                   required={!f.optional}
                   autoComplete={f.autoComplete}
                   placeholder={f.placeholder}

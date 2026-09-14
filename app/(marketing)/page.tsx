@@ -71,7 +71,7 @@ const WORK = [
 const STEPS = [
   {
     title: "Request access",
-    body: "Tell us who you are: your specialty, your licence and where you practise. It takes a couple of minutes.",
+    body: "Tell us your name, your specialty and the country you practise in. It takes a minute.",
   },
   {
     title: "Get verified",

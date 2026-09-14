@@ -33,7 +33,7 @@ const EXPERTS: Expert[] = [
 const VETTING = [
   {
     step: "Identified",
-    body: "A clinician requests access, or is put forward by someone already reviewing with us or by the clinical leads, with their specialty, credential and the country they practise in. Nothing is created at this point.",
+    body: "A clinician requests access with their specialty and the country they practise in, or is put forward by the clinical leads. Nothing is created at this point.",
   },
   {
     step: "Credential check",
