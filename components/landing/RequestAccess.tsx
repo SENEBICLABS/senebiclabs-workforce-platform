@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Script from "next/script";
 import { Button } from "@/components/ui/Button";
 import { Arrow } from "./Arrow";
@@ -25,7 +25,10 @@ import { Arrow } from "./Arrow";
  * only the secret key, which never leaves the server, can verify a token.
  *
  * On success the form is replaced in place by the confirmation, so the page
- * keeps its heading and the reader is not sent anywhere new.
+ * keeps its heading and the reader is not sent anywhere new. The browser also
+ * remembers it, so a refresh or a return visit says "already on the list"
+ * rather than offering a blank form, with a link to send another. That memory
+ * is this visitor's own browser only; the request itself lives on the server.
  */
 
 interface TurnstileApi {
@@ -79,6 +82,47 @@ const FIELDS: Field[] = [
 
 const empty = Object.fromEntries(FIELDS.map((f) => [f.name, ""])) as Record<string, string>;
 
+/* ── remembering a sent request, in this browser only ─────────────── */
+
+const STORAGE_KEY = "senebiclabs.request-access.email";
+/** Same-tab signal: the storage event only fires in other tabs. */
+const CHANGE_EVENT = "senebiclabs:request-access";
+
+/**
+ * Storage can be unavailable (private windows, blocked site data) and then
+ * throws. Every access is guarded, and the page works without it: the
+ * confirmation still shows for the visit that sent the request.
+ */
+function readRemembered(): string | null {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function remember(email: string | null) {
+  try {
+    if (email) window.localStorage.setItem(STORAGE_KEY, email);
+    else window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Nothing to do: the in-memory confirmation covers this visit.
+  }
+  window.dispatchEvent(new Event(CHANGE_EVENT));
+}
+
+function subscribe(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(CHANGE_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(CHANGE_EVENT, onChange);
+  };
+}
+
+/** The page is prerendered, where there is no storage: nothing remembered. */
+const rememberedOnServer = () => null;
+
 export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
   const SITE_KEY = siteKey;
   const [values, setValues] = useState(empty);
@@ -86,6 +130,10 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+  // Read after hydration, so the prerendered form and the first client render
+  // agree, then swap to the confirmation if this browser has already sent one.
+  const rememberedEmail = useSyncExternalStore(subscribe, readRemembered, rememberedOnServer);
+  const confirmed = done || rememberedEmail !== null;
 
   const [token, setToken] = useState("");
   const [checkError, setCheckError] = useState("");
@@ -118,15 +166,23 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
     });
   }, [SITE_KEY]);
 
-  const removeWidget = () => {
-    if (widgetId.current && window.turnstile) window.turnstile.remove(widgetId.current);
+  const removeWidget = useCallback(() => {
+    try {
+      if (widgetId.current && window.turnstile) window.turnstile.remove(widgetId.current);
+    } catch {
+      // Already gone with its box; forgetting the id is all that matters.
+    }
     widgetId.current = null;
-  };
+  }, []);
 
+  // The widget follows the form: rendered while the form is showing, removed
+  // when the confirmation replaces it, and rendered afresh on the way back.
   useEffect(() => {
-    renderWidget();
-    return removeWidget;
-  }, [renderWidget]);
+    if (confirmed) removeWidget();
+    else renderWidget();
+  }, [confirmed, renderWidget, removeWidget]);
+
+  useEffect(() => removeWidget, [removeWidget]);
 
   /** A token is good once. After any failed attempt, get a fresh one. */
   const resetWidget = () => {
@@ -157,7 +213,7 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
         if (SITE_KEY) resetWidget();
         return;
       }
-      removeWidget();
+      remember(values.email);
       setDone(true);
     } catch {
       setError("We could not reach the server. Please check your connection.");
@@ -167,20 +223,41 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
     }
   };
 
-  if (done) {
+  /** Forgets the remembered request and brings back an empty form. */
+  const sendAnother = () => {
+    remember(null);
+    setDone(false);
+    setValues(empty);
+    setWebsite("");
+    setError("");
+    setToken("");
+  };
+
+  if (confirmed) {
+    // Sent in this visit, or remembered from an earlier one.
+    const email = done ? values.email : rememberedEmail;
     return (
       // Announced when it replaces the form, so a screen reader hears the
       // outcome rather than silence after pressing the button.
       <div role="status" className="text-center">
-        <h2 className="text-[24px] leading-tight text-ink">You are on the list</h2>
+        <h2 className="text-[24px] leading-tight text-ink">
+          {done ? "You are on the list" : "You are already on the list"}
+        </h2>
         <p className="mt-4 text-body leading-relaxed text-muted">
-          Thank you. We will email{" "}
-          <span className="font-semibold text-ink">{values.email}</span> when
+          {done ? "Thank you. " : ""}We will email{" "}
+          <span className="font-semibold text-ink">{email}</span> when
           Senebiclabs opens to clinicians.
         </p>
         <p className="mt-3 text-[13px] text-muted">
           There is nothing more you need to do, and no account has been created.
         </p>
+        <button
+          type="button"
+          onClick={sendAnother}
+          className="focusable mt-6 rounded-btn text-[13px] text-muted underline underline-offset-4 transition-colors hover:text-ink"
+        >
+          Send another request
+        </button>
       </div>
     );
   }
