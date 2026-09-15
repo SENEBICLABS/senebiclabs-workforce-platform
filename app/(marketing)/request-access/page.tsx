@@ -31,7 +31,10 @@ export default function RequestAccessPage() {
         </p>
 
         <div className="mx-auto mt-14 w-full max-w-[440px]">
-          <RequestAccessForm />
+          {/* Read here, on the server, and handed to the form. The page is
+              prerendered, so this is read at build time: a changed key takes
+              effect on the next deploy. */}
+          <RequestAccessForm siteKey={process.env.NEXT_TURNSTILE_SITE_KEY} />
         </div>
       </div>
     </section>

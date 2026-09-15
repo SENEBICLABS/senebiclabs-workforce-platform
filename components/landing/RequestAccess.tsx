@@ -19,11 +19,14 @@ import { Arrow } from "./Arrow";
  * configured (local development) the widget is left out and the server skips
  * the check to match; in production the server refuses without its key.
  *
+ * The site key arrives as a prop, read on the server by the page from
+ * NEXT_TURNSTILE_SITE_KEY, rather than from a NEXT_PUBLIC_ variable. It is
+ * public either way: Cloudflare's widget puts it in the page by design, and
+ * only the secret key, which never leaves the server, can verify a token.
+ *
  * On success the form is replaced in place by the confirmation, so the page
  * keeps its heading and the reader is not sent anywhere new.
  */
-
-const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
 interface TurnstileApi {
   render(el: HTMLElement, options: Record<string, unknown>): string;
@@ -76,7 +79,8 @@ const FIELDS: Field[] = [
 
 const empty = Object.fromEntries(FIELDS.map((f) => [f.name, ""])) as Record<string, string>;
 
-export function RequestAccessForm() {
+export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
+  const SITE_KEY = siteKey;
   const [values, setValues] = useState(empty);
   const [website, setWebsite] = useState("");
   const [busy, setBusy] = useState(false);
@@ -112,7 +116,7 @@ export function RequestAccessForm() {
         );
       },
     });
-  }, []);
+  }, [SITE_KEY]);
 
   const removeWidget = () => {
     if (widgetId.current && window.turnstile) window.turnstile.remove(widgetId.current);
