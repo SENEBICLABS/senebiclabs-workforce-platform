@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { Button } from "@/components/ui/Button";
+import { Arrow } from "./Arrow";
 
 /**
  * The Request access form, rendered on its own page at /request-access.
@@ -131,6 +132,13 @@ export function RequestAccessForm() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // The button stays enabled while the check runs, rather than greyed out,
+    // so the page does not open on a dimmed call to action. Pressing it early
+    // just asks for a moment; the server refuses a missing token regardless.
+    if (SITE_KEY && !token) {
+      if (!checkError) setError("One moment: the security check is still finishing. Please try again.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -250,11 +258,13 @@ export function RequestAccessForm() {
 
       <Button
         type="submit"
+        variant="light"
         loading={busy}
-        disabled={Boolean(SITE_KEY) && !token}
-        className="mt-6 h-11 w-full"
+        className="group mt-6 h-11 w-full"
       >
         Request access
+        {/* Hidden while sending, so the spinner is not flanked by an arrow. */}
+        {!busy && <Arrow />}
       </Button>
       <p className="mt-3 text-center text-[12px] text-muted">
         Joining the list does not create an account. We will only use your

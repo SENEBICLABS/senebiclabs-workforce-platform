@@ -7,11 +7,14 @@
  * server, so the recipe has to live somewhere both sides can reach.
  */
 
-export type Variant = "primary" | "secondary" | "ghost" | "danger";
+export type Variant = "primary" | "light" | "secondary" | "ghost" | "danger";
 export type Size = "sm" | "md" | "lg";
 
 export const VARIANT: Record<Variant, string> = {
   primary: "bg-accent text-on-fill hover:bg-accent-hover disabled:hover:bg-accent",
+  // The public site's call to action: the text's own white, filled, so the one
+  // thing to press reads as the brightest thing on a black page.
+  light: "bg-ink text-canvas hover:bg-strong disabled:hover:bg-ink",
   secondary:
     "bg-surface text-ink border border-hairline hover:bg-accent-soft disabled:hover:bg-surface",
   ghost: "bg-transparent text-muted hover:bg-accent-soft hover:text-accent",

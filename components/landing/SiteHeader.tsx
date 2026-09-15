@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Arrow } from "./Arrow";
 import { BrandMark } from "./BrandMark";
 
 /**
@@ -95,15 +96,20 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-3 justify-self-end">
-          {/* Mono, uppercase and tracked on a pill: the marketing site's call to
-              action, pointed at the one thing a reader here can actually do. */}
+        {/* Pinned to the third column. On mobile the centre nav is display:none,
+            which takes it out of the grid, and without this the actions would
+            slide into the empty middle column beside the brand. */}
+        <div className="col-start-3 flex items-center gap-3 justify-self-end">
+          {/* Mono, uppercase and tracked on a white pill with an arrow: the one
+              thing a reader here can actually do, as the brightest thing in the
+              nav. */}
           <Link
             href="/request-access"
             aria-current={pathname === "/request-access" ? "page" : undefined}
-            className="focusable hidden rounded-full bg-accent px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-on-fill transition-colors hover:bg-accent-hover md:inline-block"
+            className="focusable group hidden items-center gap-1.5 rounded-full bg-ink px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-canvas transition-colors hover:bg-strong md:inline-flex"
           >
             Request access
+            <Arrow />
           </Link>
 
           <button
@@ -146,9 +152,10 @@ export function SiteHeader() {
             href="/request-access"
             aria-current={pathname === "/request-access" ? "page" : undefined}
             onClick={() => setMenuOpen(false)}
-            className="focusable mt-4 self-start rounded-full bg-accent px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-on-fill transition-colors hover:bg-accent-hover"
+            className="focusable group mt-4 inline-flex items-center gap-1.5 self-start rounded-full bg-ink px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-canvas transition-colors hover:bg-strong"
           >
             Request access
+            <Arrow />
           </Link>
         </nav>
       )}
