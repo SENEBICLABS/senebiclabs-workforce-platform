@@ -15,9 +15,10 @@ export const dynamic = "force-dynamic";
  *     address already has an account, or a request from it is already waiting.
  *     Anything else would let a stranger test whether a named clinician works
  *     with us.
- *   - It never emails the address it was given. The only mail it can cause
- *     goes to one fixed operator inbox, so it cannot be used to send our mail
- *     to strangers.
+ *   - It emails the address it was given once, and only when a request is
+ *     actually stored, so repeating a submission cannot flood an inbox. That
+ *     email carries a link that removes the address, for anyone added by
+ *     somebody else.
  *   - It requires a Cloudflare Turnstile check, so a flood of automated
  *     submissions cannot fill the list with invented people.
  *   - It is rate limited per client and per address, and carries a honeypot
