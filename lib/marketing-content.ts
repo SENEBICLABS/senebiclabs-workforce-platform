@@ -32,6 +32,17 @@ export const FAQS: Faq[] = [
   },
   {
     category: "Joining",
+    featured: true,
+    q: "When will Senebiclabs open to clinicians?",
+    a: "We have not set a date yet. Everyone who requests access is on the list, and we will email the list when we open.",
+  },
+  {
+    category: "Joining",
+    q: "What do you do with the details I send?",
+    a: "We keep your request so that we can email you when we open, and we only use your address for that. The confirmation email has a link that removes your address and deletes your request, whenever you want.",
+  },
+  {
+    category: "Joining",
     q: "What happens when I open my invitation?",
     a: "It takes you to a sign-in page where you continue with Google or with the address the invitation was sent to. Either one creates your account and takes you straight in. Nothing else is needed.",
   },
@@ -102,6 +113,30 @@ export const FAQ_CATEGORIES: Faq["category"][] = [
   "The work",
   "Pay",
   "Practicalities",
+];
+
+/**
+ * How someone gets from reading a page to reviewing a case, as it is today:
+ * request access, wait for us to open, get verified, work. Shared so the
+ * landing page and About us tell the same four steps.
+ */
+export const JOIN_STEPS = [
+  {
+    title: "Request access",
+    body: "Tell us your name, your specialty and the country you practise in. It takes a minute.",
+  },
+  {
+    title: "Hear from us",
+    body: "You are on the list. When Senebiclabs opens to clinicians, we email you.",
+  },
+  {
+    title: "Get verified",
+    body: "We check your licence against the register it was issued by, and a short set of cases in your specialty matches you to the right work.",
+  },
+  {
+    title: "Review and get paid",
+    body: "Work through cases remotely, on your own schedule, paid per reviewed case, including the ones you flag.",
+  },
 ];
 
 export const ELIGIBILITY = [
