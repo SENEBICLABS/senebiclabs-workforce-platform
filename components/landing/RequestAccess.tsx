@@ -301,7 +301,7 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
                 setValues({ ...values, [f.name]: e.target.value });
                 setError("");
               }}
-              className="focusable h-11 w-full rounded-card border border-hairline bg-surface px-3 text-body text-ink placeholder:text-muted"
+              className="focusable h-11 w-full rounded-card border border-hairline bg-surface px-3 text-body text-ink placeholder:text-placeholder"
             />
             {f.hint && (
               <p id={`ra-${f.name}-hint`} className="mt-1.5 text-[12px] text-muted">

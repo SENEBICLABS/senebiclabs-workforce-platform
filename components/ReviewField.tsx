@@ -154,7 +154,7 @@ export function ReviewField({
           aria-invalid={invalid || undefined}
           rows={field.rows ?? 4}
           placeholder="Type your assessment…"
-          className={`${CONTROL} ${border} resize-y py-2.5 placeholder:text-muted`}
+          className={`${CONTROL} ${border} resize-y py-2.5 placeholder:text-placeholder`}
         />
       )}
 

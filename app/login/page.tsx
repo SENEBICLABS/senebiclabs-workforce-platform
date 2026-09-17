@@ -156,7 +156,7 @@ function SignIn() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 aria-invalid={Boolean(error)}
-                className={`focusable h-11 w-full rounded-card border bg-surface px-3 text-body text-ink placeholder:text-muted ${
+                className={`focusable h-11 w-full rounded-card border bg-surface px-3 text-body text-ink placeholder:text-placeholder ${
                   error ? "border-danger" : "border-hairline"
                 }`}
               />

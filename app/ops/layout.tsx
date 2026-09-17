@@ -13,5 +13,5 @@ export const metadata: Metadata = {
  * application — there is no route from one into the other, in either direction.
  */
 export default function OpsLayout({ children }: { children: React.ReactNode }) {
-  return <div className="min-h-screen bg-[#0C2422] text-[#E3ECE9]">{children}</div>;
+  return <div className="min-h-screen bg-[#0C2422] text-white">{children}</div>;
 }

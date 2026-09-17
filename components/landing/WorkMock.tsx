@@ -15,7 +15,7 @@ import type { WorkTask } from "@/lib/marketing-content";
 
 /** A line of case text nobody is meant to read. */
 function Line({ w = "w-full" }: { w?: string }) {
-  return <div className={`h-2 rounded-full bg-white/[0.14] ${w}`} />;
+  return <div className={`h-2 rounded-full bg-accent/25 ${w}`} />;
 }
 
 function Frame({ label, children }: { label: string; children: React.ReactNode }) {

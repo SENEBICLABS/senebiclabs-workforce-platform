@@ -27,8 +27,11 @@
   --color-canvas-top: #060606;
   /* Monochrome text, hierarchy by opacity. */
   --color-ink: #FFFFFF;
-  --color-strong: rgb(255 255 255 / 0.93);
-  --color-muted: rgb(255 255 255 / 0.78);
+  --color-strong: #FFFFFF;
+  --color-muted: #FFFFFF;
+  /* The one thing that must not be white: an empty field would look filled.
+     Tinted with the accent rather than dimmed to grey. */
+  --color-placeholder: rgb(79 191 164 / 0.55);
   /* The accent at low alpha rather than white. This is where most of the
    * teal on the page comes from: it is on every card, every divider and
    * every field, and it composites to 31 steps of chroma over a raised
@@ -74,7 +77,7 @@
   /* Sidebar, on the same ramp: barely-raised at rest, raised on hover. */
   --color-rail: #060606;
   --color-rail-hover: #0D0D0D;
-  --color-rail-text: rgb(255 255 255 / 0.62);
+  --color-rail-text: #FFFFFF;
 
   /* ---- Type ------------------------------------------------------- */
   /* Body. Every sentence on the platform. */

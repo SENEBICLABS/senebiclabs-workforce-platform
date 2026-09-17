@@ -35,11 +35,11 @@ export default function Unlock() {
         <h1 className="text-[15px] font-semibold tracking-tight text-white">
           Operator console
         </h1>
-        <p className="mt-1 text-[13px] text-[#A8BDBA]">
+        <p className="mt-1 text-[13px] text-white">
           This area is not part of the clinician platform.
         </p>
 
-        <label htmlFor="key" className="mt-6 mb-1.5 block text-[11px] uppercase tracking-wider text-[#A8BDBA]">
+        <label htmlFor="key" className="mt-6 mb-1.5 block text-[11px] uppercase tracking-wider text-white">
           Operator key
         </label>
         <input
