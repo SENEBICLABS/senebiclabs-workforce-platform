@@ -11,7 +11,8 @@ import {
 import { Testimonials } from "@/components/landing/Testimonials";
 import { Faqs } from "@/components/landing/Faqs";
 import { RequestAccessButton } from "@/components/landing/RequestAccessButton";
-import { ELIGIBILITY, JOIN_STEPS } from "@/lib/marketing-content";
+import { WorkTabs } from "@/components/landing/WorkTabs";
+import { ELIGIBILITY, JOIN_STEPS, WORK_TASKS } from "@/lib/marketing-content";
 
 export const metadata: Metadata = {
   title: "Senebiclabs for clinicians",
@@ -36,26 +37,6 @@ export const metadata: Metadata = {
  * this one explains the problem instead. There are no figures here we could
  * stand behind yet, so there are no figures.
  */
-
-/**
- * What a clinician actually does. Every item describes a control the workspace
- * really renders: the choice and scale fields, the span highlighter, the free
- * text and structured fields, the flag, and approve / edit / send back.
- */
-const WORK = [
-  {
-    title: "Judge an answer",
-    body: "A case, and the answer a model gave for it. You say whether it holds up, choose what went wrong if it did not, rate how confident you are, and highlight the exact passage at fault. The rubric for that body of work sits beside the case while you read.",
-  },
-  {
-    title: "Write the answer yourself",
-    body: "Where the model's answer will not do, or the case calls for one written from scratch, you write it. Structured fields where the work needs structure, prose where it needs prose.",
-  },
-  {
-    title: "Approve a colleague's",
-    body: "Written work always goes to a second clinician, and never to its author. You approve it, edit it, or send it back saying what has to change. Sending back pays exactly what approving pays.",
-  },
-];
 
 const WHY_JOIN = [
   {
@@ -124,20 +105,16 @@ export default function Landing() {
         </div>
       </Section>
 
+      {/* Three tabs rather than three columns: a visitor picks the task they
+          want to understand and sees what it involves. */}
       <Section>
         <SectionHead
           eyebrow="The work"
           title="How clinicians like you improve AI models"
-          intro="We depend on licensed clinicians, in the specialties they actually practise, to improve medical AI. These are the tasks you would do on Senebiclabs."
+          intro="We depend on licensed clinicians, in the specialties they actually practise, to improve medical AI. Look through the tasks you would do on Senebiclabs."
         />
-        <Grid>
-          {WORK.map((w, i) => (
-            <GridItem key={w.title} index={i + 1} title={w.title}>
-              {w.body}
-            </GridItem>
-          ))}
-        </Grid>
-        <p className={`${MEASURE.intro} mt-14 text-center text-body text-muted`}>
+        <WorkTabs tasks={WORK_TASKS} />
+        <p className={`${MEASURE.intro} mt-10 text-center text-body text-muted`}>
           Any case you cannot judge, you flag instead of guessing. It goes to
           another clinician, and it pays the same as one you complete.
         </p>

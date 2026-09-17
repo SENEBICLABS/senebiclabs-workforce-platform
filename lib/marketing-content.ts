@@ -116,6 +116,63 @@ export const FAQ_CATEGORIES: Faq["category"][] = [
 ];
 
 /**
+ * What a clinician actually does, as three things they can look through on the
+ * landing page rather than read all at once.
+ *
+ * Every line describes a control the workspace really renders: the choice and
+ * scale fields, the span highlighter, the free text and structured fields, the
+ * flag, and approve / edit / send back on a review pool. Nothing here is
+ * aspirational, so it stays true as long as those do.
+ */
+export interface WorkTask {
+  /** Short label for the tab itself. */
+  tab: string;
+  title: string;
+  summary: string;
+  /** What you do, in the order you do it. */
+  points: string[];
+}
+
+export const WORK_TASKS: WorkTask[] = [
+  {
+    tab: "Judge an answer",
+    title: "Judge an answer",
+    summary:
+      "A case, and the answer a model gave for it. The rubric for that body of work sits beside the case while you read.",
+    points: [
+      "Say whether the answer holds up clinically",
+      "Choose what went wrong, from the error types in the rubric",
+      "Highlight the exact passage at fault",
+      "Rate how confident you are in your own judgment",
+    ],
+  },
+  {
+    tab: "Write the answer",
+    title: "Write the answer yourself",
+    summary:
+      "Where the model's answer will not do, or the case calls for one written from scratch, you write it.",
+    points: [
+      "Structured fields where the work needs structure",
+      "Prose where it needs prose",
+      "Written against the same guidelines you practise by",
+      "Your answer goes to a second clinician, never straight out",
+    ],
+  },
+  {
+    tab: "Approve a colleague's",
+    title: "Approve a colleague's",
+    summary:
+      "Written work always goes to a second clinician, and never to its author. The platform will not offer you your own work.",
+    points: [
+      "Approve it as it stands",
+      "Edit it where it is nearly right",
+      "Send it back saying what has to change",
+      "Sending back pays exactly what approving pays",
+    ],
+  },
+];
+
+/**
  * How someone gets from reading a page to reviewing a case, as it is today:
  * request access, wait for us to open, get verified, work. Shared so the
  * landing page and About us tell the same four steps.
