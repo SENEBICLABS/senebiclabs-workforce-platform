@@ -89,7 +89,7 @@ export function SectionHead({
         {title}
       </Heading>
       {intro && (
-        <p className={`${MEASURE.intro} mt-5 text-[17px] leading-relaxed text-muted`}>
+        <p className={`${MEASURE.intro} mt-5 text-[19px] leading-relaxed text-muted`}>
           {intro}
         </p>
       )}
@@ -118,7 +118,7 @@ export function GridItem({
       <p aria-hidden="true" className="tnum text-label text-accent">
         {String(index).padStart(2, "0")}
       </p>
-      <h3 className="mt-4 text-[17px] leading-snug text-ink">{title}</h3>
+      <h3 className="mt-4 text-[19px] leading-snug text-ink">{title}</h3>
       <p className="mt-2 text-body leading-relaxed text-muted">{children}</p>
     </div>
   );

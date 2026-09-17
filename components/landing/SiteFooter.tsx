@@ -11,10 +11,10 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-hairline">
       <div className="mx-auto max-w-[1100px] px-5 py-10 text-center lg:px-8">
-        <p className="text-[15px] font-bold tracking-tight text-ink">
+        <p className="text-[16px] font-bold tracking-tight text-ink">
           Senebiclabs
         </p>
-        <p className="mt-1 text-[13px] text-muted">
+        <p className="mt-1 text-[15px] text-muted">
           Clinical review platform for licensed clinicians
         </p>
 
@@ -30,7 +30,7 @@ export function SiteFooter() {
             <Link
               key={item.href}
               href={item.href}
-              className="focusable rounded-btn text-[13px] text-muted transition-colors hover:text-accent"
+              className="focusable rounded-btn text-[15px] text-muted transition-colors hover:text-accent"
             >
               {item.label}
             </Link>

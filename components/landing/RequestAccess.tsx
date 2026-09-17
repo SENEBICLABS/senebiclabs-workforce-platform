@@ -248,13 +248,13 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
           <span className="font-semibold text-ink">{email}</span> when
           Senebiclabs opens to clinicians.
         </p>
-        <p className="mt-3 text-[13px] text-muted">
+        <p className="mt-3 text-[15px] text-muted">
           There is nothing more you need to do, and no account has been created.
         </p>
         <button
           type="button"
           onClick={sendAnother}
-          className="focusable mt-6 rounded-btn text-[13px] text-muted underline underline-offset-4 transition-colors hover:text-ink"
+          className="focusable mt-6 rounded-btn text-[15px] text-muted underline underline-offset-4 transition-colors hover:text-ink"
         >
           Send another request
         </button>
@@ -304,7 +304,7 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
               className="focusable h-11 w-full rounded-card border border-hairline bg-surface px-3 text-body text-ink placeholder:text-placeholder"
             />
             {f.hint && (
-              <p id={`ra-${f.name}-hint`} className="mt-1.5 text-[12px] text-muted">
+              <p id={`ra-${f.name}-hint`} className="mt-1.5 text-[14px] text-muted">
                 {f.hint}
               </p>
             )}
@@ -332,7 +332,7 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
       {SITE_KEY && <div ref={box} className="mt-7 flex min-h-[65px] justify-center" />}
 
       {(checkError || error) && (
-        <p role="alert" className="mt-5 text-[13px] text-danger">
+        <p role="alert" className="mt-5 text-[15px] text-danger">
           {checkError || error}
         </p>
       )}
@@ -347,7 +347,7 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
         {/* Hidden while sending, so the spinner is not flanked by an arrow. */}
         {!busy && <Arrow />}
       </Button>
-      <p className="mt-3 text-center text-[12px] text-muted">
+      <p className="mt-3 text-center text-[14px] text-muted">
         Joining the list does not create an account. We will only use your
         email to tell you when we open.
       </p>

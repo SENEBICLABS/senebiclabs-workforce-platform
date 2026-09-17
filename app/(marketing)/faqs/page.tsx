@@ -23,7 +23,7 @@ export default function FaqsPage() {
         <h1 className="mx-auto mt-5 max-w-[880px] text-[42px] leading-[1.04] text-ink sm:text-[60px]">
           Questions clinicians ask
         </h1>
-        <p className={`${MEASURE.intro} mt-5 text-[17px] leading-relaxed text-muted`}>
+        <p className={`${MEASURE.intro} mt-5 text-[19px] leading-relaxed text-muted`}>
           Joining, when we open, what a review involves, how pay works, and how
           much of your time it takes.
         </p>

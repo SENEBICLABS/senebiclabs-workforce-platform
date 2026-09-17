@@ -19,7 +19,7 @@ export function AuthShell({
         </div>
         {children}
         {footer && (
-          <p className="mt-6 text-center text-[13px] text-muted">{footer}</p>
+          <p className="mt-6 text-center text-[15px] text-muted">{footer}</p>
         )}
       </div>
     </div>
@@ -48,7 +48,7 @@ export function GoogleButton({
   return (
     <a
       href={href}
-      className="focusable flex h-11 w-full items-center justify-center gap-2.5 rounded-btn border border-hairline bg-surface text-[14px] font-semibold text-ink transition-colors hover:bg-accent-soft"
+      className="focusable flex h-11 w-full items-center justify-center gap-2.5 rounded-btn border border-hairline bg-surface text-[15px] font-semibold text-ink transition-colors hover:bg-accent-soft"
     >
       <GoogleMark />
       {label}
@@ -60,7 +60,7 @@ export function OrDivider() {
   return (
     <div className="my-5 flex items-center gap-3">
       <span className="h-px flex-1 bg-hairline" />
-      <span className="text-[12px] uppercase tracking-wide text-muted">or</span>
+      <span className="text-[14px] uppercase tracking-wide text-muted">or</span>
       <span className="h-px flex-1 bg-hairline" />
     </div>
   );

@@ -24,7 +24,7 @@ function Frame({ label, children }: { label: string; children: React.ReactNode }
       aria-hidden="true"
       className="select-none rounded-card border border-hairline bg-canvas-top p-4 shadow-[0_12px_32px_rgba(0,0,0,0.35)] sm:p-5"
     >
-      <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">{label}</p>
+      <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">{label}</p>
       <div className="mt-4 space-y-2">
         <Line />
         <Line />
@@ -49,7 +49,7 @@ function Choice({ label, chosen = false }: { label: string; chosen?: boolean }) 
       >
         {chosen && <span className="h-2 w-2 rounded-full bg-accent" />}
       </span>
-      <span className={`text-[13px] ${chosen ? "text-ink" : "text-muted"}`}>{label}</span>
+      <span className={`text-[15px] ${chosen ? "text-ink" : "text-muted"}`}>{label}</span>
     </div>
   );
 }
@@ -57,7 +57,7 @@ function Choice({ label, chosen = false }: { label: string; chosen?: boolean }) 
 function Chip({ label, on = false }: { label: string; on?: boolean }) {
   return (
     <span
-      className={`rounded-full border px-2.5 py-1 text-[11px] ${
+      className={`rounded-full border px-2.5 py-1 text-[12px] ${
         on ? "border-accent bg-accent-soft text-ink" : "border-hairline text-muted"
       }`}
     >
@@ -69,7 +69,7 @@ function Chip({ label, on = false }: { label: string; on?: boolean }) {
 function FieldBox({ label, lines = 2 }: { label: string; lines?: number }) {
   return (
     <div>
-      <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">{label}</p>
+      <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">{label}</p>
       <div className="mt-1.5 space-y-2 rounded-[8px] border border-hairline bg-surface p-3">
         {Array.from({ length: lines }).map((_, i) => (
           <Line key={i} w={i === lines - 1 ? "w-7/12" : "w-full"} />
@@ -83,13 +83,13 @@ export function WorkMock({ kind }: { kind: WorkTask["mock"] }) {
   if (kind === "judge") {
     return (
       <Frame label="Case 4 of 12">
-        <p className="text-[13px] font-semibold text-ink">Does this answer hold up?</p>
+        <p className="text-[15px] font-semibold text-ink">Does this answer hold up?</p>
         <div className="mt-3 space-y-2">
           <Choice label="Holds up clinically" />
           <Choice label="Has errors" chosen />
         </div>
 
-        <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+        <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
           What went wrong
         </p>
         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -98,7 +98,7 @@ export function WorkMock({ kind }: { kind: WorkTask["mock"] }) {
           <Chip label="Omission" />
         </div>
 
-        <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+        <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
           Passage at fault
         </p>
         <div className="mt-2 space-y-2">
@@ -106,14 +106,14 @@ export function WorkMock({ kind }: { kind: WorkTask["mock"] }) {
           <div className="h-2 w-7/12 rounded-full bg-accent/45" />
         </div>
 
-        <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+        <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
           Your confidence
         </p>
         <div className="mt-2 flex gap-1.5">
           {[1, 2, 3, 4, 5].map((n) => (
             <span
               key={n}
-              className={`grid h-6 w-6 place-items-center rounded-[6px] border text-[11px] ${
+              className={`grid h-6 w-6 place-items-center rounded-[6px] border text-[12px] ${
                 n === 4
                   ? "border-accent bg-accent text-on-fill"
                   : "border-hairline text-muted"
@@ -134,7 +134,7 @@ export function WorkMock({ kind }: { kind: WorkTask["mock"] }) {
           <FieldBox label="Assessment" />
           <FieldBox label="Plan" lines={3} />
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+            <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
               In your own words
             </p>
             <div className="mt-1.5 space-y-2 rounded-[8px] border border-accent/45 bg-surface p-3">
@@ -157,18 +157,18 @@ export function WorkMock({ kind }: { kind: WorkTask["mock"] }) {
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <span className="rounded-full bg-ink px-3 py-1.5 text-[11px] font-semibold text-canvas">
+        <span className="rounded-full bg-ink px-3 py-1.5 text-[12px] font-semibold text-canvas">
           Approve
         </span>
-        <span className="rounded-full border border-hairline px-3 py-1.5 text-[11px] text-muted">
+        <span className="rounded-full border border-hairline px-3 py-1.5 text-[12px] text-muted">
           Edit
         </span>
-        <span className="rounded-full border border-accent px-3 py-1.5 text-[11px] text-ink">
+        <span className="rounded-full border border-accent px-3 py-1.5 text-[12px] text-ink">
           Send back
         </span>
       </div>
 
-      <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+      <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
         What has to change
       </p>
       <div className="mt-1.5 space-y-2 rounded-[8px] border border-hairline bg-surface p-3">

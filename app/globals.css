@@ -101,13 +101,13 @@
   --text-section--font-weight: 700;
   --text-section--letter-spacing: -0.01em;
 
-  --text-body: 14px;
+  --text-body: 16px;
   --text-body--line-height: 1.6;
   --text-body--font-weight: 400;
 
   /* Eyebrows. Mono, uppercase and widely tracked, which is what separates them
    * from body text now that neither carries a colour of its own. */
-  --text-label: 11px;
+  --text-label: 12px;
   --text-label--line-height: 1.4;
   --text-label--font-weight: 500;
   --text-label--letter-spacing: 0.12em;
@@ -159,7 +159,7 @@ h1 {
  * tinting the ground. The colour is in the light falling on the page rather
  * than in the paint, so the background is still black where there is nothing
  * on it. At 9% it composites to #07110F at the very top, which is felt more
- * than seen, and white at 62% still measures 7.66 on it.
+ * than seen, and the text over it is pure white.
  *
  * It is on a utility rather than on body so the signed-in application stays
  * flat: a ground that shifts behind a case a clinician is reading for an hour
@@ -179,8 +179,8 @@ body {
   background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 16px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 

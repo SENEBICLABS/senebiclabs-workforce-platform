@@ -65,7 +65,7 @@ export default function Landing() {
         <h1 className="mx-auto mt-5 max-w-[880px] text-[42px] leading-[1.04] text-ink sm:text-[60px]">
           Your clinical expertise can shape the future of medical AI.
         </h1>
-        <div className={`${MEASURE.intro} mt-7 space-y-4 text-[17px] leading-relaxed text-muted`}>
+        <div className={`${MEASURE.intro} mt-7 space-y-4 text-[19px] leading-relaxed text-muted`}>
           <p className="text-strong">
             Join medical experts around the world shaping the future of medical AI.
           </p>
@@ -77,7 +77,7 @@ export default function Landing() {
 
         <div className="mt-10 flex flex-col items-center gap-5">
           <RequestAccessButton />
-          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
+          <p className="font-mono text-[12px] uppercase tracking-[0.12em] text-muted">
             Fully remote · Paid per case · No AI experience needed
           </p>
         </div>
@@ -161,7 +161,7 @@ export default function Landing() {
               <p aria-hidden="true" className="tnum text-label text-accent">
                 {String(i + 1).padStart(2, "0")}
               </p>
-              <h3 className="mt-3 text-[17px] leading-snug text-ink">{step.title}</h3>
+              <h3 className="mt-3 text-[19px] leading-snug text-ink">{step.title}</h3>
               <p className={`${MEASURE.intro} mt-2 text-body leading-relaxed text-muted`}>
                 {step.body}
               </p>

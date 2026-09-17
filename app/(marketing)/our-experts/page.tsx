@@ -95,7 +95,7 @@ export default function OurExperts() {
         <h1 className="mx-auto mt-5 max-w-[880px] text-[42px] leading-[1.04] text-ink sm:text-[60px]">
           Every judgment here has a licence behind it
         </h1>
-        <p className={`${MEASURE.intro} mt-5 text-[17px] leading-relaxed text-muted`}>
+        <p className={`${MEASURE.intro} mt-5 text-[19px] leading-relaxed text-muted`}>
           Reviewing is done by clinicians who are licensed and practising in the
           area they review. Membership is vetted and by invitation, and this is what
           that means in practice.
@@ -117,7 +117,7 @@ export default function OurExperts() {
           </p>
         </div>
         <div className="mt-12 text-center">
-          <h3 className="text-[17px] leading-snug text-ink">What we require</h3>
+          <h3 className="text-[19px] leading-snug text-ink">What we require</h3>
           <ul className="mx-auto mt-5 grid max-w-[640px] grid-cols-1 gap-y-3 sm:grid-cols-2">
             {ELIGIBILITY.map((r) => (
               <li key={r} className="text-body text-muted">
@@ -140,7 +140,7 @@ export default function OurExperts() {
               <p aria-hidden="true" className="tnum text-label text-accent">
                 {String(i + 1).padStart(2, "0")}
               </p>
-              <h3 className="mt-3 text-[17px] leading-snug text-ink">{v.title}</h3>
+              <h3 className="mt-3 text-[19px] leading-snug text-ink">{v.title}</h3>
               <p className={`${MEASURE.intro} mt-2 text-body leading-relaxed text-muted`}>
                 {v.body}
               </p>
@@ -156,11 +156,11 @@ export default function OurExperts() {
           <div className="mt-14 grid grid-cols-1 gap-x-10 gap-y-12 md:grid-cols-3">
             {EXPERTS.map((e) => (
               <div key={e.name} className="text-center">
-                <p className="text-[17px] leading-snug text-ink">{e.name}</p>
+                <p className="text-[19px] leading-snug text-ink">{e.name}</p>
                 <p className="mt-1 text-body text-muted">
                   {e.credential}, {e.specialty}
                 </p>
-                <p className="mt-0.5 text-[13px] text-muted">{e.country}</p>
+                <p className="mt-0.5 text-[15px] text-muted">{e.country}</p>
               </div>
             ))}
           </div>

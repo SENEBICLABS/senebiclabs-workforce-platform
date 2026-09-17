@@ -46,7 +46,7 @@ function CalibrationCard({ pool }: { pool: CalibrationPool }) {
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-hairline pt-4">
         {passed ? (
           <>
-            <span className="text-[13px] text-muted">
+            <span className="text-[15px] text-muted">
               {pool.passed_at ? `Passed ${formatDate(pool.passed_at)}` : "Passed"}
             </span>
             <Button
@@ -59,7 +59,7 @@ function CalibrationCard({ pool }: { pool: CalibrationPool }) {
           </>
         ) : (
           <>
-            <span className="tnum text-[13px] text-muted">
+            <span className="tnum text-[15px] text-muted">
               {pool.item_count} {pool.item_count === 1 ? "item" : "items"}
               {pool.attempts > 0 &&
                 ` · ${pool.attempts} ${pool.attempts === 1 ? "attempt" : "attempts"}`}

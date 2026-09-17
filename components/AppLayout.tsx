@@ -37,7 +37,7 @@ function Sidebar() {
       <div className="px-5 py-5">
         <Link
           href="/dashboard"
-          className="focusable rounded-btn text-[17px] font-bold tracking-tight text-white"
+          className="focusable rounded-btn text-[19px] font-bold tracking-tight text-white"
         >
           Senebiclabs
         </Link>
@@ -71,15 +71,15 @@ function Sidebar() {
         <div className="flex items-center gap-3">
           <span
             aria-hidden="true"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-[12px] font-bold text-on-fill"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-[14px] font-bold text-on-fill"
           >
             {initialsOf(me?.name, me?.email)}
           </span>
           <div className="min-w-0">
-            <p className="truncate text-[13px] font-semibold text-white">
+            <p className="truncate text-[15px] font-semibold text-white">
               {me?.name ?? me?.email ?? "Signing in…"}
             </p>
-            <p className="tnum truncate text-[12px] text-rail-text">
+            <p className="tnum truncate text-[14px] text-rail-text">
               {reviewedThisSession} reviewed this session
             </p>
           </div>
@@ -104,7 +104,7 @@ function MobileTabBar() {
             key={href}
             href={href}
             aria-current={active ? "page" : undefined}
-            className={`focusable flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-semibold transition-colors ${
+            className={`focusable flex flex-1 flex-col items-center gap-1 py-2.5 text-[12px] font-semibold transition-colors ${
               active ? "text-accent" : "text-muted"
             }`}
           >
@@ -142,7 +142,7 @@ function TopBar({ title }: { title: string }) {
               onChange={setAvailable}
               label="Available for reviews"
             />
-            <span className="text-[13px] font-semibold text-muted">
+            <span className="text-[15px] font-semibold text-muted">
               {available ? "Available for reviews" : "Not available"}
             </span>
           </div>
@@ -158,7 +158,7 @@ function TopBar({ title }: { title: string }) {
             >
               <span
                 aria-hidden="true"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[12px] font-bold text-on-fill"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[14px] font-bold text-on-fill"
               >
                 {initialsOf(me?.name, me?.email)}
               </span>
@@ -178,16 +178,16 @@ function TopBar({ title }: { title: string }) {
                 >
                   {me && (
                     <div className="border-b border-hairline px-4 py-3">
-                      <p className="truncate text-[13px] font-semibold text-ink">
+                      <p className="truncate text-[15px] font-semibold text-ink">
                         {me.name}
                       </p>
-                      <p className="mt-0.5 truncate text-[12px] text-muted">
+                      <p className="mt-0.5 truncate text-[14px] text-muted">
                         {me.email}
                       </p>
                     </div>
                   )}
                   <div className="flex items-center justify-between px-4 py-3 sm:hidden">
-                    <span className="text-[13px] text-ink">
+                    <span className="text-[15px] text-ink">
                       {available ? "Available" : "Not available"}
                     </span>
                     <Switch
@@ -200,14 +200,14 @@ function TopBar({ title }: { title: string }) {
                     href="/account"
                     role="menuitem"
                     onClick={() => setMenuOpen(false)}
-                    className="focusable block px-4 py-2 text-[13px] text-ink transition-colors hover:bg-accent-soft"
+                    className="focusable block px-4 py-2 text-[15px] text-ink transition-colors hover:bg-accent-soft"
                   >
                     Account
                   </Link>
                   <button
                     role="menuitem"
                     onClick={signOut}
-                    className="focusable w-full px-4 py-2 text-left text-[13px] text-ink transition-colors hover:bg-accent-soft"
+                    className="focusable w-full px-4 py-2 text-left text-[15px] text-ink transition-colors hover:bg-accent-soft"
                   >
                     Sign out
                   </button>
@@ -229,7 +229,7 @@ function Toast() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-btn border border-hairline bg-surface px-4 py-2.5 text-[13px] font-semibold text-ink shadow-[0_8px_28px_rgba(0,0,0,0.5)] md:bottom-6 md:left-auto md:right-6 md:translate-x-0"
+      className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-btn border border-hairline bg-surface px-4 py-2.5 text-[15px] font-semibold text-ink shadow-[0_8px_28px_rgba(0,0,0,0.5)] md:bottom-6 md:left-auto md:right-6 md:translate-x-0"
     >
       {toast}
     </div>

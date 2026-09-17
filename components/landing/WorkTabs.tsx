@@ -65,7 +65,7 @@ export function WorkTabs({ tasks }: { tasks: WorkTask[] }) {
               tabIndex={i === active ? 0 : -1}
               onClick={() => setActive(i)}
               onKeyDown={onKeyDown}
-              className={`focusable whitespace-nowrap rounded-full px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] transition-colors sm:px-6 ${
+              className={`focusable whitespace-nowrap rounded-full px-4 py-2.5 font-mono text-[12px] uppercase tracking-[0.12em] transition-colors sm:px-6 ${
                 i === active ? "bg-ink text-canvas" : "text-muted hover:text-ink"
               }`}
             >
@@ -88,12 +88,12 @@ export function WorkTabs({ tasks }: { tasks: WorkTask[] }) {
             <div>
               <h3 className="text-[24px] leading-tight text-ink sm:text-[30px]">{task.title}</h3>
 
-              <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.12em] text-accent">
+              <p className="mt-6 font-mono text-[12px] uppercase tracking-[0.12em] text-accent">
                 Why
               </p>
               <p className="mt-2 text-body leading-relaxed text-muted">{task.why}</p>
 
-              <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-accent">
+              <p className="mt-5 font-mono text-[12px] uppercase tracking-[0.12em] text-accent">
                 How
               </p>
               <p className="mt-2 text-body leading-relaxed text-muted">{task.how}</p>

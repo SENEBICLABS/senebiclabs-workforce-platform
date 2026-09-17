@@ -52,7 +52,7 @@ export default async function RemoveAddressPage({
         <h1 className="mx-auto mt-5 max-w-[880px] text-[42px] leading-[1.04] text-ink sm:text-[60px]">
           {title}
         </h1>
-        <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">{body}</p>
+        <p className="mx-auto mt-5 max-w-[560px] text-[19px] leading-relaxed text-muted">{body}</p>
 
         {confirm ? (
           // A plain form, so it works without JavaScript, from any mail app's

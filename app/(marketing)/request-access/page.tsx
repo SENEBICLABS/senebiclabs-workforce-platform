@@ -25,7 +25,7 @@ export default function RequestAccessPage() {
         <h1 className="mx-auto mt-5 max-w-[880px] text-[42px] leading-[1.04] text-ink sm:text-[60px]">
           Tell us who you are
         </h1>
-        <p className="mx-auto mt-5 max-w-[560px] text-[17px] leading-relaxed text-muted">
+        <p className="mx-auto mt-5 max-w-[560px] text-[19px] leading-relaxed text-muted">
           Senebiclabs is invite-only for now. Tell us who you are and we will
           add you to the list. When we open to clinicians, we will email you.
         </p>

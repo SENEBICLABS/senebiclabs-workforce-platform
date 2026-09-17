@@ -19,13 +19,13 @@ async function ops<T>(path: string, init: RequestInit = {}): Promise<T> {
   return body as T;
 }
 
-const cell = "px-3 py-2 text-[13px] align-middle";
-const head = "px-3 py-2 text-[11px] uppercase tracking-wider text-white text-left font-medium";
+const cell = "px-3 py-2 text-[15px] align-middle";
+const head = "px-3 py-2 text-[12px] uppercase tracking-wider text-white text-left font-medium";
 const rowLine = "border-t border-white/10";
 const btn =
-  "rounded-md border border-white/15 px-2.5 py-1 text-[12px] text-white hover:bg-white/10 disabled:opacity-40";
+  "rounded-md border border-white/15 px-2.5 py-1 text-[14px] text-white hover:bg-white/10 disabled:opacity-40";
 const btnPrimary =
-  "rounded-md bg-[#0E7C74] px-3 py-1.5 text-[13px] font-medium text-white hover:bg-[#0A5A54] disabled:opacity-40";
+  "rounded-md bg-[#0E7C74] px-3 py-1.5 text-[15px] font-medium text-white hover:bg-[#0A5A54] disabled:opacity-40";
 const fmt = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
@@ -33,7 +33,7 @@ function Section({ title, action, children }: { title: string; action?: React.Re
   return (
     <section className="mt-8">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 className="text-[13px] font-semibold uppercase tracking-wider text-white">{title}</h2>
+        <h2 className="text-[15px] font-semibold uppercase tracking-wider text-white">{title}</h2>
         {action}
       </div>
       <div className="overflow-x-auto rounded-lg border border-white/10 bg-black/20">{children}</div>
@@ -44,7 +44,7 @@ function Section({ title, action, children }: { title: string; action?: React.Re
 function Toggle({ on, onClick, busy, labels = ["On", "Off"] }: { on: boolean; onClick: () => void; busy: boolean; labels?: [string, string] | string[] }) {
   return (
     <button onClick={onClick} disabled={busy}
-      className={`rounded-md px-2.5 py-1 text-[12px] font-medium disabled:opacity-40 ${
+      className={`rounded-md px-2.5 py-1 text-[14px] font-medium disabled:opacity-40 ${
         on ? "bg-[#0E7C74] text-white" : "border border-white/15 text-white hover:bg-white/10"
       }`}>
       {on ? labels[0] : labels[1]}
@@ -118,28 +118,28 @@ function AccessPicker({ pool, onClose, onSaved }: { pool: Pool; onClose: () => v
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="relative w-full max-w-md rounded-lg border border-white/15 bg-[#0C2422] p-5">
-        <h3 className="text-[14px] font-semibold text-white">Manage access</h3>
-        <p className="mt-1 text-[12px] text-white">
+        <h3 className="text-[15px] font-semibold text-white">Manage access</h3>
+        <p className="mt-1 text-[14px] text-white">
           {pool.name} — only the clinicians ticked here can see this pool.
         </p>
 
         <div className="mt-4 max-h-[46vh] space-y-1 overflow-y-auto">
-          {!rows && <p className="text-[13px] text-white">Loading…</p>}
+          {!rows && <p className="text-[15px] text-white">Loading…</p>}
           {rows?.map((r) => (
             <label key={r.id} className="flex cursor-pointer items-center gap-2.5 rounded px-2 py-1.5 hover:bg-white/5">
               <input type="checkbox" checked={r.eligible}
                 onChange={(e) => setRows(rows.map((x) => (x.id === r.id ? { ...x, eligible: e.target.checked } : x)))}
                 className="h-3.5 w-3.5 accent-[#0E7C74]" />
-              <span className="text-[13px] text-white">{r.email}</span>
+              <span className="text-[15px] text-white">{r.email}</span>
             </label>
           ))}
-          {rows?.length === 0 && <p className="text-[13px] text-white">No clinicians yet.</p>}
+          {rows?.length === 0 && <p className="text-[15px] text-white">No clinicians yet.</p>}
         </div>
 
-        {error && <p role="alert" className="mt-2 text-[12px] text-[#F2A9A9]">{error}</p>}
+        {error && <p role="alert" className="mt-2 text-[14px] text-[#F2A9A9]">{error}</p>}
 
         <div className="mt-4 flex items-center justify-between">
-          <span className="text-[12px] text-white">
+          <span className="text-[14px] text-white">
             {rows?.filter((r) => r.eligible).length ?? 0} of {rows?.length ?? 0} selected
           </span>
           <div className="flex gap-2">
@@ -210,8 +210,8 @@ export default function OpsConsole() {
     <div className="mx-auto max-w-[1180px] px-6 py-6">
       <header className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
         <div>
-          <h1 className="text-[15px] font-semibold tracking-tight text-white">Operator console</h1>
-          <p className="text-[12px] text-white">Not part of the clinician platform.</p>
+          <h1 className="text-[16px] font-semibold tracking-tight text-white">Operator console</h1>
+          <p className="text-[14px] text-white">Not part of the clinician platform.</p>
         </div>
         <button className={btn}
           onClick={() => fetch("/api/ops/session", { method: "DELETE" }).then(() => (window.location.href = "/ops/unlock"))}>
@@ -220,7 +220,7 @@ export default function OpsConsole() {
       </header>
 
       {notice && (
-        <p role="status" className="mt-4 rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[13px] text-white">
+        <p role="status" className="mt-4 rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[15px] text-white">
           {notice}
         </p>
       )}
@@ -229,7 +229,7 @@ export default function OpsConsole() {
       <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         {stats.map(([label, value]) => (
           <div key={label} className="rounded-lg border border-white/10 bg-black/20 px-3 py-2.5">
-            <p className="text-[11px] uppercase tracking-wider text-white">{label}</p>
+            <p className="text-[12px] uppercase tracking-wider text-white">{label}</p>
             <p className="mt-1 font-mono text-[16px] text-white">{value}</p>
           </div>
         ))}
@@ -239,7 +239,7 @@ export default function OpsConsole() {
       <Section title="Clinicians"
         action={
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search email or name"
-            className="h-8 w-56 rounded-md border border-white/15 bg-black/20 px-2.5 text-[13px] text-white outline-none focus:border-[#0E7C74]" />
+            className="h-8 w-56 rounded-md border border-white/15 bg-black/20 px-2.5 text-[15px] text-white outline-none focus:border-[#0E7C74]" />
         }>
         <table className="w-full min-w-[860px]">
           <thead><tr>
@@ -374,7 +374,7 @@ export default function OpsConsole() {
             }}>
             <input type="email" required value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)}
               placeholder="colleague@hospital.org"
-              className="h-8 w-56 rounded-md border border-white/15 bg-black/20 px-2.5 text-[13px] text-white outline-none focus:border-[#0E7C74]" />
+              className="h-8 w-56 rounded-md border border-white/15 bg-black/20 px-2.5 text-[15px] text-white outline-none focus:border-[#0E7C74]" />
             <button type="submit" className={btnPrimary} disabled={busy === "invite"}>
               {busy === "invite" ? "Sending…" : "Send invite"}
             </button>

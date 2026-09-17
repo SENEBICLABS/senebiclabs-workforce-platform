@@ -128,7 +128,7 @@ export function ReviewPanel({
         )}
 
         {error && (
-          <p role="alert" className="mt-4 text-[13px] text-danger">
+          <p role="alert" className="mt-4 text-[15px] text-danger">
             {error}
           </p>
         )}

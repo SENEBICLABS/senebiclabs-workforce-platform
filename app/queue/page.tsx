@@ -23,7 +23,7 @@ const SORT_LABEL: Record<SortKey, string> = {
 };
 
 const SELECT =
-  "focusable h-9 rounded-btn border border-hairline bg-surface px-3 text-[13px] text-ink transition-colors hover:bg-accent-soft";
+  "focusable h-9 rounded-btn border border-hairline bg-surface px-3 text-[15px] text-ink transition-colors hover:bg-accent-soft";
 
 const CALIBRATION_ENABLED =
   process.env.NEXT_PUBLIC_CALIBRATION_ENABLED === "true";
@@ -194,7 +194,7 @@ export default function QueuePage() {
                               {pool.name}
                             </span>
                             {pool.description && (
-                              <span className="mt-0.5 block text-[12px] text-muted">
+                              <span className="mt-0.5 block text-[14px] text-muted">
                                 {pool.description}
                               </span>
                             )}
@@ -237,13 +237,13 @@ export default function QueuePage() {
           )}
 
           {!available && rows.length > 0 && (
-            <p className="mt-4 text-[13px] text-muted">
+            <p className="mt-4 text-[15px] text-muted">
               Turn on availability to start reviewing.
             </p>
           )}
 
           {filtersActive && rows.length > 0 && (
-            <p className="tnum mt-4 text-[13px] text-muted">
+            <p className="tnum mt-4 text-[15px] text-muted">
               Showing {rows.length} of {total} pools.{" "}
               <button
                 onClick={clearFilters}

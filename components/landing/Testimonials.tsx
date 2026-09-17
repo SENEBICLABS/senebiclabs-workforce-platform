@@ -37,7 +37,7 @@ export function Testimonials() {
               </blockquote>
               <footer className="mt-5">
                 <p className="text-body font-semibold text-ink">{q.name}</p>
-                <p className="text-[13px] text-muted">
+                <p className="text-[15px] text-muted">
                   {q.credential}, {q.specialty}
                 </p>
               </footer>

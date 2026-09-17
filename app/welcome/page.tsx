@@ -49,7 +49,7 @@ export default function WelcomePage() {
             <div key={point.title} className="flex gap-4 p-5">
               <span
                 aria-hidden="true"
-                className="tnum flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[13px] font-bold text-accent"
+                className="tnum flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[15px] font-bold text-accent"
               >
                 {i + 1}
               </span>
@@ -74,7 +74,7 @@ export default function WelcomePage() {
             an account. So this is the one moment to tell a new member how to
             get back. Any signed-in page redirects to sign-in when a session
             has lapsed, which is what makes the bookmark enough. */}
-        <p className="mt-4 text-center text-[13px] text-muted">
+        <p className="mt-4 text-center text-[15px] text-muted">
           Bookmark your dashboard to come back. If you are signed out, it will
           take you straight to sign in.
         </p>

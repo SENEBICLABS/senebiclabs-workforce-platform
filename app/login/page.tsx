@@ -80,7 +80,7 @@ function SignIn() {
           <p className="mt-2 text-body text-muted">{ERRORS.no_invite}</p>
           <a
             href="/login"
-            className="focusable mt-5 inline-flex h-10 items-center justify-center rounded-btn border border-hairline bg-surface px-4 text-[14px] font-semibold text-ink transition-colors hover:bg-accent-soft"
+            className="focusable mt-5 inline-flex h-10 items-center justify-center rounded-btn border border-hairline bg-surface px-4 text-[15px] font-semibold text-ink transition-colors hover:bg-accent-soft"
           >
             Back to sign in
           </a>
@@ -113,7 +113,7 @@ function SignIn() {
                 setSent(false);
                 setDevLink("");
               }}
-              className="focusable mt-4 w-full rounded-btn text-[13px] font-semibold text-accent underline-offset-2 hover:underline"
+              className="focusable mt-4 w-full rounded-btn text-[15px] font-semibold text-accent underline-offset-2 hover:underline"
             >
               Use a different email
             </button>
@@ -130,7 +130,7 @@ function SignIn() {
                 role="alert"
                 className="mt-4 rounded-card border border-warning bg-warning-soft px-4 py-3"
               >
-                <p className="text-[13px] text-ink">{notice}</p>
+                <p className="text-[15px] text-ink">{notice}</p>
               </div>
             )}
 
@@ -161,7 +161,7 @@ function SignIn() {
                 }`}
               />
               {error && (
-                <p role="alert" className="mt-2 text-[13px] text-danger">
+                <p role="alert" className="mt-2 text-[15px] text-danger">
                   {error}
                 </p>
               )}
@@ -177,7 +177,7 @@ function SignIn() {
               >
                 Send me a sign-in link
               </Button>
-              <p className="mt-2 text-center text-[12px] text-muted">
+              <p className="mt-2 text-center text-[14px] text-muted">
                 We will email a link that signs you in. No password to
                 remember, and nothing to set up.
               </p>

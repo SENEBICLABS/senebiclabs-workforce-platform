@@ -29,7 +29,7 @@ function Guidelines({ instructions }: { instructions: string }) {
   const [open, setOpen] = useState(false);
 
   const body = (
-    <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-muted">
+    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-muted">
       {instructions}
     </p>
   );
@@ -315,7 +315,7 @@ function Workspace() {
           <PurposeBadge purpose={task.pool.purpose} />
           <span className="text-body font-semibold text-ink">{task.pool.name}</span>
         </div>
-        <span className="tnum text-[13px] text-muted">
+        <span className="tnum text-[15px] text-muted">
           {task.case_id ? `Case ${task.case_id} · ` : ""}
           {task.already_reviewed_count.toLocaleString()} reviewed in this pool
         </span>
@@ -365,7 +365,7 @@ function Workspace() {
                 role="alert"
                 className="mt-4 rounded-card border border-danger bg-danger-soft px-4 py-3"
               >
-                <p className="text-[13px] font-semibold text-danger">
+                <p className="text-[15px] font-semibold text-danger">
                   {missing.length === 1
                     ? "One required field is still empty."
                     : `${missing.length} required fields are still empty.`}{" "}
@@ -379,10 +379,10 @@ function Workspace() {
                 role="alert"
                 className="mt-4 rounded-card border border-danger bg-danger-soft px-4 py-3"
               >
-                <p className="text-[13px] font-semibold text-danger">
+                <p className="text-[15px] font-semibold text-danger">
                   {submitError}
                 </p>
-                <p className="mt-1 text-[12px] text-danger">
+                <p className="mt-1 text-[14px] text-danger">
                   Nothing was lost — your answers are still below.
                 </p>
               </div>
@@ -418,13 +418,13 @@ function Workspace() {
       {task.phase !== "review" && (
       <div className="sticky bottom-0 z-10 -mx-5 mt-6 border-t border-hairline bg-surface/95 px-5 py-3 backdrop-blur lg:-mx-8 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-[12px] text-muted">
+          <p className="text-[14px] text-muted">
             Press{" "}
-            <kbd className="rounded border border-hairline bg-canvas px-1.5 py-0.5 font-sans text-[11px] text-ink">
+            <kbd className="rounded border border-hairline bg-canvas px-1.5 py-0.5 font-sans text-[12px] text-ink">
               ⌘
             </kbd>{" "}
             +{" "}
-            <kbd className="rounded border border-hairline bg-canvas px-1.5 py-0.5 font-sans text-[11px] text-ink">
+            <kbd className="rounded border border-hairline bg-canvas px-1.5 py-0.5 font-sans text-[12px] text-ink">
               Enter
             </kbd>{" "}
             to submit

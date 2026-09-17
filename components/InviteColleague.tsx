@@ -51,7 +51,7 @@ export function InviteColleague() {
           </p>
           <button
             onClick={() => setSentTo(null)}
-            className="focusable mt-2 rounded-btn text-[13px] font-semibold text-accent underline-offset-2 hover:underline"
+            className="focusable mt-2 rounded-btn text-[15px] font-semibold text-accent underline-offset-2 hover:underline"
           >
             Invite someone else
           </button>
@@ -85,7 +85,7 @@ export function InviteColleague() {
             </Button>
           </div>
           {error && (
-            <p role="alert" className="mt-2 text-[13px] text-danger">
+            <p role="alert" className="mt-2 text-[15px] text-danger">
               {error}
             </p>
           )}

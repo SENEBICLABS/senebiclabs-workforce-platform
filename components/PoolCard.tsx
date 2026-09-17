@@ -48,7 +48,7 @@ export function PoolCard({ pool }: { pool: Pool }) {
         )}
 
         <div className="flex items-center justify-between gap-3 border-t border-hairline pt-4">
-          <span className="tnum text-[13px] text-muted">
+          <span className="tnum text-[15px] text-muted">
             {pool.reviewed_by_me.toLocaleString()} reviewed
             {pool.items !== null && ` of ${pool.items.toLocaleString()}`}
           </span>
@@ -68,7 +68,7 @@ export function PoolCard({ pool }: { pool: Pool }) {
 
       {!available && !complete && (
         <div className="absolute inset-0 flex items-center justify-center rounded-card bg-surface/85 px-4 text-center">
-          <p className="text-[13px] font-semibold text-muted">
+          <p className="text-[15px] font-semibold text-muted">
             Turn on availability to start reviewing.
           </p>
         </div>

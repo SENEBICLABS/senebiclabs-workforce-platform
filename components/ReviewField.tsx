@@ -61,7 +61,7 @@ export function ReviewField({
       </legend>
 
       {field.hint && (
-        <p id={hintId} className="mb-3 text-[13px] text-muted">
+        <p id={hintId} className="mb-3 text-[15px] text-muted">
           {field.hint}
         </p>
       )}
@@ -139,7 +139,7 @@ export function ReviewField({
             </button>
           ))}
           {typeof value === "number" && (
-            <span className="tnum ml-2 text-[13px] text-muted">
+            <span className="tnum ml-2 text-[15px] text-muted">
               {value} of {field.max ?? 5}
             </span>
           )}
@@ -209,7 +209,7 @@ export function ReviewField({
             <div className="border-l-2 border-accent-soft pl-4">
               <label
                 htmlFor={`${field.name}_finding`}
-                className="mb-1.5 block text-[13px] font-semibold text-ink"
+                className="mb-1.5 block text-[15px] font-semibold text-ink"
               >
                 Which finding?
               </label>
@@ -301,7 +301,7 @@ function SpanPicker({
             key={label}
             type="button"
             onClick={() => capture(label)}
-            className="focusable rounded-btn border border-hairline bg-surface px-3 py-1.5 text-[13px] font-semibold text-ink transition-colors hover:bg-accent-soft"
+            className="focusable rounded-btn border border-hairline bg-surface px-3 py-1.5 text-[15px] font-semibold text-ink transition-colors hover:bg-accent-soft"
           >
             Tag selection as {label}
           </button>
@@ -315,14 +315,14 @@ function SpanPicker({
               key={`${span.start}-${span.label}-${i}`}
               className="flex items-center justify-between gap-3 rounded-card bg-canvas px-3 py-2"
             >
-              <span className="min-w-0 truncate text-[13px] text-ink">
+              <span className="min-w-0 truncate text-[15px] text-ink">
                 <span className="font-semibold">{span.label}</span> — “{span.text}”
               </span>
               <button
                 type="button"
                 onClick={() => onChange(value.filter((_, j) => j !== i))}
                 aria-label={`Remove ${span.label} tag`}
-                className="focusable shrink-0 rounded-btn px-2 text-[13px] font-semibold text-accent hover:underline"
+                className="focusable shrink-0 rounded-btn px-2 text-[15px] font-semibold text-accent hover:underline"
               >
                 Remove
               </button>

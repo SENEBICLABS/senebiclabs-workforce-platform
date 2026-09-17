@@ -70,7 +70,7 @@ export function SiteHeader() {
       <div className="grid h-[58px] grid-cols-[1fr_auto_1fr] items-center px-4 md:h-[68px] md:px-6">
         <Link
           href="/"
-          className="focusable flex items-center gap-2.5 justify-self-start rounded-btn text-[15px] font-medium tracking-[0.06em] text-ink"
+          className="focusable flex items-center gap-2.5 justify-self-start rounded-btn text-[16px] font-medium tracking-[0.06em] text-ink"
         >
           <span className="grid h-[22px] w-[22px] place-items-center">
             <BrandMark />
@@ -80,7 +80,7 @@ export function SiteHeader() {
 
         <nav
           aria-label="Main"
-          className="hidden items-center justify-center gap-9 text-[15px] md:flex"
+          className="hidden items-center justify-center gap-9 text-[16px] md:flex"
         >
           {NAV.map((item) => (
             <Link
@@ -106,7 +106,7 @@ export function SiteHeader() {
           <Link
             href="/request-access"
             aria-current={pathname === "/request-access" ? "page" : undefined}
-            className="focusable group hidden items-center gap-1.5 rounded-full bg-ink px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-canvas transition-colors hover:bg-strong md:inline-flex"
+            className="focusable group hidden items-center gap-1.5 rounded-full bg-ink px-[18px] py-2 font-mono text-[12px] uppercase tracking-[0.12em] text-canvas transition-colors hover:bg-strong md:inline-flex"
           >
             Request access
             <Arrow />
@@ -152,7 +152,7 @@ export function SiteHeader() {
             href="/request-access"
             aria-current={pathname === "/request-access" ? "page" : undefined}
             onClick={() => setMenuOpen(false)}
-            className="focusable group mt-4 inline-flex items-center gap-1.5 self-start rounded-full bg-ink px-[18px] py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-canvas transition-colors hover:bg-strong"
+            className="focusable group mt-4 inline-flex items-center gap-1.5 self-start rounded-full bg-ink px-[18px] py-2 font-mono text-[12px] uppercase tracking-[0.12em] text-canvas transition-colors hover:bg-strong"
           >
             Request access
             <Arrow />

@@ -109,7 +109,7 @@ export default function AgreementPage() {
         </label>
 
         {error && (
-          <p role="alert" className="mt-3 text-[13px] text-danger">
+          <p role="alert" className="mt-3 text-[15px] text-danger">
             {error}
           </p>
         )}

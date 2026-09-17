@@ -22,9 +22,9 @@ export const VARIANT: Record<Variant, string> = {
 };
 
 export const SIZE: Record<Size, string> = {
-  sm: "h-8 px-3 text-[13px]",
-  md: "h-9 px-4 text-[14px]",
-  lg: "h-11 px-5 text-[14px]",
+  sm: "h-8 px-3 text-[15px]",
+  md: "h-9 px-4 text-[15px]",
+  lg: "h-11 px-5 text-[15px]",
 };
 
 /** Only a real button can be disabled, so these stay off the shared recipe. */

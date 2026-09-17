@@ -126,7 +126,7 @@ function Join() {
           <p className="mt-2 text-body text-muted">{copy.body}</p>
           <a
             href="/login"
-            className="focusable mt-5 inline-flex h-10 items-center justify-center rounded-btn border border-hairline bg-surface px-4 text-[14px] font-semibold text-ink transition-colors hover:bg-accent-soft"
+            className="focusable mt-5 inline-flex h-10 items-center justify-center rounded-btn border border-hairline bg-surface px-4 text-[15px] font-semibold text-ink transition-colors hover:bg-accent-soft"
           >
             Go to sign in
           </a>
@@ -174,7 +174,7 @@ function Join() {
                 role="alert"
                 className="mt-4 rounded-card border border-danger bg-danger-soft px-4 py-3"
               >
-                <p className="text-[13px] text-ink">
+                <p className="text-[15px] text-ink">
                   {GATE_ERRORS[bounced] ?? GATE_ERRORS.google_failed}
                 </p>
               </div>
@@ -202,12 +202,12 @@ function Join() {
             </Button>
 
             {error && (
-              <p role="alert" className="mt-3 text-[13px] text-danger">
+              <p role="alert" className="mt-3 text-[15px] text-danger">
                 {error}
               </p>
             )}
 
-            <p className="mt-4 text-center text-[12px] text-muted">
+            <p className="mt-4 text-center text-[14px] text-muted">
               Either way your account is created on this address. Google just
               gives you a password-free way back in next time.
             </p>

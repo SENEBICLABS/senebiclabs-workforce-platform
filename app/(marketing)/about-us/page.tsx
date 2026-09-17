@@ -75,7 +75,7 @@ export default function AboutUs() {
         <h1 className="mx-auto mt-5 max-w-[880px] text-[42px] leading-[1.04] text-ink sm:text-[60px]">
           Someone has to decide what a correct answer looks like
         </h1>
-        <p className={`${MEASURE.intro} mt-5 text-[17px] leading-relaxed text-muted`}>
+        <p className={`${MEASURE.intro} mt-5 text-[19px] leading-relaxed text-muted`}>
           Medical AI is measured against a reference standard. That standard is not
           discovered in the data. It is set by people who know the subject, and
           Senebiclabs is where licensed clinicians set it.
@@ -142,7 +142,7 @@ export default function AboutUs() {
               <p aria-hidden="true" className="tnum text-label text-accent">
                 {String(i + 1).padStart(2, "0")}
               </p>
-              <h3 className="mt-3 text-[17px] leading-snug text-ink">{step.title}</h3>
+              <h3 className="mt-3 text-[19px] leading-snug text-ink">{step.title}</h3>
               <p className={`${MEASURE.intro} mt-2 text-body leading-relaxed text-muted`}>
                 {step.body}
               </p>
