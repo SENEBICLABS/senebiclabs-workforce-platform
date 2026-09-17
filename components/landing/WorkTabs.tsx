@@ -2,13 +2,15 @@
 
 import { useRef, useState } from "react";
 import type { WorkTask } from "@/lib/marketing-content";
+import { WorkMock } from "./WorkMock";
 
 /**
- * The work, as three tabs a visitor can look through.
+ * The work, as tabs a visitor can look through.
  *
- * The section used to lay all three tasks out at once, which asked someone to
- * read three paragraphs before learning anything. Here they pick the one they
- * want and see what it actually involves.
+ * A pill bar over one panel: the task on the left, said as why it exists and
+ * what you actually do, and a picture of the workspace on the right. Someone
+ * deciding whether this is for them wants to see the thing, not read three
+ * paragraphs of prose.
  *
  * Built to the tabs pattern rather than as three buttons: one stop in the tab
  * order, arrow keys move between tabs, and each panel is tied to its tab, so a
@@ -41,34 +43,36 @@ export function WorkTabs({ tasks }: { tasks: WorkTask[] }) {
 
   return (
     <div className="mt-12">
-      <div
-        role="tablist"
-        aria-label="What a clinician does here"
-        className="flex flex-wrap justify-center gap-x-8 gap-y-2 border-b border-hairline"
-      >
-        {tasks.map((task, i) => (
-          <button
-            key={task.tab}
-            ref={(el) => {
-              tabs.current[i] = el;
-            }}
-            id={`work-tab-${i}`}
-            role="tab"
-            type="button"
-            aria-selected={i === active}
-            aria-controls={`work-panel-${i}`}
-            tabIndex={i === active ? 0 : -1}
-            onClick={() => setActive(i)}
-            onKeyDown={onKeyDown}
-            className={`focusable -mb-px border-b-2 px-1 pb-3 font-mono text-[11px] uppercase tracking-[0.12em] transition-colors ${
-              i === active
-                ? "border-accent text-ink"
-                : "border-transparent text-muted hover:text-ink"
-            }`}
-          >
-            {task.tab}
-          </button>
-        ))}
+      {/* Scrolls sideways rather than wrapping when the labels outgrow a phone,
+          so the bar stays one row at every width. */}
+      <div className="-mx-5 overflow-x-auto px-5 scrollbar-none [&::-webkit-scrollbar]:hidden">
+        <div
+          role="tablist"
+          aria-label="What a clinician does here"
+          className="mx-auto flex w-max gap-1 rounded-full border border-hairline bg-surface p-1.5"
+        >
+          {tasks.map((task, i) => (
+            <button
+              key={task.tab}
+              ref={(el) => {
+                tabs.current[i] = el;
+              }}
+              id={`work-tab-${i}`}
+              role="tab"
+              type="button"
+              aria-selected={i === active}
+              aria-controls={`work-panel-${i}`}
+              tabIndex={i === active ? 0 : -1}
+              onClick={() => setActive(i)}
+              onKeyDown={onKeyDown}
+              className={`focusable whitespace-nowrap rounded-full px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] transition-colors sm:px-6 ${
+                i === active ? "bg-ink text-canvas" : "text-muted hover:text-ink"
+              }`}
+            >
+              {task.tab}
+            </button>
+          ))}
+        </div>
       </div>
 
       {tasks.map((task, i) => (
@@ -78,19 +82,25 @@ export function WorkTabs({ tasks }: { tasks: WorkTask[] }) {
           role="tabpanel"
           aria-labelledby={`work-tab-${i}`}
           hidden={i !== active}
-          // A minimum height, so switching tabs does not move the page under
-          // the reader's cursor.
-          className="mx-auto mt-10 min-h-[260px] max-w-[640px] text-center sm:min-h-[220px]"
+          className="mt-8 rounded-card border border-hairline bg-linear-to-br from-accent-soft/40 via-transparent to-transparent p-6 text-left sm:p-10"
         >
-          <h3 className="text-[22px] leading-snug text-ink sm:text-[26px]">{task.title}</h3>
-          <p className="mt-3 text-body leading-relaxed text-muted">{task.summary}</p>
-          <ul className="mt-6 space-y-2.5">
-            {task.points.map((point) => (
-              <li key={point} className="text-body text-muted">
-                {point}
-              </li>
-            ))}
-          </ul>
+          <div className="grid items-center gap-10 md:grid-cols-2">
+            <div>
+              <h3 className="text-[24px] leading-tight text-ink sm:text-[30px]">{task.title}</h3>
+
+              <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.12em] text-accent">
+                Why
+              </p>
+              <p className="mt-2 text-body leading-relaxed text-muted">{task.why}</p>
+
+              <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-accent">
+                How
+              </p>
+              <p className="mt-2 text-body leading-relaxed text-muted">{task.how}</p>
+            </div>
+
+            <WorkMock kind={task.mock} />
+          </div>
         </div>
       ))}
     </div>
