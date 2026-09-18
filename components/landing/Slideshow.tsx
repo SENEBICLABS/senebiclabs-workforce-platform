@@ -126,12 +126,14 @@ export function Slideshow({ items }: { items: WhyJoin[] }) {
             role="group"
             aria-roledescription="slide"
             aria-label={`${i + 1} of ${items.length}: ${item.title}`}
-            className="w-full shrink-0 snap-start rounded-card border border-hairline bg-linear-to-br from-accent-soft/40 via-transparent to-transparent p-7 text-left sm:p-10 lg:p-12"
+            className="w-full shrink-0 snap-start text-left"
           >
-            {/* The slide fills the track so every one has a scroll position of
-                its own, but the words keep a column: a line of this text at the
-                full 1300px ran to about 170 characters. */}
-            <div className="max-w-[720px]">
+            {/* The slide is the scroll unit and fills the track, so every one
+                has a position of its own and the dots cannot disagree with a
+                swipe. The card inside hugs the text rather than stretching with
+                it: at full width the detail ran to about 170 characters a line
+                and left half the panel empty. */}
+            <div className="mx-auto max-w-[820px] rounded-card border border-hairline bg-linear-to-br from-accent-soft/40 via-transparent to-transparent p-7 sm:p-10 lg:p-12">
               <p aria-hidden="true" className="tnum text-label text-accent">
                 {String(i + 1).padStart(2, "0")}
               </p>
