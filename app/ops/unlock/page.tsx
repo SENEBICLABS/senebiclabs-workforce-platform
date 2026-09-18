@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Unlock() {
+  const router = useRouter();
   const [key, setKey] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -21,7 +23,11 @@ export default function Unlock() {
         setError("That key is not valid.");
         return;
       }
-      window.location.href = "/ops";
+      // The API set the operator cookie on this response. push() navigates and
+      // refresh() re-fetches the console with that cookie attached, so the
+      // edge guard sees it rather than serving a payload from before unlock.
+      router.push("/ops");
+      router.refresh();
     } catch {
       setError("Could not reach the server.");
     } finally {

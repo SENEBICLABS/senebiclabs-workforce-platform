@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 /* ── shared plumbing ─────────────────────────────────────────────── */
 
@@ -157,6 +158,7 @@ function AccessPicker({ pool, onClose, onSaved }: { pool: Pool; onClose: () => v
 /* ── console ─────────────────────────────────────────────────────── */
 
 export default function OpsConsole() {
+  const router = useRouter();
   const [overview, setOverview] = useState<Overview | null>(null);
   const [clinicians, setClinicians] = useState<Clinician[]>([]);
   const [pools, setPools] = useState<Pool[]>([]);
@@ -168,24 +170,50 @@ export default function OpsConsole() {
   const [picker, setPicker] = useState<Pool | null>(null);
   const [inviteEmail, setInviteEmail] = useState("");
 
-  const load = useCallback(async () => {
-    const [o, c, p, i, r] = await Promise.all([
-      ops<Overview>("/overview"),
-      ops<{ clinicians: Clinician[] }>(`/clinicians${search ? `?q=${encodeURIComponent(search)}` : ""}`),
-      ops<{ pools: Pool[] }>("/pools"),
-      ops<{ invites: Invite[] }>("/invites"),
-      ops<{ requests: AccessRequest[] }>("/access-requests"),
-    ]);
-    setOverview(o); setClinicians(c.clinicians); setPools(p.pools); setInvites(i.invites); setRequests(r.requests);
-  }, [search]);
+  /**
+   * Bumped whenever something has changed the data. The effect below owns
+   * every fetch, so nothing else has to know how the console is loaded.
+   */
+  const [reloads, setReloads] = useState(0);
+  const refresh = () => setReloads((n) => n + 1);
 
-  useEffect(() => { load().catch(() => {}); }, [load]);
+  /**
+   * The one place data is loaded, keyed on the search box and on the reload
+   * counter.
+   *
+   * `cancelled` is what makes the search box safe: typing fires a request per
+   * keystroke, and without it a slow response for "sm" can land after a fast
+   * one for "smith" and put the wrong rows on screen.
+   */
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const [o, c, p, i, r] = await Promise.all([
+          ops<Overview>("/overview"),
+          ops<{ clinicians: Clinician[] }>(`/clinicians${search ? `?q=${encodeURIComponent(search)}` : ""}`),
+          ops<{ pools: Pool[] }>("/pools"),
+          ops<{ invites: Invite[] }>("/invites"),
+          ops<{ requests: AccessRequest[] }>("/access-requests"),
+        ]);
+        if (cancelled) return;
+        setOverview(o); setClinicians(c.clinicians); setPools(p.pools); setInvites(i.invites); setRequests(r.requests);
+      } catch {
+        // A lapsed session has already been sent to the unlock screen by ops().
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [search, reloads]);
 
   const act = async (key: string, fn: () => Promise<unknown>, message?: string) => {
     setBusy(key); setNotice(null);
     try {
       await fn();
-      await load();
+      refresh();
       if (message) setNotice(message);
     } catch (e) {
       setNotice(String((e as Error).message));
@@ -214,7 +242,11 @@ export default function OpsConsole() {
           <p className="text-[14px] text-white">Not part of the clinician platform.</p>
         </div>
         <button className={btn}
-          onClick={() => fetch("/api/ops/session", { method: "DELETE" }).then(() => (window.location.href = "/ops/unlock"))}>
+          onClick={async () => {
+            await fetch("/api/ops/session", { method: "DELETE" });
+            router.push("/ops/unlock");
+            router.refresh();
+          }}>
           Lock
         </button>
       </header>
@@ -411,7 +443,18 @@ export default function OpsConsole() {
         </table>
       </Section>
 
-      {picker && <AccessPicker pool={picker} onClose={() => setPicker(null)} onSaved={() => setNotice("Access updated.")} />}
+      {/* Saving access changes the eligible counts, so the console reloads
+          rather than only announcing it. */}
+      {picker && (
+        <AccessPicker
+          pool={picker}
+          onClose={() => setPicker(null)}
+          onSaved={() => {
+            setNotice("Access updated.");
+            refresh();
+          }}
+        />
+      )}
     </div>
   );
 }
