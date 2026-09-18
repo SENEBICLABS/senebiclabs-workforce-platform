@@ -61,7 +61,7 @@ export function SiteHeader() {
 
   return (
     <header
-      className={`fixed inset-x-4 top-3 z-50 rounded-[14px] backdrop-blur-[16px] transition-[background-color,border-color,box-shadow] duration-200 md:inset-x-10 md:top-5 ${
+      className={`fixed inset-x-5 top-3 z-50 mx-auto max-w-[1480px] rounded-[14px] backdrop-blur-[16px] transition-[background-color,border-color,box-shadow] duration-200 md:inset-x-10 md:top-5 ${
         scrolled
           ? "border border-white/[0.06] bg-black/[0.72] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.04)]"
           : "border border-transparent bg-black/30"

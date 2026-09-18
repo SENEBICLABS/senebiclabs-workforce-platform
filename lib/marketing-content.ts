@@ -116,13 +116,18 @@ export const FAQ_CATEGORIES: Faq["category"][] = [
 ];
 
 /**
- * What a clinician actually does, as three things they can look through on the
- * landing page rather than read all at once.
+ * What a clinician actually does, as the three purposes a pool can have:
+ * evaluate, label, create. They are the words PurposeBadge already shows on
+ * every pool card, so the page and the workspace call the work one thing.
+ *
+ * Peer review is named inside Create rather than given a tab of its own. It is
+ * a phase of written work, not a kind of work: Task.phase only reaches
+ * "review" for a config with free-text fields, so a choice-only pool never has
+ * one, and a tab for it would read as a category no clinician would recognise.
  *
  * Every line describes a control the workspace really renders: the choice and
- * scale fields, the span highlighter, the free text and structured fields, the
- * flag, and approve / edit / send back on a review pool. Nothing here is
- * aspirational, so it stays true as long as those do.
+ * scale fields, the span highlighter, the free text and structured fields, and
+ * the flag. Nothing here is aspirational, so it stays true as long as those do.
  */
 export interface WorkTask {
   /** Short label for the tab itself. */
@@ -133,30 +138,30 @@ export interface WorkTask {
   /** What you actually do. */
   how: string;
   /** Which preview of the workspace sits beside it. */
-  mock: "judge" | "write" | "approve";
+  mock: "judge" | "label" | "write";
 }
 
 export const WORK_TASKS: WorkTask[] = [
   {
-    tab: "Judge an answer",
-    title: "Judge an answer",
+    tab: "Evaluate",
+    title: "Assess the AI's answer",
     why: "A model's answer is only as good as the clinician who checks it. What you decide is what the model is measured and corrected against.",
-    how: "Read the case and the answer the model gave, with the rubric for that work beside you. Say whether it holds up, choose what went wrong if it did not, highlight the exact passage at fault, and rate how confident you are.",
+    how: "Read the case and the answer the model gave, with the rubric beside you. Say whether it holds up, set the correct answer where it does not, flag anything that could harm a patient, and rate it on the axes that pool uses. A short written reason goes with each judgement.",
     mock: "judge",
   },
   {
-    tab: "Write the answer",
-    title: "Write the answer yourself",
-    why: "Where the model's answer will not do, the correct one has to come from a clinician who practises in that area.",
-    how: "Write it against the guidelines you already work to: structured fields where the work needs structure, prose where it needs prose. It goes to a second clinician for approval, never straight out.",
-    mock: "write",
+    tab: "Label",
+    title: "Label clinical data",
+    why: "Before a model can learn from medical data, someone qualified has to say what it actually shows.",
+    how: "Read the case and record what it shows: the category it belongs to, the findings present, and whether a claim holds up against the evidence. Where a statement is wrong, highlight the exact words and write the correction.",
+    mock: "label",
   },
   {
-    tab: "Approve a colleague's",
-    title: "Approve a colleague's",
-    why: "No written answer leaves on one clinician's say-so. A second reading by someone else in the specialty is what makes it safe to use.",
-    how: "Approve it as it stands, edit it where it is nearly right, or send it back saying what has to change. The platform never offers you your own work, and sending back pays exactly what approving pays.",
-    mock: "approve",
+    tab: "Create",
+    title: "Write the correct answer",
+    why: "Where the model's answer will not do, the correct one has to come from a clinician who practises in that area.",
+    how: "Write it against the guidelines you already work to: structured fields where the work needs structure, prose where it needs prose. Nothing you write leaves on your say-so alone. A second clinician reads it and approves, edits, or sends it back, and you will be asked to do that reading for others.",
+    mock: "write",
   },
 ];
 

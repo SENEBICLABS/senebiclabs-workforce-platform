@@ -43,36 +43,36 @@ export function WorkTabs({ tasks }: { tasks: WorkTask[] }) {
 
   return (
     <div className="mt-12">
-      {/* Scrolls sideways rather than wrapping when the labels outgrow a phone,
-          so the bar stays one row at every width. */}
-      <div className="-mx-5 overflow-x-auto px-5 scrollbar-none [&::-webkit-scrollbar]:hidden">
-        <div
-          role="tablist"
-          aria-label="What a clinician does here"
-          className="mx-auto flex w-max gap-1 rounded-full border border-hairline bg-surface p-1.5"
-        >
-          {tasks.map((task, i) => (
-            <button
-              key={task.tab}
-              ref={(el) => {
-                tabs.current[i] = el;
-              }}
-              id={`work-tab-${i}`}
-              role="tab"
-              type="button"
-              aria-selected={i === active}
-              aria-controls={`work-panel-${i}`}
-              tabIndex={i === active ? 0 : -1}
-              onClick={() => setActive(i)}
-              onKeyDown={onKeyDown}
-              className={`focusable whitespace-nowrap rounded-full px-4 py-2.5 font-mono text-[12px] uppercase tracking-[0.12em] transition-colors sm:px-6 ${
-                i === active ? "bg-ink text-canvas" : "text-muted hover:text-ink"
-              }`}
-            >
-              {task.tab}
-            </button>
-          ))}
-        </div>
+      {/* The section's own nav. It spans the panel beneath it, in three equal
+          segments, rather than sitting as a small pill in the middle of it.
+          Single-word labels fit a third of the bar at every width, so nothing
+          needs to wrap or scroll. */}
+      <div
+        role="tablist"
+        aria-label="What a clinician does here"
+        className="mx-auto grid w-fit grid-cols-3 gap-1 rounded-full border border-hairline bg-surface p-1.5"
+      >
+        {tasks.map((task, i) => (
+          <button
+            key={task.tab}
+            ref={(el) => {
+              tabs.current[i] = el;
+            }}
+            id={`work-tab-${i}`}
+            role="tab"
+            type="button"
+            aria-selected={i === active}
+            aria-controls={`work-panel-${i}`}
+            tabIndex={i === active ? 0 : -1}
+            onClick={() => setActive(i)}
+            onKeyDown={onKeyDown}
+            className={`focusable min-w-[110px] whitespace-nowrap rounded-full px-5 py-2.5 font-mono text-[12px] uppercase tracking-[0.12em] transition-colors sm:min-w-[150px] ${
+              i === active ? "bg-ink text-canvas" : "text-muted hover:text-ink"
+            }`}
+          >
+            {task.tab}
+          </button>
+        ))}
       </div>
 
       {tasks.map((task, i) => (
@@ -82,10 +82,10 @@ export function WorkTabs({ tasks }: { tasks: WorkTask[] }) {
           role="tabpanel"
           aria-labelledby={`work-tab-${i}`}
           hidden={i !== active}
-          className="mt-8 rounded-card border border-hairline bg-linear-to-br from-accent-soft/40 via-transparent to-transparent p-6 text-left sm:p-10"
+          className="mt-8 rounded-card border border-hairline bg-linear-to-br from-accent-soft/40 via-transparent to-transparent p-6 text-left sm:px-9 sm:py-8 lg:px-12 lg:py-10"
         >
-          <div className="grid items-center gap-10 md:grid-cols-2">
-            <div>
+          <div className="grid items-start gap-9 md:grid-cols-[minmax(0,1fr)_minmax(360px,440px)] lg:gap-14">
+            <div className="max-w-[560px]">
               <h3 className="text-[24px] leading-tight text-ink sm:text-[30px]">{task.title}</h3>
 
               <p className="mt-6 font-mono text-[12px] uppercase tracking-[0.12em] text-accent">

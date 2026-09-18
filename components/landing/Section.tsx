@@ -13,7 +13,9 @@
  */
 
 /** Page shell. One width for every section, so edges line up down the page. */
-const SHELL = "mx-auto w-full max-w-[1040px] px-5 lg:px-8";
+const SHELL = "mx-auto w-full max-w-[1280px] px-5 lg:px-10";
+/** For a section carrying a panel rather than prose: nearly the full window. */
+const SHELL_WIDE = "mx-auto w-full max-w-[1560px] px-5 lg:px-10";
 
 /**
  * Measures, in the order they narrow. A line of text wants roughly 60 to 75
@@ -32,15 +34,18 @@ export function Section({
   children,
   className = "",
   tight = false,
+  wide = false,
 }: {
   children: React.ReactNode;
   className?: string;
   /** For sections that sit directly under another, sharing one breath. */
   tight?: boolean;
+  /** For a section built around a panel, which wants the window, not a column. */
+  wide?: boolean;
 }) {
   return (
     <section className={className}>
-      <div className={`${SHELL} ${tight ? "py-14 sm:py-16" : "py-20 sm:py-28"}`}>
+      <div className={`${wide ? SHELL_WIDE : SHELL} ${tight ? "py-14 sm:py-16" : "py-20 sm:py-28"}`}>
         {children}
       </div>
     </section>

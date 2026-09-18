@@ -107,7 +107,7 @@ export default function Landing() {
 
       {/* Three tabs rather than three columns: a visitor picks the task they
           want to understand and sees what it involves. */}
-      <Section>
+      <Section wide>
         <SectionHead
           eyebrow="The work"
           title="How clinicians like you improve AI models"
