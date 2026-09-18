@@ -55,7 +55,7 @@ const PRINCIPLES = [
 const PROMISES = [
   {
     title: "Paid for honest work",
-    body: "Paid per case, at a rate shown before you accept anything. Flagging a case you cannot judge pays the same as completing one, because a platform that pays only for answers ends up buying guesses.",
+    body: "Paid at professional rates, shown before you accept anything. Flagging a case you cannot judge pays the same as completing one, because a platform that pays only for answers ends up buying guesses.",
   },
   {
     title: "Your time stays yours",

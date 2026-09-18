@@ -82,12 +82,12 @@ export const FAQS: Faq[] = [
     category: "Pay",
     featured: true,
     q: "How does pay work?",
-    a: "You are paid per reviewed case. The rate for a body of work is shown before you accept it, so you always know what a case pays before you begin. Cases you flag as unclear are paid the same as cases you complete.",
+    a: "You are paid at professional rates. The rate for a body of work is shown before you accept it, so you always know what it pays before you begin. Cases you flag as unclear are paid the same as cases you complete.",
   },
   {
     category: "Pay",
     q: "Am I paid for work that is sent back?",
-    a: "Yes. Reviewing is paid for the pass you make, not for the outcome you reach. Sending written work back to be rewritten pays the same as approving it, so there is nothing to gain by waving something through.",
+    a: "Yes. You are paid for the pass you make, not for the outcome you reach. Sending written work back to be rewritten pays the same as approving it, so there is nothing to gain by waving something through.",
   },
   {
     category: "Practicalities",
@@ -184,8 +184,8 @@ export const JOIN_STEPS = [
     body: "We check your licence against the register it was issued by, and a short set of cases in your specialty matches you to the right work.",
   },
   {
-    title: "Review and get paid",
-    body: "Work through cases remotely, on your own schedule, paid per reviewed case, including the ones you flag.",
+    title: "Work and get paid",
+    body: "Work through cases remotely, on your own schedule, at professional rates, including the cases you flag.",
   },
 ];
 

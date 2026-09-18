@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 const WHY_JOIN = [
   {
     title: "Paid for what you already know",
-    body: "Paid per reviewed case, at professional rates, with the rate shown before you take anything on.",
+    body: "Paid at professional rates, shown before you take anything on.",
   },
   {
     title: "Remote, on your schedule",
@@ -78,7 +78,7 @@ export default function Landing() {
         <div className="mt-10 flex flex-col items-center gap-5">
           <RequestAccessButton />
           <p className="font-mono text-[12px] uppercase tracking-[0.12em] text-muted">
-            Fully remote · Paid per case · No AI experience needed
+            Fully remote · Professional rates · No AI experience needed
           </p>
         </div>
       </Hero>
@@ -114,10 +114,6 @@ export default function Landing() {
           intro="We depend on licensed clinicians, in the specialties they actually practise, to improve medical AI. Look through the tasks you would do on Senebiclabs."
         />
         <WorkTabs tasks={WORK_TASKS} />
-        <p className={`${MEASURE.intro} mt-10 text-center text-body text-muted`}>
-          Any case you cannot judge, you flag instead of guessing. It goes to
-          another clinician, and it pays the same as one you complete.
-        </p>
       </Section>
 
       <Section>
