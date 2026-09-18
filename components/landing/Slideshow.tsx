@@ -111,14 +111,14 @@ export function Slideshow({ items }: { items: WhyJoin[] }) {
       aria-roledescription="carousel"
       aria-label="Why clinicians join Senebiclabs"
     >
-      {/* The track bleeds past the section padding so a slide can fill the
-          width it was given, and the dots beneath are what say there is more
-          to swipe to. */}
+      {/* No bleed: the track sits on the section's own content box, so a slide
+          lines up with the heading above it. snap-start against a padded track
+          rested at 40px of scroll, which pushed every card off centre. */}
       <div
         ref={track}
         tabIndex={0}
         onKeyDown={onKeyDown}
-        className="focusable -mx-5 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-5 pb-2 scrollbar-none [&::-webkit-scrollbar]:hidden lg:-mx-10 lg:px-10"
+        className="focusable flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-2 scrollbar-none [&::-webkit-scrollbar]:hidden"
       >
         {items.map((item, i) => (
           <div
