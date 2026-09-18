@@ -166,6 +166,48 @@ export const WORK_TASKS: WorkTask[] = [
 ];
 
 /**
+ * Why a clinician would join, as four claims a reader can check.
+ *
+ * Every sentence here is backed by something that already exists: the terms in
+ * app/agreement/page.tsx, which each member accepts, and behaviour the
+ * platform implements. Rates published per pool and weekly payment are
+ * agreement terms. Choosing your own pools and hours is agreement term 1.
+ * Working to the rubric supplied with a pool, and flagging where it conflicts
+ * with your own standard of care, is term 2. Seeing only the pools you are
+ * eligible for is enforced server-side on every request.
+ */
+export interface WhyJoin {
+  title: string;
+  /** The claim, said plainly. */
+  lead: string;
+  /** What it means in practice, so the claim is checkable rather than a slogan. */
+  detail: string;
+}
+
+export const WHY_SENEBICLABS: WhyJoin[] = [
+  {
+    title: "Paid at professional rates",
+    lead: "A rate is published for every pool before you take it on, so you never start work not knowing what it pays.",
+    detail: "Payments clear weekly. A case you flag as one you cannot judge is paid at the same rate as one you complete, so there is never a reason to guess rather than say so. These are terms in the agreement you accept when you join, not aspirations.",
+  },
+  {
+    title: "You choose the work and the hours",
+    lead: "You pick which pools you take and when you work on them. There are no shifts, no minimum hours and no targets.",
+    detail: "You are engaged as an independent clinician rather than an employee. Your answers are saved as you go, so you can stop halfway through a case, close the tab, and pick it up where you left off.",
+  },
+  {
+    title: "Inside your own specialty",
+    lead: "You review in the area you actually practise, and you see only the pools you have been made eligible for.",
+    detail: "That is enforced by the platform on every request, not left to a policy. Each pool carries the rubric written for it by the clinical leads, which sits beside the case while you read. Where the rubric and your own standard of care disagree, you flag the case rather than resolve it yourself.",
+  },
+  {
+    title: "Your judgment is the reference",
+    lead: "What you decide becomes the standard a medical AI system is measured and corrected against.",
+    detail: "Several clinicians see each case, and where you disagree with each other it goes to adjudication rather than being settled by majority. Your reading is recorded as a clinician's judgment, with a specialty and a licence behind it, not as one vote among many.",
+  },
+];
+
+/**
  * How someone gets from reading a page to reviewing a case, as it is today:
  * request access, wait for us to open, get verified, work. Shared so the
  * landing page and About us tell the same four steps.

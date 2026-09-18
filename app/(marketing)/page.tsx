@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  Grid,
-  GridItem,
   Hero,
   MEASURE,
   Section,
@@ -12,7 +10,8 @@ import { Testimonials } from "@/components/landing/Testimonials";
 import { Faqs } from "@/components/landing/Faqs";
 import { RequestAccessButton } from "@/components/landing/RequestAccessButton";
 import { WorkTabs } from "@/components/landing/WorkTabs";
-import { ELIGIBILITY, JOIN_STEPS, WORK_TASKS } from "@/lib/marketing-content";
+import { Slideshow } from "@/components/landing/Slideshow";
+import { ELIGIBILITY, JOIN_STEPS, WHY_SENEBICLABS, WORK_TASKS } from "@/lib/marketing-content";
 
 export const metadata: Metadata = {
   title: "Senebiclabs for clinicians",
@@ -38,24 +37,6 @@ export const metadata: Metadata = {
  * stand behind yet, so there are no figures.
  */
 
-const WHY_JOIN = [
-  {
-    title: "Paid for what you already know",
-    body: "Paid at professional rates, shown before you take anything on.",
-  },
-  {
-    title: "Remote, on your schedule",
-    body: "No shifts and no minimum hours. Pick up cases when you have time, and stop when you do not.",
-  },
-  {
-    title: "Inside your own specialty",
-    body: "You review in the area you practise, against the guidelines you already work to, not a rubric invented for the task.",
-  },
-  {
-    title: "Your judgment becomes the standard",
-    body: "A correction you make today shapes how a model answers the same question for everyone who asks it next.",
-  },
-];
 
 export default function Landing() {
   return (
@@ -116,19 +97,15 @@ export default function Landing() {
         <WorkTabs tasks={WORK_TASKS} />
       </Section>
 
-      <Section>
+      {/* One claim at a time, swiped through, so each gets the room to say
+          what it actually means rather than being a line in a grid. */}
+      <Section wide>
         <SectionHead
           eyebrow="Why Senebiclabs"
           title="Why clinicians join"
-          intro="Paid work that fits around clinical practice, and changes what these systems tell people."
+          intro="Four things you can hold us to, and what each one means in practice."
         />
-        <Grid cols={2}>
-          {WHY_JOIN.map((item, i) => (
-            <GridItem key={item.title} index={i + 1} title={item.title}>
-              {item.body}
-            </GridItem>
-          ))}
-        </Grid>
+        <Slideshow items={WHY_SENEBICLABS} />
       </Section>
 
       <Section tight>
