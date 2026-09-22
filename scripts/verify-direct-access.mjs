@@ -5,7 +5,6 @@
  *   node scripts/verify-direct-access.mjs
  */
 import fs from "fs";
-import { SignJWT } from "jose";
 import { assertTestProject } from "./assert-test-project.mjs";
 
 const env = Object.fromEntries(

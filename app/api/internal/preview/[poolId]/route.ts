@@ -87,7 +87,7 @@ export async function GET(
   }
 
   // Map LS task ids to the client's own case ids; the task id itself is dropped.
-  let caseIdByTask = new Map<number, string>();
+  const caseIdByTask = new Map<number, string>();
   try {
     for (const task of await listTasks(pool.ls_project_id)) {
       const data = (task.data ?? {}) as Record<string, unknown>;

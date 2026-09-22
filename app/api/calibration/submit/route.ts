@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
       for (const answer of answers) {
         const item = calibrationItems.find(
-          (item: any) => item.id === answer.itemId
+          (item: { id: string; correct_option?: unknown }) => item.id === answer.itemId
         );
 
         if (!item) continue;

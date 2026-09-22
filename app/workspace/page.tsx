@@ -86,6 +86,16 @@ function Workspace() {
   const [missing, setMissing] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
+  // A different pool resets the page, during render rather than in an effect,
+  // so a task from the old pool is never shown under the new one's heading.
+  const [loadedFor, setLoadedFor] = useState(poolId);
+  if (loadedFor !== poolId) {
+    setLoadedFor(poolId);
+    setLoading(true);
+    setLoadError(null);
+    setDrained(false);
+  }
+
   /** Adopt a task and restore whatever was typed against it before. */
   const adopt = useCallback((next: Task | null) => {
     setMissing([]);
@@ -117,9 +127,29 @@ function Workspace() {
     }
   }, [poolId, adopt]);
 
+  // The first task for this pool. State is set only when the request settles:
+  // calling load() here set loading and cleared errors synchronously in the
+  // effect body, which renders twice. `live` drops a response that arrives
+  // after the pool has changed. load() itself stays, for retry and for moving
+  // on after a submit or a flag, which are event handlers.
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (!poolId) return;
+    let live = true;
+    api
+      .nextTask(poolId)
+      .then((result) => {
+        if (live) adopt(result === NO_CONTENT ? null : (result as Task));
+      })
+      .catch((err: unknown) => {
+        if (live) setLoadError(err instanceof ApiError ? err.message : "Something went wrong.");
+      })
+      .finally(() => {
+        if (live) setLoading(false);
+      });
+    return () => {
+      live = false;
+    };
+  }, [poolId, adopt]);
 
   // Persist as they type, so nothing is lost to a refresh or a stray back.
   useEffect(() => {

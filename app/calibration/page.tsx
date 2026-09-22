@@ -80,21 +80,35 @@ function CalibrationCard({ pool }: { pool: CalibrationPool }) {
 const CALIBRATION_ENABLED =
   process.env.NEXT_PUBLIC_CALIBRATION_ENABLED === "true";
 
+/**
+ * Two components, one per state, rather than an early return.
+ *
+ * This used to return early when calibration was off and call useAsync below
+ * the return, so the number of hooks the page ran depended on a flag. React
+ * requires the same hooks in the same order on every render; a component that
+ * breaks that can hand one hook's state to another. Each branch now runs its
+ * own hooks unconditionally.
+ */
 export default function CalibrationPage() {
-  // Access comes with the invitation while this is off; the page would only
-  // offer assessments that unlock nothing.
-  if (!CALIBRATION_ENABLED) {
-    return (
-      <AppLayout title="Calibration">
-        <EmptyState
-          title="Calibration is not required"
-          body="Your invitation already gives you access to the pools open to you. Head to your dashboard to start reviewing."
-          action={<Button onClick={() => (window.location.href = "/dashboard")}>Go to dashboard</Button>}
-        />
-      </AppLayout>
-    );
-  }
+  return CALIBRATION_ENABLED ? <Calibrations /> : <CalibrationNotRequired />;
+}
 
+/** Access comes with the invitation while this is off; the page would only
+ *  offer assessments that unlock nothing. */
+function CalibrationNotRequired() {
+  const router = useRouter();
+  return (
+    <AppLayout title="Calibration">
+      <EmptyState
+        title="Calibration is not required"
+        body="Your invitation already gives you access to the pools open to you. Head to your dashboard to start reviewing."
+        action={<Button onClick={() => router.push("/dashboard")}>Go to dashboard</Button>}
+      />
+    </AppLayout>
+  );
+}
+
+function Calibrations() {
   const calibrations = useAsync(() => api.calibrations(), []);
 
   const passed = (calibrations.data ?? []).filter((p) => p.status === "passed");
