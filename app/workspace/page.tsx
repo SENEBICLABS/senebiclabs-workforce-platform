@@ -275,6 +275,14 @@ function Workspace() {
     }
   }, [task, busy, showToast, load]);
 
+  // The submit shortcut works with either modifier; the hint has to name the
+  // one this keyboard actually has. Read after mount, so the server and the
+  // first client render agree.
+  const [isMac, setIsMac] = useState(false);
+  useEffect(() => {
+    setIsMac(/mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent));
+  }, []);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
@@ -451,7 +459,7 @@ function Workspace() {
           <p className="text-[14px] text-muted">
             Press{" "}
             <kbd className="rounded border border-hairline bg-canvas px-1.5 py-0.5 font-sans text-[12px] text-ink">
-              ⌘
+              {isMac ? "⌘" : "Ctrl"}
             </kbd>{" "}
             +{" "}
             <kbd className="rounded border border-hairline bg-canvas px-1.5 py-0.5 font-sans text-[12px] text-ink">

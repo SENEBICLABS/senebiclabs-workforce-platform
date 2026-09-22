@@ -28,6 +28,17 @@ const CONTROL =
  * client-specific: the type, label, hint, options and requiredness all arrive
  * from the config, so a new project renders without a UI change.
  */
+/**
+ * Option text as a clinician should read it.
+ *
+ * Options come from a pool's config, where they are written as data: "correct",
+ * "partially correct". Only the first letter is touched, so MBBS, ECG and the
+ * like are left exactly as the config spells them.
+ */
+function optionLabel(option: string): string {
+  return option.charAt(0).toUpperCase() + option.slice(1);
+}
+
 export function ReviewField({
   field,
   answers,
@@ -78,7 +89,7 @@ export function ReviewField({
             <option value="">Select one…</option>
             {options.map((option) => (
               <option key={option} value={option}>
-                {option}
+                {optionLabel(option)}
               </option>
             ))}
           </select>
@@ -103,7 +114,7 @@ export function ReviewField({
                     onChange={() => onChange(field.name, option)}
                     className="focusable h-4 w-4 shrink-0 accent-accent"
                   />
-                  <span className="text-body text-ink">{option}</span>
+                  <span className="text-body text-ink">{optionLabel(option)}</span>
                 </label>
               );
             })}
@@ -181,7 +192,11 @@ export function ReviewField({
         <div className="space-y-3">
           <div className="flex gap-2" role="radiogroup" aria-describedby={hintId}>
             {["Yes", "No"].map((option) => {
-              const selected = (value ?? "No") === option;
+              // No default. This used to read (value ?? "No"), which showed No
+              // as chosen before anyone had answered: a clinician who never touched
+              // the field still submitted "no critical miss", and the safer-looking
+              // answer was the one recorded by inaction.
+              const selected = value === option;
               return (
                 <label
                   key={option}
@@ -225,7 +240,7 @@ export function ReviewField({
                 <option value="">Select one…</option>
                 {options.map((option) => (
                   <option key={option} value={option}>
-                    {option}
+                    {optionLabel(option)}
                   </option>
                 ))}
               </select>

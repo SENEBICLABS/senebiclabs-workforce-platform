@@ -1,11 +1,26 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": [
+    "dub1"
+  ],
   "functions": {
-    "app/api/pools/[poolId]/next/route.ts": { "maxDuration": 60 },
-    "app/api/tasks/[taskId]/submit/route.ts": { "maxDuration": 60 },
-    "app/api/tasks/[taskId]/flag/route.ts": { "maxDuration": 30 },
-    "app/api/pools/route.ts": { "maxDuration": 30 },
-    "app/api/tasks/reconcile/route.ts": { "maxDuration": 300 },
-    "app/api/internal/preview/[poolId]/route.ts": { "maxDuration": 300 }
+    "app/api/pools/[poolId]/next/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/tasks/[taskId]/submit/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/tasks/[taskId]/flag/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/pools/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/tasks/reconcile/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/internal/preview/[poolId]/route.ts": {
+      "maxDuration": 300
+    }
   }
 }
