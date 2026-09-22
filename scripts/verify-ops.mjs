@@ -8,7 +8,7 @@
  * the clinician side.
  */
 import fs from "fs";
-import { SignJWT } from "jose";
+import { sessionFor } from "./session-for.mjs";
 
 const env = Object.fromEntries(
   fs.readFileSync(".env.local", "utf8").split("\n").filter((l) => l.includes("="))
@@ -39,9 +39,7 @@ for (const email of [P, O]) {
   ids[email] = c.id;
 }
 const clinicianCookie = async (email) => {
-  const t = await new SignJWT({ clinicianId: ids[email], email })
-    .setProtectedHeader({ alg: "HS256" }).setExpirationTime("1h")
-    .sign(new TextEncoder().encode(env.JWT_SECRET));
+  const t = await sessionFor(env, { clinicianId: ids[email], email });
   return `sessionToken=${t}`;
 };
 const asP = await clinicianCookie(P);

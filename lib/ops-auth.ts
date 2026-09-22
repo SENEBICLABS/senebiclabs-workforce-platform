@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
+import { jwtSecret } from "./secrets";
 
 /**
  * The operator gate.
@@ -18,11 +19,15 @@ import { SignJWT, jwtVerify } from "jose";
 const OPS_COOKIE = "ops_session";
 const SESSION_HOURS = 8;
 
-function secret() {
-  return new TextEncoder().encode(
-    process.env.JWT_SECRET ?? "missing-jwt-secret"
-  );
-}
+/**
+ * The fail-closed secret from lib/secrets.ts, as clinician sessions use.
+ *
+ * This used to fall back to the literal "missing-jwt-secret", a public
+ * constant: with JWT_SECRET unset, anyone could sign an operator cookie. Now a
+ * missing or short secret throws. Verification treats that as a refusal, and
+ * the unlock route reports the console as unconfigured.
+ */
+const secret = () => jwtSecret();
 
 export async function issueOpsToken(): Promise<string> {
   return new SignJWT({ ops: true })

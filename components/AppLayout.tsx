@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, LayoutDashboard, ListChecks, Target, User } from "lucide-react";
 import { useAppState } from "./AppState";
 import { Switch } from "./ui/Switch";
-import { api } from "@/lib/api";
+import { api, SIGNED_OUT_EVENT } from "@/lib/api";
 
 const CALIBRATION_ENABLED =
   process.env.NEXT_PUBLIC_CALIBRATION_ENABLED === "true";
@@ -236,6 +236,35 @@ function Toast() {
   );
 }
 
+/**
+ * Takes the person to sign-in the moment the platform says their session is
+ * over.
+ *
+ * Revoking a session refuses it on its next request, but the page shell is only
+ * checked for a signature at the edge, so without this a revoked clinician
+ * would sit on a page whose every panel failed. It signs out first, which
+ * clears the stale cookie so the edge redirect behaves from then on, and it
+ * fires once however many requests come back 401 together.
+ */
+function SessionWatch() {
+  const router = useRouter();
+  const leaving = useRef(false);
+
+  useEffect(() => {
+    const onSignedOut = () => {
+      if (leaving.current) return;
+      leaving.current = true;
+      fetch("/api/auth/sign-out", { method: "POST" })
+        .catch(() => {})
+        .finally(() => router.replace("/login"));
+    };
+    window.addEventListener(SIGNED_OUT_EVENT, onSignedOut);
+    return () => window.removeEventListener(SIGNED_OUT_EVENT, onSignedOut);
+  }, [router]);
+
+  return null;
+}
+
 export function AppLayout({
   title,
   children,
@@ -245,6 +274,7 @@ export function AppLayout({
 }) {
   return (
     <div className="min-h-screen bg-canvas">
+      <SessionWatch />
       <Sidebar />
       <div className="md:pl-60">
         <TopBar title={title} />

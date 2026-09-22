@@ -8,7 +8,7 @@
  * example.com, and rightly).
  */
 import fs from "fs";
-import { SignJWT } from "jose";
+import { sessionFor } from "./session-for.mjs";
 
 const env = Object.fromEntries(
   fs.readFileSync(".env.local", "utf8").split("\n").filter((l) => l.includes("="))
@@ -109,9 +109,7 @@ console.log(`  session cookie set:  ${/sessionToken=/.test(uVerify.headers.get("
 
 /* ── 6. a member without the permission cannot invite ──────────── */
 hr("6. INVITE ENDPOINT REFUSES A MEMBER WITHOUT can_invite");
-const token = await new SignJWT({ clinicianId: newClinician.id, email: newClinician.email })
-  .setProtectedHeader({ alg: "HS256" }).setExpirationTime("1h")
-  .sign(new TextEncoder().encode(env.JWT_SECRET));
+const token = await sessionFor(env, { clinicianId: newClinician.id, email: newClinician.email });
 const refused = await fetch(`${APP}/api/invites`, {
   method: "POST",
   headers: { "Content-Type": "application/json", Cookie: `sessionToken=${token}` },

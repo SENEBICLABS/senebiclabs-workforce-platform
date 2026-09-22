@@ -8,7 +8,7 @@
  * because it measures Label Studio against approved items, not completions.
  */
 import fs from "fs";
-import { SignJWT } from "jose";
+import { sessionFor } from "./session-for.mjs";
 import { assertTestProject } from "./assert-test-project.mjs";
 
 const env = Object.fromEntries(
@@ -69,9 +69,7 @@ for (const email of [A, B, C]) {
   });
 }
 const call = async (email) => {
-  const t = await new SignJWT({ clinicianId: ids[email], email })
-    .setProtectedHeader({ alg: "HS256" }).setExpirationTime("1h")
-    .sign(new TextEncoder().encode(env.JWT_SECRET));
+  const t = await sessionFor(env, { clinicianId: ids[email], email });
   return (p, i = {}) => fetch(`${APP}${p}`, { ...i, headers: { Cookie: `sessionToken=${t}`, "Content-Type": "application/json", ...i.headers } });
 };
 const cA = await call(A), cB = await call(B), cC = await call(C);

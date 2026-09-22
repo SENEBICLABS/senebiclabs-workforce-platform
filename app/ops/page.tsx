@@ -5,14 +5,21 @@ import { useRouter } from "next/navigation";
 
 /* ── shared plumbing ─────────────────────────────────────────────── */
 
-/** Every call carries the ops cookie; a 403 means the session lapsed. */
+/** Announced when the console's operator session has lapsed. */
+const OPS_LOCKED_EVENT = "senebiclabs:ops-locked";
+
+/**
+ * Every call carries the ops cookie; a 403 means the session lapsed. This sits
+ * outside React, so it announces the lapse and the console, which has the
+ * router, returns to the unlock screen.
+ */
 async function ops<T>(path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`/api/ops${path}`, {
     ...init,
     headers: { "Content-Type": "application/json", ...init.headers },
   });
   if (res.status === 403) {
-    window.location.href = "/ops/unlock";
+    window.dispatchEvent(new Event(OPS_LOCKED_EVENT));
     throw new Error("locked");
   }
   const body = await res.json().catch(() => ({}));
@@ -159,6 +166,12 @@ function AccessPicker({ pool, onClose, onSaved }: { pool: Pool; onClose: () => v
 
 export default function OpsConsole() {
   const router = useRouter();
+
+  useEffect(() => {
+    const onLocked = () => router.replace("/ops/unlock");
+    window.addEventListener(OPS_LOCKED_EVENT, onLocked);
+    return () => window.removeEventListener(OPS_LOCKED_EVENT, onLocked);
+  }, [router]);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [clinicians, setClinicians] = useState<Clinician[]>([]);
   const [pools, setPools] = useState<Pool[]>([]);
@@ -209,12 +222,16 @@ export default function OpsConsole() {
     };
   }, [search, reloads]);
 
-  const act = async (key: string, fn: () => Promise<unknown>, message?: string) => {
+  const act = async (
+    key: string,
+    fn: () => Promise<unknown>,
+    message?: string | ((result: unknown) => string)
+  ) => {
     setBusy(key); setNotice(null);
     try {
-      await fn();
+      const result = await fn();
       refresh();
-      if (message) setNotice(message);
+      if (message) setNotice(typeof message === "function" ? message(result) : message);
     } catch (e) {
       setNotice(String((e as Error).message));
     } finally {
@@ -273,11 +290,11 @@ export default function OpsConsole() {
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search email or name"
             className="h-8 w-56 rounded-md border border-white/15 bg-black/20 px-2.5 text-[15px] text-white outline-none focus:border-[#0E7C74]" />
         }>
-        <table className="w-full min-w-[860px]">
+        <table className="w-full min-w-[980px]">
           <thead><tr>
             <th className={head}>Email</th><th className={head}>Name</th><th className={head}>Joined</th>
             <th className={head}>Invited by</th><th className={head}>Reviews</th><th className={head}>Pools</th>
-            <th className={head}>Can invite</th>
+            <th className={head}>Can invite</th><th className={head}>Sessions</th>
           </tr></thead>
           <tbody>
             {clinicians.map((c) => (
@@ -294,10 +311,28 @@ export default function OpsConsole() {
                       () => ops(`/clinicians/${c.id}/can-invite`, { method: "POST", body: JSON.stringify({ value: !c.can_invite }) }),
                       `${c.email} can ${c.can_invite ? "no longer" : "now"} invite colleagues.`)} />
                 </td>
+                <td className={cell}>
+                  {/* Signs them out everywhere on their next request. Their
+                      account, history and pool access are untouched. */}
+                  <button className={btn} disabled={busy === `s-${c.id}`}
+                    onClick={() => {
+                      if (!confirm(`End every session ${c.email} is signed in with? They are signed out on every device on their next request, and can sign in again.`)) return;
+                      act(`s-${c.id}`,
+                        () => ops<{ revoked: number }>(`/clinicians/${c.id}/revoke-sessions`, { method: "POST" }),
+                        (result) => {
+                          const n = (result as { revoked: number }).revoked;
+                          return n === 0
+                            ? `${c.email} had no live sessions.`
+                            : `Ended ${n} session${n === 1 ? "" : "s"} for ${c.email}.`;
+                        });
+                    }}>
+                    End sessions
+                  </button>
+                </td>
               </tr>
             ))}
             {clinicians.length === 0 && (
-              <tr><td colSpan={7} className={`${cell} text-white`}>No clinicians match.</td></tr>
+              <tr><td colSpan={8} className={`${cell} text-white`}>No clinicians match.</td></tr>
             )}
           </tbody>
         </table>

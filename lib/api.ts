@@ -99,6 +99,14 @@ export class ApiError extends Error {
 /** Signals a drained pool — a 204, which is not an error. */
 export const NO_CONTENT = Symbol("no-content");
 
+/**
+ * Announced when a request comes back 401: the session is over, whether it was
+ * signed out elsewhere, ended by an operator, or simply expired. The signed-in
+ * layout listens for it and takes the person to sign-in, rather than leaving
+ * every panel on the page to fail on its own.
+ */
+export const SIGNED_OUT_EVENT = "senebiclabs:signed-out";
+
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
@@ -118,6 +126,10 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
     body = await res.json();
   } catch {
     /* some errors carry no body */
+  }
+
+  if (res.status === 401 && typeof window !== "undefined") {
+    window.dispatchEvent(new Event(SIGNED_OUT_EVENT));
   }
 
   if (!res.ok) {

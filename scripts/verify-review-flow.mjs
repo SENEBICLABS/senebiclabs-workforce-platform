@@ -8,7 +8,7 @@
  * Runs entirely against the webhook-free sandbox.
  */
 import fs from "fs";
-import { SignJWT } from "jose";
+import { sessionFor } from "./session-for.mjs";
 import { assertTestProject } from "./assert-test-project.mjs";
 
 const env = Object.fromEntries(
@@ -67,9 +67,7 @@ for (const email of [A, B]) {
   await q("pool_eligibility", { method: "POST", body: JSON.stringify({ clinician_id: c.id, pool_id: pool.id, eligible: true, eligible_since: new Date().toISOString() }) });
 }
 const cookieFor = async (email) => {
-  const t = await new SignJWT({ clinicianId: ids[email], email })
-    .setProtectedHeader({ alg: "HS256" }).setExpirationTime("1h")
-    .sign(new TextEncoder().encode(env.JWT_SECRET));
+  const t = await sessionFor(env, { clinicianId: ids[email], email });
   return `sessionToken=${t}`;
 };
 const cA = await cookieFor(A), cB = await cookieFor(B);
