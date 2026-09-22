@@ -1,5 +1,5 @@
 import "server-only";
-import { createHash } from "crypto";
+import { randomBytes } from "crypto";
 import { SignJWT } from "jose";
 import { supabaseAdmin } from "./supabase";
 import { grantDirectAccess } from "./access";
@@ -21,6 +21,10 @@ import {
  */
 
 import { jwtSecret } from "./secrets";
+import { hashSessionToken } from "./sessions";
+
+/** How long a session lasts, for the token and its row alike. */
+const SESSION_DAYS = 7;
 
 export type GateFailure =
   | "no_invite"
@@ -107,31 +111,43 @@ async function issueSessionFor(
   const clinicianId = row.id;
   const email = row.email;
 
+  // One instant decides both expiries, so the token and its row cannot drift.
+  const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+
   let sessionToken: string;
   try {
+    // A jti makes every token unique. Without one, two sign-ins by the same
+    // clinician within a second produced byte-identical tokens, and once rows
+    // can be revoked that is a trap: sign out, sign straight back in, and the
+    // new token matches the row just revoked, so it is dead on arrival.
     sessionToken = await new SignJWT({ clinicianId, email })
       .setProtectedHeader({ alg: "HS256" })
-      .setExpirationTime("7d")
+      .setJti(randomBytes(16).toString("base64url"))
+      .setIssuedAt()
+      .setExpirationTime(Math.floor(expiresAt.getTime() / 1000))
       .sign(jwtSecret());
   } catch (err) {
     console.error("[gate] could not sign a session token", err);
     return { ok: false, reason: "unavailable" };
   }
 
-  // The token is recorded as a SHA-256 hash rather than verbatim. This table
-  // is never read back for authentication, so the plaintext bought nothing,
-  // and storing it meant a database leak handed over every live session as a
-  // ready-to-use cookie value.
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  // The row is what makes the session honoured, so it is recorded before the
+  // token is handed over, as a SHA-256 hash so the table is not a bag of
+  // working cookies.
   const { error } = await supabaseAdmin.from("sessions").insert({
     clinician_id: clinicianId,
-    token: createHash("sha256").update(sessionToken).digest("hex"),
-    expires_at: expiresAt,
+    token: hashSessionToken(sessionToken),
+    expires_at: expiresAt.toISOString(),
   });
 
-  // 23505 means this exact token is already recorded — harmless.
+  // Fails closed. verifySessionToken refuses any token without a live row, so
+  // a token whose insert failed would die on its first request; the person is
+  // better told now that sign-in did not complete than handed a session that
+  // does not work. 23505 means this token is already recorded, which with a
+  // random jti should never happen and is harmless if it does.
   if (error && error.code !== "23505") {
-    console.error("[gate] session insert failed", error);
+    console.error("[gate] session insert failed, so no session is issued", error);
+    return { ok: false, reason: "unavailable" };
   }
 
   return { ok: true, token: sessionToken };

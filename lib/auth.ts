@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { supabaseAdmin } from "./supabase";
 import { jwtSecret, magicLinkSecret } from "./secrets";
+import { sessionIsLive } from "./sessions";
 
 /**
  * Sign-in link tokens.
@@ -107,21 +108,33 @@ export async function consumeSignInLink(
 }
 
 /**
- * Verifies a session token's signature.
+ * Verifies a session: its signature, and then that it has not been ended.
  *
  * Signed with JWT_SECRET, not the sign-in link secret: different lifetime and a
  * different blast radius, so a leak of one is not a leak of both.
+ *
+ * This used to stop at the signature. A signed token was then good for its
+ * whole seven days whatever happened in the meantime, and there was no way to
+ * end one early: not on sign-out, not for a lost device, not when someone's
+ * access was withdrawn. The signature still has to hold, and on top of it the
+ * session must have a row that is unrevoked, unexpired and belongs to the
+ * clinician the token names. Revoking the row ends the session on its next
+ * request.
  */
 export async function verifySessionToken(
   token: string
 ): Promise<{ clinicianId: string; email: string } | null> {
+  let claims: { clinicianId: string; email: string };
   try {
     const { payload } = await jwtVerify(token, jwtSecret());
     if (typeof payload.clinicianId !== "string" || typeof payload.email !== "string") {
       return null;
     }
-    return { clinicianId: payload.clinicianId, email: payload.email };
+    claims = { clinicianId: payload.clinicianId, email: payload.email };
   } catch {
     return null;
   }
+
+  if (!(await sessionIsLive(token, claims.clinicianId))) return null;
+  return claims;
 }
