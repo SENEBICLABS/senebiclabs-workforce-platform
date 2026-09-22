@@ -5,6 +5,10 @@ import { authSecretsReady, jwtSecret } from "@/lib/secrets";
 /**
  * Edge guards for two very different surfaces.
  *
+ * Named "proxy" because that is what Next 16 calls this file; the old
+ * "middleware" convention is deprecated. Same position in front of the app,
+ * same behaviour, different spelling.
+ *
  * /ops — the operator console. A clinician session is never consulted here, so
  * no privilege inside the clinician app reaches it. Only the unlock screen is
  * public. A failure is a 403 REFUSAL, not a redirect: nothing should hint at
@@ -28,7 +32,7 @@ function secret() {
   return jwtSecret();
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // ── Operator console: refusal, not redirect (unchanged behaviour). ──

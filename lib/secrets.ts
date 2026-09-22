@@ -4,7 +4,7 @@
  * This file exists because three different places used to fall back to a
  * literal when their environment variable was missing:
  *
- *   middleware.ts        "missing-jwt-secret"
+ *   proxy.ts             "missing-jwt-secret"
  *   lib/auth.ts          process.env.JWT_SECRET!  -> encodes "undefined"
  *   lib/google-oauth.ts  "dev"
  *
@@ -13,7 +13,7 @@
  * or an ops token, simply by signing one themselves. A missing secret has to
  * stop the process, not quietly downgrade it to a shared password.
  *
- * No node imports here: middleware runs on the edge runtime and imports this
+ * No node imports here: the proxy runs on the edge runtime and imports this
  * too, so it stays to process.env and TextEncoder.
  */
 
@@ -68,7 +68,7 @@ export const oauthStateSecret = () =>
 /**
  * Whether every secret needed to sign in is present and long enough.
  *
- * Used by the health check and by middleware, which cannot throw its way to a
+ * Used by the health check and by the proxy, which cannot throw its way to a
  * useful error and has to refuse instead.
  */
 export function authSecretsReady(): { ok: true } | { ok: false; problem: string } {

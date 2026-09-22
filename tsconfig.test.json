@@ -9,7 +9,7 @@
   },
   "include": [
     "tests/**/*.ts",
-    "vitest.config.ts",
+    "vitest.config.mts",
     "lib/**/*.ts",
     "app/**/*.ts",
     "app/**/*.tsx",
