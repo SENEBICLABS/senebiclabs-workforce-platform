@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, Flag } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
@@ -276,12 +276,14 @@ function Workspace() {
   }, [task, busy, showToast, load]);
 
   // The submit shortcut works with either modifier; the hint has to name the
-  // one this keyboard actually has. Read after mount, so the server and the
-  // first client render agree.
-  const [isMac, setIsMac] = useState(false);
-  useEffect(() => {
-    setIsMac(/mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent));
-  }, []);
+  // one this keyboard actually has. Subscribing to nothing is the point: the
+  // server renders the Ctrl form, the client reads the real platform, and
+  // neither needs a setState in an effect to do it.
+  const isMac = useSyncExternalStore(
+    () => () => {},
+    () => /mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent),
+    () => false
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
