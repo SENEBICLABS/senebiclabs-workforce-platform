@@ -134,7 +134,12 @@ export function ReviewPanel({
         )}
       </Card>
 
-      <div className="sticky bottom-0 z-10 -mx-5 border-t border-hairline bg-surface/95 px-5 py-3 backdrop-blur lg:-mx-8 lg:px-8">
+      {/*
+        Clear of the fixed bottom tab bar on a phone, which is at z-30 and would
+        otherwise swallow taps meant for these buttons. Only below md, since
+        that bar exists nowhere else.
+      */}
+      <div className="sticky bottom-16 z-10 -mx-5 border-t border-hairline bg-surface/95 px-5 py-3 backdrop-blur md:bottom-0 lg:-mx-8 lg:px-8">
         <div className="flex flex-wrap items-center justify-end gap-2">
           {mode === "idle" && (
             <>

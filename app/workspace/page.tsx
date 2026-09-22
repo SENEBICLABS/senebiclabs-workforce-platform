@@ -85,6 +85,9 @@ function Workspace() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [missing, setMissing] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  // Flagging hands the case to someone else and throws away what they typed.
+  // It sits next to Submit, so it asks once before doing that.
+  const [confirmFlag, setConfirmFlag] = useState(false);
 
   // A different pool resets the page, during render rather than in an effect,
   // so a task from the old pool is never shown under the new one's heading.
@@ -100,6 +103,7 @@ function Workspace() {
   const adopt = useCallback((next: Task | null) => {
     setMissing([]);
     setSubmitError(null);
+    setConfirmFlag(false);
     if (!next) {
       setTask(null);
       setAnswers({});
@@ -152,14 +156,49 @@ function Workspace() {
   }, [poolId, adopt]);
 
   // Persist as they type, so nothing is lost to a refresh or a stray back.
+  //
+  // An untouched case is not a draft. This used to write "{}" the moment a case
+  // was adopted, which left one dead key behind for every case ever opened and
+  // never removed it, so a clinician working daily accumulated them for ever.
+  // Nothing to keep now means the key goes.
   useEffect(() => {
     if (!task) return;
     try {
-      window.localStorage.setItem(draftKey(task.task_id), JSON.stringify(answers));
+      if (Object.keys(answers).length === 0) {
+        window.localStorage.removeItem(draftKey(task.task_id));
+      } else {
+        window.localStorage.setItem(draftKey(task.task_id), JSON.stringify(answers));
+      }
     } catch {
       /* storage unavailable; the in-memory answers still stand */
     }
   }, [answers, task]);
+
+  // Clear out the empty drafts left by the older behaviour, once per visit.
+  useEffect(() => {
+    try {
+      const dead: string[] = [];
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const key = window.localStorage.key(i);
+        if (!key?.startsWith("senebiclabs:draft:")) continue;
+        const raw = window.localStorage.getItem(key);
+        if (raw === "{}" || raw === "" || raw === null) dead.push(key);
+      }
+      dead.forEach((key) => window.localStorage.removeItem(key));
+    } catch {
+      /* storage unavailable; nothing to tidy */
+    }
+  }, []);
+
+  // A failed submit must never be silent. The message renders at the top of the
+  // assessment card, and someone who submitted with the keyboard is at the
+  // bottom of a long form, where they would never see it.
+  useEffect(() => {
+    if (!submitError) return;
+    document
+      .getElementById("submit-error")
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [submitError]);
 
   const clearDraft = (taskId: number) => {
     try {
@@ -255,8 +294,17 @@ function Workspace() {
     [task, busy, countReview, showToast, load]
   );
 
+  // Steps down again on its own, so a stray click does not leave the button
+  // armed for the rest of the sitting.
+  useEffect(() => {
+    if (!confirmFlag) return;
+    const timer = window.setTimeout(() => setConfirmFlag(false), 6000);
+    return () => window.clearTimeout(timer);
+  }, [confirmFlag]);
+
   const flag = useCallback(async () => {
     if (!task || busy) return;
+    setConfirmFlag(false);
     setBusy(true);
     setSubmitError(null);
     const flaggedId = task.task_id;
@@ -381,7 +429,15 @@ function Workspace() {
           ))}
 
           {task.phase === "review" ? (
+            // Keyed by case. The panel keeps the edited text, the send-back
+            // reason and which mode it is in inside its own state, and it sits
+            // in the same place in the tree from one case to the next, so
+            // without a key React reuses all of it: send one case back, and the
+            // next opened in rejecting mode with the previous reason still in
+            // the box, one click from going back under someone else's words. An
+            // edit carried over the same way. A new case gets a new panel.
             <ReviewPanel
+              key={task.task_id}
               fields={task.eval_config.fields}
               authored={task.authored ?? {}}
               revision={task.revision ?? 0}
@@ -416,6 +472,7 @@ function Workspace() {
 
             {submitError && (
               <div
+                id="submit-error"
                 role="alert"
                 className="mt-4 rounded-card border border-danger bg-danger-soft px-4 py-3"
               >
@@ -455,25 +512,61 @@ function Workspace() {
         )}
       </div>
 
+      {/*
+        The action bar sits clear of the bottom tab bar on a phone. That bar is
+        fixed at z-30 and this one was resting underneath it, so a tap aimed at
+        Submit review landed on Account: the main action of the product was
+        unreachable on a phone. bottom-16 is the height of the tab bar, and it
+        applies only below md, which is the only place that bar exists.
+      */}
       {task.phase !== "review" && (
-      <div className="sticky bottom-0 z-10 -mx-5 mt-6 border-t border-hairline bg-surface/95 px-5 py-3 backdrop-blur lg:-mx-8 lg:px-8">
+      <div className="sticky bottom-16 z-10 -mx-5 mt-6 border-t border-hairline bg-surface/95 px-5 py-3 backdrop-blur md:bottom-0 lg:-mx-8 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-[14px] text-muted">
-            Press{" "}
-            <kbd className="rounded border border-hairline bg-canvas px-1.5 py-0.5 font-sans text-[12px] text-ink">
-              {isMac ? "⌘" : "Ctrl"}
-            </kbd>{" "}
-            +{" "}
-            <kbd className="rounded border border-hairline bg-canvas px-1.5 py-0.5 font-sans text-[12px] text-ink">
-              Enter
-            </kbd>{" "}
-            to submit
-          </p>
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" onClick={flag} disabled={busy}>
-              <Flag size={14} aria-hidden="true" />
-              Flag — unclear
-            </Button>
+          {confirmFlag ? (
+            <p role="status" className="text-[14px] text-ink">
+              This case goes to another clinician, and anything you have entered
+              on it is discarded.
+            </p>
+          ) : (
+            // No keyboard to press it on, and on a phone it was crowding the
+            // buttons off the bar.
+            <p className="hidden text-[14px] text-muted sm:block">
+              Press{" "}
+              <kbd className="rounded border border-hairline bg-canvas px-1.5 py-0.5 font-sans text-[12px] text-ink">
+                {isMac ? "⌘" : "Ctrl"}
+              </kbd>{" "}
+              +{" "}
+              <kbd className="rounded border border-hairline bg-canvas px-1.5 py-0.5 font-sans text-[12px] text-ink">
+                Enter
+              </kbd>{" "}
+              to submit
+            </p>
+          )}
+          <div className="ml-auto flex items-center gap-2">
+            {confirmFlag ? (
+              <>
+                <Button
+                  variant="ghost"
+                  onClick={() => setConfirmFlag(false)}
+                  disabled={busy}
+                >
+                  Keep it
+                </Button>
+                <Button variant="danger" onClick={flag} loading={busy}>
+                  <Flag size={14} aria-hidden="true" />
+                  Yes, hand it on
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="secondary"
+                onClick={() => setConfirmFlag(true)}
+                disabled={busy}
+              >
+                <Flag size={14} aria-hidden="true" />
+                Flag — unclear
+              </Button>
+            )}
             <Button onClick={submit} loading={busy}>
               Submit review
             </Button>
