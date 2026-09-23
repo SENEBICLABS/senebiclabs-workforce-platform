@@ -1,6 +1,27 @@
 import { createHash, randomBytes } from "crypto";
 
 /**
+ * Gives an invitation that already exists a token whose hash we know.
+ *
+ * Returns the raw token, or null when there is no pending invitation for that
+ * address. Used where the invitation was created by something else under test
+ * — the operator console, say — and the test still has to accept it.
+ */
+export async function knownTokenFor(_env, { q, qj }, email) {
+  const raw = randomBytes(24).toString("base64url");
+  const token_hash = createHash("sha256").update(raw).digest("hex");
+  const [pending] = await qj(
+    `invites?invited_email=eq.${encodeURIComponent(email)}&status=eq.pending&select=id`
+  );
+  if (!pending) return null;
+  await q(`invites?id=eq.${pending.id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ token_hash }),
+  });
+  return raw;
+}
+
+/**
  * An invitation this test can actually accept.
  *
  * Two things stand between a script and a usable invite, and both are the

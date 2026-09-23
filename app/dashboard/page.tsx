@@ -15,13 +15,23 @@ import {
 import { api } from "@/lib/api";
 import { useAsync } from "@/lib/use-async";
 
-function StatTile({ label, value }: { label: string; value: string }) {
+function StatTile({
+  label,
+  value,
+  note,
+}: {
+  label: string;
+  value: string;
+  /** One line saying what the number is, where the label alone could mislead. */
+  note?: string;
+}) {
   return (
     <Card className="p-5">
       <p className="text-label uppercase text-muted">{label}</p>
       <p className="tnum mt-2 text-[28px] font-bold leading-none text-ink">
         {value}
       </p>
+      {note && <p className="mt-2 text-[14px] leading-snug text-muted">{note}</p>}
     </Card>
   );
 }
@@ -40,10 +50,18 @@ export default function DashboardPage() {
 
   return (
     <AppLayout title="Dashboard">
-      {/* Stats. Only figures with a real source are rendered. */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {/*
+        Stats. Only figures with a real source are rendered.
+
+        Flags are shown, and shown apart. A flagged case is paid as a completed
+        one is, so a clinician who flags honestly should see that work rather
+        than wonder where it went; but a flag is not a review, and adding it to
+        the reviewed figure would overstate how many cases they judged.
+      */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.loading ? (
           <>
+            <Skeleton className="h-[104px]" />
             <Skeleton className="h-[104px]" />
             <Skeleton className="h-[104px]" />
             <Skeleton className="h-[104px]" />
@@ -61,6 +79,15 @@ export default function DashboardPage() {
             <StatTile
               label="Reviewed in total"
               value={stats.data.reviewed_total.toLocaleString()}
+            />
+            <StatTile
+              label="Flagged in total"
+              value={stats.data.flagged_total.toLocaleString()}
+              note={
+                stats.data.flagged_total > 0
+                  ? "Cases you could not judge. Recorded and paid as a completed case is."
+                  : "Cases you could not judge are recorded and paid as completed ones are."
+              }
             />
           </>
         ) : null}

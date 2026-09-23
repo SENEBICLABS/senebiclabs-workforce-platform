@@ -9,6 +9,8 @@
  */
 import fs from "fs";
 import { sessionFor } from "./session-for.mjs";
+import { signInLinkFor } from "./sign-in-link.mjs";
+import { knownTokenFor } from "./invite.mjs";
 
 const env = Object.fromEntries(
   fs.readFileSync(".env.local", "utf8").split("\n").filter((l) => l.includes("="))
@@ -57,22 +59,28 @@ const created = await fetch(`${APP}/api/invites`, {
 });
 console.log(`  POST /api/invites → HTTP ${created.status}`);
 console.log(`  ${JSON.stringify(await created.json())}`);
-const [invite] = await qj(`invites?invited_email=eq.${encodeURIComponent(INVITEE)}&select=*`);
-console.log(`\n  row: status=${invite.status} single-use token=${invite.token.slice(0, 12)}… expires=${invite.expires_at?.slice(0, 10)}`);
-console.log(`  emailed link: ${env.NEXT_PUBLIC_APP_URL}/join?token=${invite.token.slice(0, 12)}…`);
+const [invite] = await qj(`invites?invited_email=eq.${encodeURIComponent(INVITEE)}&select=id,status,expires_at,token_hash`);
+// Tokens are SHA-256 hashed at rest, so the raw one exists only in the email
+// and cannot be read back. That is the product being right. To accept the
+// invitation the way a clinician would, plant a token whose hash we know into
+// this same row: /api/auth/verify still hashes what it is given and matches it
+// against the column, so nothing about the check under test changes.
+const rawToken = await knownTokenFor(env, { q, qj }, INVITEE);
+console.log(`\n  row: status=${invite.status} expires=${invite.expires_at?.slice(0, 10)}`);
+console.log(`  stored as a hash, not a token:   ${/^[0-9a-f]{64}$/.test(invite.token_hash)}`);
+console.log(`  emailed link: ${env.NEXT_PUBLIC_APP_URL}/join?token=${rawToken.slice(0, 12)}…`);
 
 /* ── 3. that invitee registers via magic link ───────────────────── */
 hr("3. INVITEE COMPLETES REGISTRATION (magic link)");
 const before = (await qj(`clinicians?email=eq.${encodeURIComponent(INVITEE)}&select=id`)).length;
 console.log(`  clinician rows before: ${before}`);
-const ml = await (await fetch(`${APP}/api/auth/magic-link`, {
-  method: "POST", headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ email: INVITEE }),
-})).json();
-const mlToken = (ml.magicLink ?? "").split("token=")[1];
+// /api/auth/sign-in-link answers the same either way and mails the link, so a
+// test cannot read one out of it. The link is signed here exactly as
+// lib/auth.ts signs it; verify still checks the signature, spends the jti so a
+// replay is refused, and puts the address through the gate.
 const verified = await fetch(`${APP}/api/auth/verify`, {
   method: "POST", headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ token: mlToken, invite: invite.token }),
+  body: JSON.stringify({ token: await signInLinkFor(env, INVITEE), invite: rawToken }),
 });
 const vBody = await verified.json();
 console.log(`  POST /api/auth/verify → HTTP ${verified.status}  ${JSON.stringify(vBody)}`);
@@ -87,19 +95,15 @@ console.log(`  accepted_by matches: ${spent?.accepted_by === newClinician?.id}`)
 
 /* ── 4. the invite is single-use ───────────────────────────────── */
 hr("4. THE INVITE IS SINGLE-USE");
-const reuse = await fetch(`${APP}/api/invites/validate?token=${encodeURIComponent(invite.token)}`);
+const reuse = await fetch(`${APP}/api/invites/validate?token=${encodeURIComponent(rawToken)}`);
 console.log(`  GET /api/invites/validate → ${JSON.stringify(await reuse.json())}`);
 
 /* ── 5. uninvited address is refused ───────────────────────────── */
 hr("5. UNINVITED ADDRESS IS REFUSED (same gate Google uses)");
 const uBefore = (await qj(`clinicians?email=eq.${encodeURIComponent(UNINVITED)}&select=id`)).length;
-const uml = await (await fetch(`${APP}/api/auth/magic-link`, {
-  method: "POST", headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ email: UNINVITED }),
-})).json();
 const uVerify = await fetch(`${APP}/api/auth/verify`, {
   method: "POST", headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ token: (uml.magicLink ?? "").split("token=")[1] }),
+  body: JSON.stringify({ token: await signInLinkFor(env, UNINVITED) }),
 });
 console.log(`  POST /api/auth/verify → HTTP ${uVerify.status}`);
 console.log(`  ${JSON.stringify(await uVerify.json())}`);
@@ -129,3 +133,27 @@ console.log("  Google sign-in runs the same signInOrReject gate as above.");
 console.log("  Proving it end to end needs GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET");
 console.log("  and a browser round trip — see the note in the summary.");
 console.log(`  configured right now: ${Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)}`);
+
+/* ── cleanup ────────────────────────────────────────────────────── */
+//
+// This used to leave a clinician row, a spent invite and a session behind on
+// every run. Invitations are the one path every clinician takes, so this script
+// gets run often, and the residue turned up later as accounts nobody made and
+// pending invitations nobody sent.
+hr("7. CLEANUP");
+for (const email of [INVITEE, UNINVITED]) {
+  const [row] = await qj(`clinicians?email=eq.${encodeURIComponent(email)}&select=id`);
+  if (row) {
+    for (const tbl of ["task_completions", "task_flags", "pool_eligibility", "sessions"]) {
+      await q(`${tbl}?clinician_id=eq.${row.id}`, { method: "DELETE" });
+    }
+    await q(`clinicians?id=eq.${row.id}`, { method: "DELETE" });
+  }
+}
+await q(`invites?invited_email=like.*${stamp}*`, { method: "DELETE" });
+
+const leftClinicians = await qj(`clinicians?email=like.*${stamp}*&select=id`);
+const leftInvites = await qj(`invites?invited_email=like.*${stamp}*&select=id`);
+console.log(`  test clinicians left: ${leftClinicians.length}`);
+console.log(`  test invites left:    ${leftInvites.length}`);
+console.log(`  the real pending invitations are untouched: ${(await qj("invites?status=eq.pending&select=id")).length} still pending`);

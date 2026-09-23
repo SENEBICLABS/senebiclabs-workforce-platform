@@ -10,6 +10,8 @@
 import fs from "fs";
 import { sessionFor } from "./session-for.mjs";
 import { resolveSandbox } from "./sandbox.mjs";
+import { signInLinkFor } from "./sign-in-link.mjs";
+import { knownTokenFor } from "./invite.mjs";
 
 const env = Object.fromEntries(
   fs.readFileSync(".env.local", "utf8").split("\n").filter((l) => l.includes("="))
@@ -110,18 +112,17 @@ console.log(`  starting clean: "${pool.name}" eligible=${await eligibleCount()}`
 const opened = await (await fetch(`${APP}/api/ops/pools/${pool.id}/open-access`, {
   method: "POST", headers: KEY, body: JSON.stringify({ value: true }) })).json();
 console.log(`\n  OPEN  → ${opened.note}`);
-await fetch(`${APP}/api/auth/magic-link`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: P }) });
-// A sign-in is what tops a clinician up; mint one through the gate.
-const ml = await (await fetch(`${APP}/api/auth/magic-link`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: P }) })).json();
-await fetch(`${APP}/api/auth/verify`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: (ml.magicLink ?? "").split("token=")[1] }) });
+// A sign-in is what tops a clinician up, so one is put through the gate. The
+// link is signed the way lib/auth.ts signs it; /api/auth/verify still checks
+// the signature, spends the jti and runs the gate.
+await fetch(`${APP}/api/auth/verify`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: await signInLinkFor(env, P) }) });
 console.log(`  after ${P} signs in → they hold the pool: ${(await poolsSeenBy(asP)).includes(pool.id)}`);
 console.log(`  eligible now: ${await eligibleCount()}`);
 
 const closed = await (await fetch(`${APP}/api/ops/pools/${pool.id}/open-access`, {
   method: "POST", headers: KEY, body: JSON.stringify({ value: false }) })).json();
 console.log(`\n  CLOSE → ${closed.note}`);
-const mlO = await (await fetch(`${APP}/api/auth/magic-link`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: O }) })).json();
-await fetch(`${APP}/api/auth/verify`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: (mlO.magicLink ?? "").split("token=")[1] }) });
+await fetch(`${APP}/api/auth/verify`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: await signInLinkFor(env, O) }) });
 console.log(`  a different clinician signs in → they get it: ${(await poolsSeenBy(asO)).includes(pool.id)}   (must be false)`);
 console.log(`  the one who already had it keeps it: ${(await poolsSeenBy(asP)).includes(pool.id)}   (must be true)`);
 
@@ -145,19 +146,21 @@ hr("5. SENDING AND REVOKING AN INVITE FROM THE CONSOLE");
 const target = `godwinyampoi449+inv${stamp}@gmail.com`;
 const sent = await fetch(`${APP}/api/ops/invites`, { method: "POST", headers: KEY, body: JSON.stringify({ email: target }) });
 console.log(`  POST /api/ops/invites → HTTP ${sent.status}  ${JSON.stringify(await sent.json())}`);
-const [row] = await qj(`invites?invited_email=eq.${encodeURIComponent(target)}&select=id,token,status,expires_at`);
+const [row] = await qj(`invites?invited_email=eq.${encodeURIComponent(target)}&select=id,status,expires_at`);
+// The console emails the link and stores only its hash, so the raw token is
+// not readable back. Plant one whose hash we know, to accept it below.
+const rawToken = await knownTokenFor(env, { q, qj }, target);
 console.log(`  row: status=${row.status} expires=${row.expires_at?.slice(0, 10)}`);
 const listed = await (await fetch(`${APP}/api/ops/invites`, { headers: KEY })).json();
 console.log(`  appears in the pending list: ${listed.invites.some((i) => i.email === target)}  (invited_by "${listed.invites.find((i) => i.email === target)?.invited_by}")`);
 
 const rev = await fetch(`${APP}/api/ops/invites/${row.id}/revoke`, { method: "POST", headers: KEY });
 console.log(`\n  POST revoke → HTTP ${rev.status}  ${JSON.stringify(await rev.json())}`);
-const validate = await (await fetch(`${APP}/api/invites/validate?token=${encodeURIComponent(row.token)}`)).json();
+const validate = await (await fetch(`${APP}/api/invites/validate?token=${encodeURIComponent(rawToken)}`)).json();
 console.log(`  the link now validates as: ${JSON.stringify(validate)}`);
-const tryAccept = await (await fetch(`${APP}/api/auth/magic-link`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: target }) })).json();
 const accept = await fetch(`${APP}/api/auth/verify`, {
   method: "POST", headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ token: (tryAccept.magicLink ?? "").split("token=")[1], invite: row.token }),
+  body: JSON.stringify({ token: await signInLinkFor(env, target), invite: rawToken }),
 });
 console.log(`  attempting to accept it → HTTP ${accept.status}  ${JSON.stringify(await accept.json())}`);
 console.log(`  no account created: ${(await qj(`clinicians?email=eq.${encodeURIComponent(target)}&select=id`)).length === 0}`);

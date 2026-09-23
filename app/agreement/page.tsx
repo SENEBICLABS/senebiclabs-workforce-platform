@@ -25,7 +25,7 @@ const CLAUSES = [
   },
   {
     heading: "5. Payment",
-    body: "You are paid for the work you complete and submit. Your rate and payment schedule are agreed with you in writing before you begin; they are not published in the platform. Where written work is sent back to be rewritten, that pass is recorded and paid as an approval would be.",
+    body: "You are paid for the work you complete and submit. Your rate and payment schedule are agreed with you in writing before you begin; they are not published in the platform. Flagging a case you cannot judge is recorded as a pass and paid as a completed one is. Where written work is sent back to be rewritten, that pass is recorded and paid as an approval would be. Every pass is recorded at the time it is made, and you can see your own on your work record.",
   },
   {
     heading: "6. Liability",

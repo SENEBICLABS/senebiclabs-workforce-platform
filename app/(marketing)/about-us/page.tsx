@@ -54,8 +54,8 @@ const PRINCIPLES = [
 
 const PROMISES = [
   {
-    title: "No reward for waving work through",
-    body: "You are recorded for the pass you make, not for the outcome you reach. Sending written work back to be rewritten counts exactly as approving it does, so a platform that pays for answers never ends up buying agreement.",
+    title: "No reward for guessing",
+    body: "You are recorded for the pass you make, not for the outcome you reach. Flagging a case you cannot judge is recorded as a pass and paid as a completed one is, and sending written work back to be rewritten counts exactly as approving it does. A platform that pays only for answers ends up buying guesses; this one does not.",
   },
   {
     title: "Your time stays yours",

@@ -65,7 +65,7 @@ export const FAQS: Faq[] = [
   {
     category: "The work",
     q: "What if a case is outside my area?",
-    a: "Flag it. A flagged case goes to another clinician rather than forcing you to guess, and it stops being offered to you. Guessing costs everyone more than flagging does.",
+    a: "Flag it. A flagged case goes to another clinician rather than forcing you to guess, and it stops being offered to you. Flagging a case you cannot judge is recorded as a pass and paid as a completed one is, so saying so costs you nothing and guessing costs everyone more.",
   },
   {
     category: "The work",
@@ -82,7 +82,7 @@ export const FAQS: Faq[] = [
     category: "Pay",
     featured: true,
     q: "How does pay work?",
-    a: "Work is paid, and the terms that apply to you are set out in the agreement you accept when you join. We are still building the part of the platform that shows rates and statements, so until that exists we agree the terms with you directly rather than quoting a figure here.",
+    a: "Work is paid, and the terms that apply to you are set out in the agreement you accept when you join. Every pass you make is recorded: a case judged, a case flagged, an answer written, a colleague's answer reviewed. Flagging a case you cannot judge is recorded as a pass and paid as a completed one is. We are still building the part of the platform that shows rates and statements, so until that exists we agree the terms with you directly rather than quoting a figure here.",
   },
   {
     category: "Pay",
@@ -172,12 +172,21 @@ export const WORK_TASKS: WorkTask[] = [
  * terms in app/agreement/page.tsx, which each member accepts, or behaviour the
  * platform implements and a test covers.
  *
- * There was a rate claim here, and it was false. It said a rate is published
- * for every pool before you take it on, and that a flagged case pays what a
- * completed one pays. The platform has no rate: no column on pools, no amount
- * on a completion, no statement anywhere. Flagging writes no record of work at
- * all, so it could not have paid the same as completing. Both are gone until
- * pay exists, and then they come back described as whatever was built.
+ * Two claims were removed from here for being false, and one of them has since
+ * been made true rather than reworded.
+ *
+ * The rate claim is still gone. It said a rate is published for every pool
+ * before you take it on, and the platform has no rate: no column on pools, no
+ * amount on a completion, no statement anywhere. It comes back when pay exists,
+ * described as whatever was built.
+ *
+ * The flag claim is back. It said a flagged case pays what a completed one
+ * pays, which was false when flagging wrote no record of work at all. It now
+ * writes one, of kind "flag", in the same table and on the same footing as a
+ * judgement, and scripts/verify-completion-kinds.mjs proves it: one row per
+ * flag, the case still reaching its full complement of reviewers, and the
+ * flagger still recordable for a later pass on it. A clinician can see those
+ * rows themselves on the work record.
  *
  * What is left is checkable. Being recorded for the pass rather than the
  * outcome is proven by scripts/verify-reviewer-pay.mjs. Choosing your own pools
@@ -196,9 +205,9 @@ export interface WhyJoin {
 
 export const WHY_SENEBICLABS: WhyJoin[] = [
   {
-    title: "Nothing to gain by waving work through",
-    lead: "You are recorded for the pass you make, not for the outcome you reach. Sending written work back to be rewritten counts exactly as approving it does.",
-    detail: "That is not a policy, it is how the code counts. A reviewer who sends a draft back is recorded for that pass, and is not recorded a second time when the rewrite comes back to them. Approving and sending back are worth the same, so there is nothing to be gained by approving something you would otherwise question.",
+    title: "Nothing to gain by guessing, or by waving work through",
+    lead: "You are recorded for the pass you make, not for the outcome you reach. Flagging a case you cannot judge is recorded as a pass and paid as a completed one is, and sending written work back to be rewritten counts exactly as approving it does.",
+    detail: "That is not a policy, it is how the code counts. Flagging writes a record of the work alongside the note that the case should go to someone else, so the honest answer and the confident one are worth the same. A reviewer who sends a draft back is recorded for that pass, and is not recorded a second time when the rewrite comes back to them. You can see every pass you have made, by kind and by pool, on your own work record.",
   },
   {
     title: "You choose the work and the hours",

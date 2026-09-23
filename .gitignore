@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# The example ships: it documents which variables exist, including the
+# sandbox ids the write-path suite needs, and holds no real values.
+!.env.example
 
 # vercel
 .vercel

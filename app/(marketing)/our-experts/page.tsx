@@ -82,8 +82,8 @@ const SAFEGUARDS = [
     body: "For written work, one clinician writes and a different one approves, edits or sends it back. The platform will not offer a reviewer their own work.",
   },
   {
-    title: "Flagging costs you nothing",
-    body: "A clinician who cannot judge a case flags it, and it goes to someone else rather than being guessed at. The flagged case stops being offered to them, and nothing about flagging counts against them.",
+    title: "Flagging is paid",
+    body: "A clinician who cannot judge a case flags it, and it goes to someone else rather than being guessed at. Flagging a case you cannot judge is recorded as a pass and paid as a completed one is, so nobody is paid more for guessing than for saying so.",
   },
 ];
 
