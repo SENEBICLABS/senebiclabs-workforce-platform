@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
 import { supabaseAdmin } from "@/lib/supabase";
+import { READINGS_ONLY } from "@/lib/completions";
 import { FORBIDDEN, requireEligiblePool } from "@/lib/gate";
 import { findNextTask, getTask } from "@/lib/labelstudio";
 import {
@@ -37,14 +38,20 @@ export async function GET(
     const [{ data: completions }, flagged] = await Promise.all([
       supabaseAdmin
         .from("task_completions")
-        .select("ls_task_id")
+        .select("ls_task_id, kind")
         .eq("clinician_id", auth.clinicianId)
         .eq("pool_id", pool.id),
       loadFlaggedTaskIds(auth.clinicianId, pool.id),
     ]);
 
+    // What not to offer again is every pass, a flag among them. What counts as
+    // "reviewed" is only a reading: a case declined is not a case reviewed.
     const seen = new Set<number>(flagged);
     for (const row of completions ?? []) seen.add(row.ls_task_id);
+
+    const readings = (completions ?? []).filter((row) =>
+      READINGS_ONLY.includes(row.kind as (typeof READINGS_ONLY)[number])
+    ).length;
 
     const raw0 = pool.evalConfig as RawEvalConfig | null;
 
@@ -87,7 +94,7 @@ export async function GET(
           // What the author wrote. No identity — a reviewer judges the text.
           authored: reviewable.authored_data,
           revision: reviewable.revision,
-          already_reviewed_count: completions?.length ?? 0,
+          already_reviewed_count: readings,
         });
       }
 
@@ -123,7 +130,7 @@ export async function GET(
         fields: config.fields,
         classes: config.classes,
       },
-      already_reviewed_count: completions?.length ?? 0,
+      already_reviewed_count: readings,
     });
   });
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
 import { supabaseAdmin } from "@/lib/supabase";
+import { READINGS_ONLY } from "@/lib/completions";
 import { countTasks } from "@/lib/labelstudio";
 import { normalizeConfig, type RawEvalConfig } from "@/lib/eval-config";
 
@@ -36,10 +37,14 @@ export async function GET(req: NextRequest) {
 
     if (pools.length === 0) return NextResponse.json({ pools: [] });
 
+    // Readings only. Counting flags here would advance a clinician's progress
+    // through a pool for cases they explicitly declined to judge, and could
+    // mark a pool "complete" without it having been reviewed.
     const { data: completions } = await supabaseAdmin
       .from("task_completions")
       .select("pool_id")
-      .eq("clinician_id", auth.clinicianId);
+      .eq("clinician_id", auth.clinicianId)
+      .in("kind", READINGS_ONLY);
 
     const reviewedByPool = new Map<string, number>();
     for (const row of completions ?? []) {

@@ -18,6 +18,7 @@ import {
   type RawEvalConfig,
 } from "@/lib/eval-config";
 import { recordAuthored, reviewRequired } from "@/lib/review";
+import { READINGS_ONLY, recordPass } from "@/lib/completions";
 
 export const dynamic = "force-dynamic";
 
@@ -81,13 +82,25 @@ export async function POST(
     );
     if (!pool) return FORBIDDEN();
 
-    // Idempotency: the unique index on (clinician_id, ls_task_id) is the real
-    // guard, this just turns a double-submit into a clean answer.
+    const raw = pool.evalConfig as RawEvalConfig | null;
+    const config = normalizeConfig(raw);
+
+    // Which pass is this? A pool that wants a second reading is being authored;
+    // anything else is being judged.
+    const passKind = reviewRequired(raw) ? "authoring" : "judgement";
+
+    // Idempotency: the unique index on (clinician_id, ls_task_id, kind) is the
+    // real guard, this just turns a double-submit into a clean answer. It has
+    // to filter on the kind now, because a clinician may hold a flag row for
+    // this same case, and a flag is not a submitted review. Without the filter
+    // a flagged case would answer "you have already reviewed this" to someone
+    // who never judged it.
     const { data: existing } = await supabaseAdmin
       .from("task_completions")
       .select("id")
       .eq("clinician_id", auth.clinicianId)
       .eq("ls_task_id", taskId)
+      .eq("kind", passKind)
       .maybeSingle();
 
     if (existing) {
@@ -96,9 +109,6 @@ export async function POST(
         { status: 409 }
       );
     }
-
-    const raw = pool.evalConfig as RawEvalConfig | null;
-    const config = normalizeConfig(raw);
 
     let result;
     try {
@@ -141,19 +151,18 @@ export async function POST(
       // Authoring is paid work and counts toward the author's totals, even
       // though nothing is published until someone approves it. This is why a
       // review pool holds more completions than annotations.
-      const { error: authorCompletion } = await supabaseAdmin
-        .from("task_completions")
-        .insert({
-          clinician_id: auth.clinicianId,
-          pool_id: pool.id,
-          ls_task_id: taskId,
-          annotation_data: answers,
-        });
+      const authored = await recordPass({
+        clinicianId: auth.clinicianId,
+        poolId: pool.id,
+        taskId,
+        kind: "authoring",
+        data: answers,
+      });
 
-      // 23505 means they already have a completion on this task — a re-author
-      // after a send-back. The work happened; one row for it is enough.
-      if (authorCompletion && authorCompletion.code !== "23505") {
-        console.error("[submit] author completion insert failed", authorCompletion);
+      // A duplicate is a re-author after a send-back. The work happened; one
+      // row for it is enough.
+      if (!authored.ok) {
+        console.error(`[submit] the authoring pass on task ${taskId} was not recorded`);
       }
 
       return NextResponse.json({
@@ -229,6 +238,7 @@ export async function POST(
           pool_id: pool.id,
           ls_task_id: taskId,
           annotation_data: result,
+          kind: "judgement",
         });
         insertError = fallback.error;
       }
@@ -297,7 +307,7 @@ async function nextTaskFor(
   const [{ data: completions }, { data: flags }] = await Promise.all([
     supabaseAdmin
       .from("task_completions")
-      .select("ls_task_id")
+      .select("ls_task_id, kind")
       .eq("clinician_id", clinicianId)
       .eq("pool_id", pool.id),
     supabaseAdmin
@@ -307,9 +317,17 @@ async function nextTaskFor(
       .eq("pool_id", pool.id),
   ]);
 
+  // Two different questions of the same rows. What not to offer again includes
+  // every kind of pass, a flag among them. What to show as "reviewed" counts
+  // only readings, because a case someone declined to judge is not one they
+  // reviewed.
   const seen = new Set<number>();
   for (const row of completions ?? []) seen.add(row.ls_task_id);
   for (const row of flags ?? []) seen.add(row.ls_task_id as number);
+
+  const readings = (completions ?? []).filter((row) =>
+    READINGS_ONLY.includes(row.kind as (typeof READINGS_ONLY)[number])
+  ).length;
 
   let task;
   try {
@@ -337,6 +355,6 @@ async function nextTaskFor(
     // so the row just written is already in this count; adding one made the
     // number the clinician sees jump by two on their first submit and stay one
     // too high for the rest of the sitting, correcting itself only on a reload.
-    already_reviewed_count: completions?.length ?? 0,
+    already_reviewed_count: readings,
   };
 }

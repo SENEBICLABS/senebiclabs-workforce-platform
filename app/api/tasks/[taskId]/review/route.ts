@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
-import { supabaseAdmin } from "@/lib/supabase";
+import { recordPass } from "@/lib/completions";
 import { FORBIDDEN, requireEligiblePoolForTask } from "@/lib/gate";
 import {
   createAnnotation,
@@ -28,9 +28,9 @@ export const dynamic = "force-dynamic";
  *
  * Called for every outcome, approve and send-back alike. Paying only for
  * approvals would pay reviewers to approve, which is the one thing a review
- * pass must not reward. The unique index on (clinician_id, ls_task_id) means a
- * reviewer who sends an item back and later approves the rewrite is recorded
- * once, not twice.
+ * pass must not reward. The unique index on (clinician_id, ls_task_id, kind)
+ * means a reviewer who sends an item back and later approves the rewrite is
+ * recorded once, not twice.
  */
 async function recordReviewerWork(
   clinicianId: string,
@@ -38,17 +38,12 @@ async function recordReviewerWork(
   taskId: number,
   data: unknown
 ): Promise<void> {
-  const { error } = await supabaseAdmin.from("task_completions").insert({
-    clinician_id: clinicianId,
-    pool_id: poolId,
-    ls_task_id: taskId,
-    annotation_data: data,
-  });
-
-  // 23505 is the same reviewer's earlier pass on this task. One row is right.
-  if (error && error.code !== "23505") {
-    console.error("[review] reviewer completion insert failed", error);
-  }
+  // A duplicate is the same reviewer's earlier pass on this task, which is
+  // exactly the case the unique index exists for: sending a draft back and
+  // later approving the rewrite is one reviewer's work on one case, and is
+  // recorded once. Scoping that index by kind does not change it, because both
+  // passes are of kind "review".
+  await recordPass({ clinicianId, poolId, taskId, kind: "review", data });
 }
 
 /**

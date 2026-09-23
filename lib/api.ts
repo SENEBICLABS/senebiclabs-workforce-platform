@@ -141,6 +141,28 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
+/** One pass over a case: the unit of work the platform records. */
+export type PassKind = "judgement" | "flag" | "authoring" | "review";
+
+export interface WorkRecord {
+  total: number;
+  by_kind: Record<PassKind, number>;
+  by_pool: {
+    pool_id: string;
+    pool: string;
+    total: number;
+    kinds: Record<PassKind, number>;
+  }[];
+  recent: {
+    id: string;
+    kind: PassKind;
+    pool: string;
+    case_ref: number;
+    at: string;
+  }[];
+  recent_limit: number;
+}
+
 export const api = {
   /** Emails a sign-in link. The same mechanism as an invite link, for someone
    *  who already has an account. */
@@ -193,6 +215,7 @@ export const api = {
 
   me: () => call<Me>("/api/me"),
   stats: () => call<Stats>("/api/me/stats"),
+  passes: () => call<WorkRecord>("/api/me/passes"),
   pools: () => call<{ pools: Pool[] }>("/api/pools").then((r) => r.pools),
 
   nextTask: (poolId: string) =>

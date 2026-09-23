@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { READINGS_ONLY } from "@/lib/completions";
 import { deleteAnnotation, listTasks } from "@/lib/labelstudio";
 import { reviewRequired } from "@/lib/review";
 import type { RawEvalConfig } from "@/lib/eval-config";
@@ -91,10 +92,14 @@ async function reconcileConsensus(
   poolId: string,
   tasks: LsTaskLite[]
 ): Promise<Reconciliation> {
+  // Readings only. A flag produces no annotation by design, so counting flag
+  // rows here would report a divergence between the table and Label Studio on
+  // every honestly flagged case.
   const { data: completions } = await supabaseAdmin
     .from("task_completions")
     .select("ls_task_id")
-    .eq("pool_id", poolId);
+    .eq("pool_id", poolId)
+    .in("kind", READINGS_ONLY);
 
   const recorded = new Map<number, number>();
   for (const row of completions ?? []) {
@@ -151,7 +156,8 @@ async function reconcileReview(
     supabaseAdmin
       .from("task_completions")
       .select("id", { count: "exact", head: true })
-      .eq("pool_id", poolId),
+      .eq("pool_id", poolId)
+      .in("kind", READINGS_ONLY),
   ]);
 
   const rows = items ?? [];

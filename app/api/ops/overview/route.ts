@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withOps } from "@/lib/ops-auth";
 import { supabaseAdmin } from "@/lib/supabase";
+import { READINGS_ONLY } from "@/lib/completions";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +14,14 @@ export async function GET(req: NextRequest) {
       supabaseAdmin.from("clinicians").select("id, active, can_invite"),
       supabaseAdmin.from("pools").select("id, open_access"),
       supabaseAdmin.from("invites").select("id, status"),
-      supabaseAdmin.from("task_completions").select("id", { count: "exact", head: true }),
       supabaseAdmin
         .from("task_completions")
         .select("id", { count: "exact", head: true })
+        .in("kind", READINGS_ONLY),
+      supabaseAdmin
+        .from("task_completions")
+        .select("id", { count: "exact", head: true })
+        .in("kind", READINGS_ONLY)
         .gte("completed_at", weekAgo),
     ]);
 

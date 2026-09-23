@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { READINGS_ONLY } from "@/lib/completions";
 import { listTasks } from "@/lib/labelstudio";
 import { caseIdFor, normalizeConfig, type RawEvalConfig } from "@/lib/eval-config";
 import {
@@ -72,10 +73,13 @@ export async function GET(
   const raw = (pool.eval_config ?? null) as RawEvalConfig | null;
   const config = normalizeConfig(raw);
 
+  // What a client is shown is readings. A flag is recorded work and is paid,
+  // but it carries no judgement of the case and belongs in no deliverable.
   const { data: completions, error } = await supabaseAdmin
     .from("task_completions")
     .select("clinician_id, ls_task_id, annotation_data, completed_at")
     .eq("pool_id", pool.id)
+    .in("kind", READINGS_ONLY)
     .order("completed_at", { ascending: true });
 
   if (error) {

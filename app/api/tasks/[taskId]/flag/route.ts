@@ -3,6 +3,7 @@ import { withAuth } from "@/lib/middleware";
 import { supabaseAdmin } from "@/lib/supabase";
 import { FORBIDDEN, requireEligiblePoolForTask } from "@/lib/gate";
 import { getTask, LabelStudioError } from "@/lib/labelstudio";
+import { recordPass } from "@/lib/completions";
 
 export const dynamic = "force-dynamic";
 
@@ -10,8 +11,14 @@ export const dynamic = "force-dynamic";
  * Skips a case without writing an annotation.
  *
  * Flagging is the escape hatch for a case a clinician cannot judge — it must
- * never produce a guess in Label Studio, so nothing is written there. The flag
- * only records that this clinician should not be served the case again.
+ * never produce a guess in Label Studio, so nothing is written there.
+ *
+ * Two rows, for two different purposes. task_flags is the routing fact: do not
+ * serve this case to this clinician again. task_completions is the record of
+ * work: they read the case and made a judgement about their own competence to
+ * judge it, which is a pass, and is the pass most easily lost. Until this was
+ * added, flagging left no trace of work at all, so whenever pay is built from
+ * this table, an honest flag would have been worth nothing.
  */
 export async function POST(
   req: NextRequest,
@@ -68,6 +75,24 @@ export async function POST(
       return NextResponse.json(
         { error: "We could not record that flag. Try again." },
         { status: 500 }
+      );
+    }
+
+    // The routing fact is recorded; now the work. A failure here is logged and
+    // not surfaced: the flag itself succeeded, the case has moved on, and
+    // telling the clinician to try again would re-flag something already
+    // flagged. The log is what tells us a pass went unrecorded.
+    const recorded = await recordPass({
+      clinicianId: auth.clinicianId,
+      poolId: pool.id,
+      taskId,
+      kind: "flag",
+      data: reason ? { reason } : null,
+    });
+
+    if (!recorded.ok) {
+      console.error(
+        `[flag] task ${taskId} was flagged but the pass was not recorded for ${auth.clinicianId}`
       );
     }
 

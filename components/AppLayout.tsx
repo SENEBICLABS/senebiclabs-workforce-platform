@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronDown, LayoutDashboard, ListChecks, Target, User } from "lucide-react";
+import { ChevronDown, LayoutDashboard, ListChecks, NotebookText, Target, User } from "lucide-react";
 import { useAppState } from "./AppState";
 import { Switch } from "./ui/Switch";
 import { api, SIGNED_OUT_EVENT } from "@/lib/api";
@@ -18,6 +18,9 @@ const NAV = [
   ...(CALIBRATION_ENABLED
     ? [{ href: "/calibration", label: "Calibration", icon: Target }]
     : []),
+  // The record of work done. Reachable, because a record nobody can find is
+  // not much of a record.
+  { href: "/earnings", label: "Work record", icon: NotebookText },
   { href: "/account", label: "Account", icon: User },
 ];
 

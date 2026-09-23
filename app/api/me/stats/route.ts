@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
 import { supabaseAdmin } from "@/lib/supabase";
+import { READINGS_ONLY } from "@/lib/completions";
 
 export const dynamic = "force-dynamic";
 
 /**
  * Real counts only.
+ *
+ * These are readings, not passes. A flag is recorded work and appears on the
+ * work record at /earnings, but it is not a review, and a "reviews" figure that
+ * counted declined cases would be telling the clinician something untrue.
  *
  * Every figure here is a count of rows this clinician actually produced. A
  * stat with no source is omitted from the response rather than estimated —
@@ -21,11 +26,13 @@ export async function GET(req: NextRequest) {
       supabaseAdmin
         .from("task_completions")
         .select("id", { count: "exact", head: true })
-        .eq("clinician_id", auth.clinicianId),
+        .eq("clinician_id", auth.clinicianId)
+        .in("kind", READINGS_ONLY),
       supabaseAdmin
         .from("task_completions")
         .select("id", { count: "exact", head: true })
         .eq("clinician_id", auth.clinicianId)
+        .in("kind", READINGS_ONLY)
         .gte("completed_at", weekStart.toISOString()),
     ]);
 

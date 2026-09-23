@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withOps } from "@/lib/ops-auth";
 import { supabaseAdmin } from "@/lib/supabase";
+import { READINGS_ONLY } from "@/lib/completions";
 import { countTasks } from "@/lib/labelstudio";
 import { normalizeConfig, type RawEvalConfig } from "@/lib/eval-config";
 import { reviewRequired } from "@/lib/review";
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
           .from("pools")
           .select("id, name, ls_project_id, eval_config, open_access, maximum_annotations")
           .order("name"),
-        supabaseAdmin.from("task_completions").select("pool_id"),
+        supabaseAdmin.from("task_completions").select("pool_id").in("kind", READINGS_ONLY),
         supabaseAdmin.from("pool_eligibility").select("pool_id, eligible"),
       ]);
 

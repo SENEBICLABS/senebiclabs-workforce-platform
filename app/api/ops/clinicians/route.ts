@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withOps } from "@/lib/ops-auth";
 import { supabaseAdmin } from "@/lib/supabase";
+import { READINGS_ONLY } from "@/lib/completions";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
           .from("clinicians")
           .select("id, email, name, active, can_invite, invited_by, created_at")
           .order("created_at", { ascending: true }),
-        supabaseAdmin.from("task_completions").select("clinician_id"),
+        supabaseAdmin.from("task_completions").select("clinician_id").in("kind", READINGS_ONLY),
         supabaseAdmin.from("pool_eligibility").select("clinician_id, eligible"),
       ]);
 
