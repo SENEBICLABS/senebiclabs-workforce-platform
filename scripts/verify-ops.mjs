@@ -9,6 +9,7 @@
  */
 import fs from "fs";
 import { sessionFor } from "./session-for.mjs";
+import { resolveSandbox } from "./sandbox.mjs";
 
 const env = Object.fromEntries(
   fs.readFileSync(".env.local", "utf8").split("\n").filter((l) => l.includes("="))
@@ -97,7 +98,7 @@ console.log(`  revoked → can_invite=${meOff.can_invite}   their POST /api/invi
 
 /* ── 3. open / close / revoke-all ───────────────────────────────── */
 hr("3. OPEN, CLOSE, AND CLOSE-AND-REVOKE-ALL");
-const [pool] = await qj("pools?ls_project_id=eq.38&select=id,name");
+const { pool } = await resolveSandbox("judge", env, qj);
 const eligibleCount = async () =>
   (await qj(`pool_eligibility?pool_id=eq.${pool.id}&eligible=is.true&select=id`)).length;
 const poolsSeenBy = async (cookie) =>

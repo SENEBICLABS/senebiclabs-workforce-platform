@@ -9,7 +9,7 @@
  */
 import fs from "fs";
 import { sessionFor } from "./session-for.mjs";
-import { assertTestProject } from "./assert-test-project.mjs";
+import { resolveSandbox } from "./sandbox.mjs";
 
 const env = Object.fromEntries(
   fs.readFileSync(".env.local", "utf8").split("\n").filter((l) => l.includes("="))
@@ -28,8 +28,8 @@ const LSH = { Authorization: `Token ${env.LABEL_STUDIO_API_TOKEN}`, "Content-Typ
 const LS = (p, i = {}) => fetch(`${env.LABEL_STUDIO_API_URL}${p}`, { headers: LSH, ...i });
 const hr = (t) => console.log(`\n${"═".repeat(70)}\n${t}\n${"═".repeat(70)}`);
 
-const PROJECT = 38;
-await assertTestProject(PROJECT);
+// Named in .env.local, checked for webhooks before a single write.
+const { pool } = await resolveSandbox("author", env, qj);
 
 if ((await q("review_items?select=id&limit=1")).status === 404) {
   console.log("migrations/006_review_items.sql is not applied — stopping.");
@@ -38,7 +38,6 @@ if ((await q("review_items?select=id&limit=1")).status === 404) {
 
 /* ── setup: a written-work pool ─────────────────────────────────── */
 hr("0. SETUP — a pool whose config asks for review");
-const [pool] = await qj(`pools?ls_project_id=eq.${PROJECT}&select=id,name,eval_config`);
 const cfg = structuredClone(pool.eval_config);
 cfg.review_required = true;
 cfg.schema.field_order = ["draft_answer"];

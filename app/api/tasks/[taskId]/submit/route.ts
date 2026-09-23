@@ -333,6 +333,10 @@ async function nextTaskFor(
       fields: config.fields,
       classes: config.classes,
     },
-    already_reviewed_count: (completions?.length ?? 0) + 1,
+    // No + 1 here. This runs after claim_task_slot has inserted the completion,
+    // so the row just written is already in this count; adding one made the
+    // number the clinician sees jump by two on their first submit and stay one
+    // too high for the rest of the sitting, correcting itself only on a reload.
+    already_reviewed_count: completions?.length ?? 0,
   };
 }
