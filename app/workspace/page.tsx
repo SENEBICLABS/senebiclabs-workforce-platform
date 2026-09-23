@@ -25,13 +25,32 @@ function readDraft(taskId: number): Answers {
   }
 }
 
-function Guidelines({ instructions }: { instructions: string }) {
+/**
+ * The rubric for this pool, or a plain statement that there isn't one.
+ *
+ * We tell clinicians the rubric sits beside the case. When a pool's config
+ * carries no instructions the panel used not to render at all, so the promise
+ * quietly became untrue and the clinician had no way to tell whether the rubric
+ * was missing or whether they had missed it. Saying so is the honest version,
+ * and it tells them what to do instead.
+ */
+function Guidelines({ instructions }: { instructions: string | null }) {
   const [open, setOpen] = useState(false);
 
-  const body = (
+  const body = instructions ? (
     <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-muted">
       {instructions}
     </p>
+  ) : (
+    <div className="space-y-2">
+      <p className="text-[15px] font-semibold leading-relaxed text-ink">
+        No rubric has been supplied for this pool.
+      </p>
+      <p className="text-[15px] leading-relaxed text-muted">
+        Judge the case against your own standard of care, and flag anything you
+        cannot judge on that basis rather than guessing.
+      </p>
+    </div>
   );
 
   return (
@@ -411,11 +430,9 @@ function Workspace() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
         <div className="min-w-0 space-y-5">
-          {instructions && (
-            <div className="lg:hidden">
-              <Guidelines instructions={instructions} />
-            </div>
-          )}
+          <div className="lg:hidden">
+            <Guidelines instructions={instructions} />
+          </div>
 
           {task.context.map((block, i) => (
             <Card key={`${block.label}-${i}`} className="p-5">
@@ -505,11 +522,9 @@ function Workspace() {
           )}
         </div>
 
-        {instructions && (
-          <div className="hidden lg:block">
-            <Guidelines instructions={instructions} />
-          </div>
-        )}
+        <div className="hidden lg:block">
+          <Guidelines instructions={instructions} />
+        </div>
       </div>
 
       {/*

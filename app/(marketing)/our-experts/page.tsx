@@ -82,8 +82,8 @@ const SAFEGUARDS = [
     body: "For written work, one clinician writes and a different one approves, edits or sends it back. The platform will not offer a reviewer their own work.",
   },
   {
-    title: "Flagging is paid",
-    body: "A clinician who cannot judge a case flags it and is paid the same as for completing one. Nobody is paid more for guessing than for saying so.",
+    title: "Flagging costs you nothing",
+    body: "A clinician who cannot judge a case flags it, and it goes to someone else rather than being guessed at. The flagged case stops being offered to them, and nothing about flagging counts against them.",
   },
 ];
 
@@ -103,12 +103,13 @@ export default function OurExperts() {
       </Hero>
 
       <Section>
-        <SectionHead eyebrow="Who reviews here" title="Practising clinicians, in their own specialty" />
+        <SectionHead eyebrow="Who reviews here" title="Practising clinicians, invited to the work that fits them" />
         <div className={`${MEASURE.prose} mt-8 space-y-5 text-center text-body leading-relaxed text-muted`}>
           <p>
             Physicians and specialists who hold a current licence and still practise.
-            They review inside their own specialty, against the guidelines they
-            already work to, not against a rubric invented for the task.
+            Every pool is invite-only, and we invite a clinician to the pools that
+            match the work they actually do, against the guidelines they already
+            work to, not against a rubric invented for the task.
           </p>
           <p>
             The specialties we need change as new work arrives. Rather than publish a

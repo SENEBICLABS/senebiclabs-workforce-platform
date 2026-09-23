@@ -12,11 +12,11 @@ const POINTS = [
   },
   {
     title: "How you are paid",
-    body: "Professional rates, set per pool and shown before you start. Payments clear every Friday for the week prior.",
+    body: "Your rate and payment schedule are the ones agreed with you in writing before you started. The platform does not show rates or statements yet, so ask us rather than looking for a figure here.",
   },
   {
     title: "When something is unclear",
-    body: "Flag the case. It goes to a second clinician rather than forcing a guess — flagging is expected, not penalised.",
+    body: "Flag the case. It goes to a second clinician rather than forcing a guess, and it stops being offered to you. Flagging is expected, and nothing about it counts against you.",
   },
 ];
 

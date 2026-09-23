@@ -59,7 +59,7 @@ export default function Landing() {
         <div className="mt-10 flex flex-col items-center gap-5">
           <RequestAccessButton />
           <p className="font-mono text-[12px] uppercase tracking-[0.12em] text-muted">
-            Fully remote · Professional rates · No AI experience needed
+            Fully remote · Invite-only · No AI experience needed
           </p>
         </div>
       </Hero>

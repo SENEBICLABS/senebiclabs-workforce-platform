@@ -65,7 +65,7 @@ export const FAQS: Faq[] = [
   {
     category: "The work",
     q: "What if a case is outside my area?",
-    a: "Flag it. A flagged case goes to another clinician rather than forcing you to guess, and flagging is paid the same as completing. Guessing costs everyone more than flagging does.",
+    a: "Flag it. A flagged case goes to another clinician rather than forcing you to guess, and it stops being offered to you. Guessing costs everyone more than flagging does.",
   },
   {
     category: "The work",
@@ -82,7 +82,7 @@ export const FAQS: Faq[] = [
     category: "Pay",
     featured: true,
     q: "How does pay work?",
-    a: "You are paid at professional rates. The rate for a body of work is shown before you accept it, so you always know what it pays before you begin. Cases you flag as unclear are paid the same as cases you complete.",
+    a: "Work is paid, and the terms that apply to you are set out in the agreement you accept when you join. We are still building the part of the platform that shows rates and statements, so until that exists we agree the terms with you directly rather than quoting a figure here.",
   },
   {
     category: "Pay",
@@ -168,13 +168,23 @@ export const WORK_TASKS: WorkTask[] = [
 /**
  * Why a clinician would join, as four claims a reader can check.
  *
- * Every sentence here is backed by something that already exists: the terms in
- * app/agreement/page.tsx, which each member accepts, and behaviour the
- * platform implements. Rates published per pool and weekly payment are
- * agreement terms. Choosing your own pools and hours is agreement term 1.
- * Working to the rubric supplied with a pool, and flagging where it conflicts
- * with your own standard of care, is term 2. Seeing only the pools you are
- * eligible for is enforced server-side on every request.
+ * Every sentence here has to be backed by something that already exists: the
+ * terms in app/agreement/page.tsx, which each member accepts, or behaviour the
+ * platform implements and a test covers.
+ *
+ * There was a rate claim here, and it was false. It said a rate is published
+ * for every pool before you take it on, and that a flagged case pays what a
+ * completed one pays. The platform has no rate: no column on pools, no amount
+ * on a completion, no statement anywhere. Flagging writes no record of work at
+ * all, so it could not have paid the same as completing. Both are gone until
+ * pay exists, and then they come back described as whatever was built.
+ *
+ * What is left is checkable. Being recorded for the pass rather than the
+ * outcome is proven by scripts/verify-reviewer-pay.mjs. Choosing your own pools
+ * and hours is agreement term 1. Working to the rubric supplied with a pool is
+ * term 2. Seeing only the pools you were invited to is enforced server-side on
+ * every request. No clinician identity reaches Label Studio, and so none
+ * reaches a client.
  */
 export interface WhyJoin {
   title: string;
@@ -186,9 +196,9 @@ export interface WhyJoin {
 
 export const WHY_SENEBICLABS: WhyJoin[] = [
   {
-    title: "Paid at professional rates",
-    lead: "A rate is published for every pool before you take it on, so you never start work not knowing what it pays.",
-    detail: "Payments clear weekly. A case you flag as one you cannot judge is paid at the same rate as one you complete, so there is never a reason to guess rather than say so. These are terms in the agreement you accept when you join, not aspirations.",
+    title: "Nothing to gain by waving work through",
+    lead: "You are recorded for the pass you make, not for the outcome you reach. Sending written work back to be rewritten counts exactly as approving it does.",
+    detail: "That is not a policy, it is how the code counts. A reviewer who sends a draft back is recorded for that pass, and is not recorded a second time when the rewrite comes back to them. Approving and sending back are worth the same, so there is nothing to be gained by approving something you would otherwise question.",
   },
   {
     title: "You choose the work and the hours",
@@ -196,14 +206,14 @@ export const WHY_SENEBICLABS: WhyJoin[] = [
     detail: "You are engaged as an independent clinician rather than an employee. Your answers are saved as you go, so you can stop halfway through a case, close the tab, and pick it up where you left off.",
   },
   {
-    title: "Inside your own specialty",
-    lead: "You review in the area you actually practise, and you see only the pools you have been made eligible for.",
-    detail: "That is enforced by the platform on every request, not left to a policy. Each pool carries the rubric written for it by the clinical leads, which sits beside the case while you read. Where the rubric and your own standard of care disagree, you flag the case rather than resolve it yourself.",
+    title: "You are invited to the pools that match your practice",
+    lead: "Every pool is invite-only, and you see only the pools you have been invited to.",
+    detail: "Seeing only your own pools is enforced by the platform on every request, not left to a policy. Which pools you are invited to is a judgement we make about your practice when we invite you, and we hold ourselves to it. Each pool carries the rubric written for it by the clinical leads, which sits beside the case while you read. Where the rubric and your own standard of care disagree, you flag the case rather than resolve it yourself.",
   },
   {
     title: "Your judgment is the reference",
     lead: "What you decide becomes the standard a medical AI system is measured and corrected against.",
-    detail: "Several clinicians see each case, and where you disagree with each other it goes to adjudication rather than being settled by majority. Your reading is recorded as a clinician's judgment, with a specialty and a licence behind it, not as one vote among many.",
+    detail: "Several clinicians see each case, and where you disagree with each other it goes to adjudication rather than being settled by majority. Your reading is recorded as a clinician's judgment, not as one vote among many.",
   },
 ];
 
@@ -223,11 +233,11 @@ export const JOIN_STEPS = [
   },
   {
     title: "Get verified",
-    body: "We check your licence against the register it was issued by, and a short set of cases in your specialty matches you to the right work.",
+    body: "We check the licence you give us against the register that issued it, and agree with you which pools suit your practice.",
   },
   {
     title: "Work and get paid",
-    body: "Work through cases remotely, on your own schedule, at professional rates, including the cases you flag.",
+    body: "Work through cases remotely, on your own schedule, under the terms you accepted when you joined.",
   },
 ];
 

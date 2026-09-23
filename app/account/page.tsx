@@ -113,11 +113,11 @@ export default function AccountPage() {
           <SectionHeading>Payment</SectionHeading>
           <Card className="p-5">
             <p className="text-body text-ink">
-              Paid at professional rates via M-Pesa.
+              Paid via M-Pesa.
             </p>
             <p className="mt-1.5 text-body text-muted">
-              Rates and payment schedule are agreed per pool. Statements are not
-              available in the portal yet.
+              Your rate and payment schedule are the ones agreed with you in
+              writing. Rates and statements are not shown in the portal yet.
             </p>
           </Card>
         </div>

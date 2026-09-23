@@ -25,7 +25,7 @@ const CLAUSES = [
   },
   {
     heading: "5. Payment",
-    body: "You are paid at the rate published for each pool, for reviews you complete and submit. Payments clear weekly. Flagged cases are paid at the same rate as completed reviews.",
+    body: "You are paid for the work you complete and submit. Your rate and payment schedule are agreed with you in writing before you begin; they are not published in the platform. Where written work is sent back to be rewritten, that pass is recorded and paid as an approval would be.",
   },
   {
     heading: "6. Liability",

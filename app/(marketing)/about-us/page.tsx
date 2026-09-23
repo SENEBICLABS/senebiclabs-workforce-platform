@@ -54,8 +54,8 @@ const PRINCIPLES = [
 
 const PROMISES = [
   {
-    title: "Paid for honest work",
-    body: "Paid at professional rates, shown before you accept anything. Flagging a case you cannot judge pays the same as completing one, because a platform that pays only for answers ends up buying guesses.",
+    title: "No reward for waving work through",
+    body: "You are recorded for the pass you make, not for the outcome you reach. Sending written work back to be rewritten counts exactly as approving it does, so a platform that pays for answers never ends up buying agreement.",
   },
   {
     title: "Your time stays yours",
@@ -95,7 +95,7 @@ export default function AboutUs() {
             We put those cases in front of clinicians who do. They confirm the
             answer, correct it, or flag what it missed. What comes out is the
             reference a medical AI system is tested and improved against, with a
-            specialty and a licence behind every judgment in it.
+            practising clinician behind every judgment in it.
           </p>
           <p>
             We build the side of that which clinicians use: how work is served, how
