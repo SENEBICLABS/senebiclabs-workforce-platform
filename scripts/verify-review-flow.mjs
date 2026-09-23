@@ -38,19 +38,20 @@ if ((await q("review_items?select=id&limit=1")).status === 404) {
 
 /* ── setup: a written-work pool ─────────────────────────────────── */
 hr("0. SETUP — a pool whose config asks for review");
-const cfg = structuredClone(pool.eval_config);
-cfg.review_required = true;
-cfg.schema.field_order = ["draft_answer"];
-cfg.schema.fields = {
-  draft_answer: {
-    type: "text",
-    title: "Written answer",
-    hint: "Write the answer a clinician should receive.",
-    required: true,
-  },
-};
-await q(`pools?id=eq.${pool.id}`, { method: "PATCH", body: JSON.stringify({ eval_config: cfg, maximum_annotations: 1 }) });
-console.log(`  pool "${pool.name}"  review_required=true, one written field`);
+
+// The sandbox is already an authoring pool: review_required, one written field,
+// one author per case. This used to rewrite the pool's config to suit itself
+// and put it back at the end, which is fine until a run dies before the end —
+// one did, and it left the sandbox renamed, so a later script submitted a field
+// the pool no longer had. A test that reshapes the thing it is testing has to
+// be perfect at cleaning up; a test that reads the shape does not.
+const cfg = pool.eval_config ?? {};
+const FIELD = cfg.schema?.field_order?.[0] ?? Object.keys(cfg.schema?.fields ?? {})[0];
+if (!cfg.review_required || !FIELD) {
+  console.log("The author sandbox is not shaped for this test (needs review_required and one written field). Stopping.");
+  process.exit(1);
+}
+console.log(`  pool "${pool.name}"  review_required=true, written field "${FIELD}"`);
 
 // Two clinicians, both eligible.
 const stamp = Date.now().toString().slice(-6);
@@ -83,7 +84,7 @@ console.log(`  GET next → phase=${t1.phase}  task ${t1.task_id} (case ${t1.cas
 const AUTHORED = "Advise urgent same-day review: the described chest pain with diaphoresis is a red flag for acute coronary syndrome and must not wait.";
 const lsBefore = ((await (await LS(`/api/tasks/${t1.task_id}/`)).json()).annotations ?? []).length;
 const sub = await callA(`/api/tasks/${t1.task_id}/submit`, {
-  method: "POST", body: JSON.stringify({ answers: { draft_answer: AUTHORED } }),
+  method: "POST", body: JSON.stringify({ answers: { [FIELD]: AUTHORED } }),
 });
 const subBody = await sub.json();
 console.log(`  POST submit → HTTP ${sub.status}  ${JSON.stringify({ phase: subBody.phase, state: subBody.state, awaiting_review: subBody.awaiting_review })}`);
@@ -121,12 +122,12 @@ for (let i = 0; i < 6; i++) {
 }
 console.log(`  B served: phase=${served?.phase}  task ${served?.task_id}`);
 console.log(`  it is A's item: ${served?.task_id === t1.task_id}`);
-console.log(`  B sees the authored text: ${JSON.stringify(served?.authored?.draft_answer)?.slice(0, 70)}…`);
+console.log(`  B sees the authored text: ${JSON.stringify(served?.authored?.[FIELD])?.slice(0, 70)}…`);
 console.log(`  author identity withheld from the payload: ${!JSON.stringify(served ?? {}).includes(ids[A])}`);
 
 const EDITED = AUTHORED.replace("urgent same-day review", "immediate emergency assessment");
 const dec = await callB(`/api/tasks/${t1.task_id}/review`, {
-  method: "POST", body: JSON.stringify({ action: "edit", answers: { draft_answer: EDITED } }),
+  method: "POST", body: JSON.stringify({ action: "edit", answers: { [FIELD]: EDITED } }),
 });
 console.log(`\n  POST review {action:"edit"} → HTTP ${dec.status}  ${JSON.stringify(await dec.json()).slice(0, 90)}`);
 
@@ -140,7 +141,7 @@ console.log(`  author still A: ${final.author_id === ids[A]}`);
 
 const lsTask = await (await LS(`/api/tasks/${t1.task_id}/`)).json();
 const anns = lsTask.annotations ?? [];
-const delivered = anns.at(-1)?.result?.find((r) => r.from_name === "draft_answer")?.value?.text?.[0];
+const delivered = anns.at(-1)?.result?.find((r) => r.from_name === FIELD)?.value?.text?.[0];
 console.log(`\n  LS annotations now: ${anns.length}  (one approved value, not a merge)`);
 console.log(`  delivered text == B's edit:   ${delivered === EDITED}`);
 console.log(`  delivered text == A's draft:  ${delivered === AUTHORED}   (must be false)`);
@@ -158,10 +159,9 @@ for (const email of [A, B]) {
   }
   await q(`clinicians?id=eq.${id}`, { method: "DELETE" });
 }
-await q(`pools?id=eq.${pool.id}`, { method: "PATCH", body: JSON.stringify({ eval_config: pool.eval_config }) });
 const leftA = await qj(`clinicians?email=eq.${encodeURIComponent(A)}&select=id`);
 const leftB = await qj(`clinicians?email=eq.${encodeURIComponent(B)}&select=id`);
 const lsEnd = ((await (await LS(`/api/tasks/${t1.token ?? t1.task_id}/`)).json()).annotations ?? []).length;
 console.log(`  test clinicians removed: ${leftA.length === 0 && leftB.length === 0}`);
 console.log(`  sandbox annotations left: ${lsEnd}`);
-console.log(`  pool config restored: true`);
+console.log(`  the pool\u2019s own config was never touched`);

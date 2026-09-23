@@ -35,17 +35,20 @@ if ((await q("review_items?select=id&limit=1")).status === 404) {
   process.exit(1);
 }
 
-const originalConfig = structuredClone(pool.eval_config);
 
-/* ── setup ──────────────────────────────────────────────────────── */
-hr("SETUP — a review pool and three clinicians");
-const cfg = structuredClone(pool.eval_config);
-cfg.review_required = true;
-cfg.schema.field_order = ["draft_answer"];
-cfg.schema.fields = {
-  draft_answer: { type: "text", title: "Written answer", required: true },
-};
-await q(`pools?id=eq.${pool.id}`, { method: "PATCH", body: JSON.stringify({ eval_config: cfg }) });
+// The sandbox is already an authoring pool: review_required, one written field,
+// one author per case. This used to rewrite the pool's config to suit itself
+// and put it back at the end, which is fine until a run dies before the end —
+// one did, and it left the sandbox renamed, so a later script submitted a field
+// the pool no longer had. A test that reshapes the thing it is testing has to
+// be perfect at cleaning up; a test that reads the shape does not.
+const cfgNow = pool.eval_config ?? {};
+const FIELD = cfgNow.schema?.field_order?.[0] ?? Object.keys(cfgNow.schema?.fields ?? {})[0];
+if (!cfgNow.review_required || !FIELD) {
+  console.log("The author sandbox is not shaped for this test (needs review_required and one written field). Stopping.");
+  process.exit(1);
+}
+console.log(`  pool "${pool.name}"  review_required=true, written field "${FIELD}"`);
 console.log(`  pool "${pool.name}" → review_required=true`);
 
 const stamp = Date.now().toString().slice(-6);
@@ -89,7 +92,7 @@ const nextFor = async (fn, wantPhase) => {
 hr("BUILD — one approved item, one sent back and re-authored");
 
 const t1 = await nextFor(cA, "author");
-await cA(`/api/tasks/${t1.task_id}/submit`, { method: "POST", body: JSON.stringify({ answers: { draft_answer: "First answer, written by A." } }) });
+await cA(`/api/tasks/${t1.task_id}/submit`, { method: "POST", body: JSON.stringify({ answers: { [FIELD]: "First answer, written by A." } }) });
 console.log(`  A authors task ${t1.task_id}                    → completion, no annotation`);
 
 const r1 = await nextFor(cB, "review");
@@ -97,7 +100,7 @@ await cB(`/api/tasks/${r1.task_id}/review`, { method: "POST", body: JSON.stringi
 console.log(`  B approves task ${r1.task_id}                   → completion + annotation`);
 
 const t2 = await nextFor(cA, "author");
-await cA(`/api/tasks/${t2.task_id}/submit`, { method: "POST", body: JSON.stringify({ answers: { draft_answer: "Second answer, too terse." } }) });
+await cA(`/api/tasks/${t2.task_id}/submit`, { method: "POST", body: JSON.stringify({ answers: { [FIELD]: "Second answer, too terse." } }) });
 console.log(`  A authors task ${t2.task_id}                    → completion, no annotation`);
 
 const r2 = await nextFor(cB, "review");
@@ -105,7 +108,7 @@ await cB(`/api/tasks/${r2.task_id}/review`, { method: "POST", body: JSON.stringi
 console.log(`  B sends task ${r2.task_id} back                 → no annotation, revision +1`);
 
 const t3 = await nextFor(cC, "author");
-await cC(`/api/tasks/${t3.task_id}/submit`, { method: "POST", body: JSON.stringify({ answers: { draft_answer: "Second answer, rewritten by C with the next step spelled out." } }) });
+await cC(`/api/tasks/${t3.task_id}/submit`, { method: "POST", body: JSON.stringify({ answers: { [FIELD]: "Second answer, rewritten by C with the next step spelled out." } }) });
 console.log(`  C re-authors task ${t3.task_id}                 → completion, no annotation`);
 
 const r3 = await nextFor(cB, "review");
@@ -149,7 +152,7 @@ console.log(`  measured LS against: ${body.compared_against}`);
 hr("IT STILL CATCHES A REAL ORPHAN");
 const stray = await (await LS(`/api/tasks/${t1.task_id}/annotations/`, {
   method: "POST",
-  body: JSON.stringify({ result: [{ from_name: "draft_answer", to_name: "image", type: "textarea", value: { text: ["unapproved stray"] } }], was_cancelled: false }),
+  body: JSON.stringify({ result: [{ from_name: FIELD, to_name: "image", type: "textarea", value: { text: ["unapproved stray"] } }], was_cancelled: false }),
 })).json();
 console.log(`  wrote an unapproved annotation ${stray.id} straight into LS`);
 const rec2 = await (await fetch(`${APP}/api/tasks/reconcile?poolId=${pool.id}`, { headers: { "x-ops-key": env.OPS_API_KEY } })).json();
@@ -169,8 +172,7 @@ for (const email of [A, B, C]) {
   }
   await q(`clinicians?id=eq.${ids[email]}`, { method: "DELETE" });
 }
-await q(`pools?id=eq.${pool.id}`, { method: "PATCH", body: JSON.stringify({ eval_config: originalConfig }) });
 const endTasks = await allTasks(PROJECT);
 console.log(`  sandbox annotations left: ${endTasks.reduce((n, t) => n + (t.annotations?.length ?? 0), 0)}`);
 console.log(`  test clinicians left: ${(await qj(`clinicians?email=like.*+${stamp}*&select=id`)).length}`);
-console.log(`  pool config restored: ${JSON.stringify((await qj(`pools?id=eq.${pool.id}&select=eval_config`))[0].eval_config) === JSON.stringify(originalConfig)}`);
+console.log(`  the pool\u2019s own config was never touched`);

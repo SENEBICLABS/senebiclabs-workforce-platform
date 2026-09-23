@@ -193,9 +193,28 @@ check("E is not shown the whole table", mine.total < everyone.length, `(${mine.t
 
 const otherPools = mine.by_pool.filter((p) => p.pool_id !== POOL);
 check("no pool they did not work in", otherPools.length === 0);
-const aRecord = await (await people.a.call("/api/me/passes")).json();
-check("a different clinician gets a different record", aRecord.total !== mine.total || JSON.stringify(aRecord.by_kind) !== JSON.stringify(mine.by_kind));
-console.log(`  GET as A → total ${aRecord.total}, by kind ${JSON.stringify(aRecord.by_kind)}`);
+
+// Comparing tallies between two clinicians proves nothing: two people can do
+// the same amount of the same work and their totals match while each record is
+// still correctly their own. What has to hold is that every row returned is a
+// row that clinician actually owns, and that no row of theirs is missing. So
+// compare the (kind, case) pairs against the table, per clinician.
+const fingerprint = (rows) =>
+  rows.map((r) => `${r.kind}:${r.case_ref ?? r.ls_task_id}`).sort().join(" | ");
+
+for (const n of NAMES) {
+  const served = await (await people[n].call("/api/me/passes")).json();
+  const owned = await qj(`task_completions?clinician_id=eq.${people[n].id}&select=kind,ls_task_id`);
+  const same = fingerprint(served.recent) === fingerprint(owned);
+  check(`${n.toUpperCase()}'s record is exactly their own rows`, same,
+    same ? `(${owned.length})` : `\n        served: ${fingerprint(served.recent)}\n        owned:  ${fingerprint(owned)}`);
+}
+
+// And nobody's record contains a row belonging to someone else.
+const everyRow = await qj("task_completions?select=id,clinician_id");
+const byOthers = new Set(everyRow.filter((r) => r.clinician_id !== people.e.id).map((r) => r.id));
+check("none of E's returned rows belong to anyone else",
+  mine.recent.every((r) => !byOthers.has(r.id)), `(${byOthers.size} rows exist that are not E's)`);
 
 /* ── cleanup ────────────────────────────────────────────────────── */
 hr("CLEANUP");

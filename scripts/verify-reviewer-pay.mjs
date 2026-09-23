@@ -35,14 +35,20 @@ if ((await q("review_items?select=id&limit=1")).status === 404) {
   process.exit(1);
 }
 
-const original = structuredClone(pool.eval_config);
 
-hr("SETUP");
-const cfg = structuredClone(pool.eval_config);
-cfg.review_required = true;
-cfg.schema.field_order = ["draft_answer"];
-cfg.schema.fields = { draft_answer: { type: "text", title: "Written answer", required: true } };
-await q(`pools?id=eq.${pool.id}`, { method: "PATCH", body: JSON.stringify({ eval_config: cfg }) });
+// The sandbox is already an authoring pool: review_required, one written field,
+// one author per case. This used to rewrite the pool's config to suit itself
+// and put it back at the end, which is fine until a run dies before the end —
+// one did, and it left the sandbox renamed, so a later script submitted a field
+// the pool no longer had. A test that reshapes the thing it is testing has to
+// be perfect at cleaning up; a test that reads the shape does not.
+const cfgNow = pool.eval_config ?? {};
+const FIELD = cfgNow.schema?.field_order?.[0] ?? Object.keys(cfgNow.schema?.fields ?? {})[0];
+if (!cfgNow.review_required || !FIELD) {
+  console.log("The author sandbox is not shaped for this test (needs review_required and one written field). Stopping.");
+  process.exit(1);
+}
+console.log(`  pool "${pool.name}"  review_required=true, written field "${FIELD}"`);
 
 const stamp = Date.now().toString().slice(-6);
 const A = `godwinyampoi449+wa${stamp}@gmail.com`;   // first author
@@ -77,7 +83,7 @@ console.log(`  reviewer under test: ${R}`);
 
 hr("1. AN ITEM IS AUTHORED, THEN SENT BACK");
 const t1 = await nextFor(cA, "author");
-await cA(`/api/tasks/${t1.task_id}/submit`, { method: "POST", body: JSON.stringify({ answers: { draft_answer: "Terse first draft." } }) });
+await cA(`/api/tasks/${t1.task_id}/submit`, { method: "POST", body: JSON.stringify({ answers: { [FIELD]: "Terse first draft." } }) });
 console.log(`  A authors task ${t1.task_id}`);
 console.log(`  reviewer completions before their pass: ${(await reviewerRows()).length}`);
 
@@ -98,7 +104,7 @@ console.log(`  LS annotations on it: ${lsNow}   (paid, but nothing published)`);
 hr("2. THE SAME TASK IS REWRITTEN AND THE SAME REVIEWER APPROVES IT");
 const rewrite = await nextFor(cC, "author");
 console.log(`  C is served task ${rewrite.task_id}  (same task: ${rewrite.task_id === t1.task_id})`);
-await cC(`/api/tasks/${rewrite.task_id}/submit`, { method: "POST", body: JSON.stringify({ answers: { draft_answer: "Rewritten: advise same-day assessment and state why." } }) });
+await cC(`/api/tasks/${rewrite.task_id}/submit`, { method: "POST", body: JSON.stringify({ answers: { [FIELD]: "Rewritten: advise same-day assessment and state why." } }) });
 
 const again = await nextFor(cR, "review");
 console.log(`  reviewer served task ${again?.task_id} again: ${again?.task_id === t1.task_id}`);
@@ -137,5 +143,4 @@ for (const email of [A, R, C]) {
   }
   await q(`clinicians?id=eq.${ids[email]}`, { method: "DELETE" });
 }
-await q(`pools?id=eq.${pool.id}`, { method: "PATCH", body: JSON.stringify({ eval_config: original }) });
-console.log(`  cleaned up; pool config restored`);
+console.log(`  cleaned up; the pool\u2019s own config was never touched`);

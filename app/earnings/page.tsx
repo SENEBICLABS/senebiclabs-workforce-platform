@@ -32,6 +32,17 @@ const KIND_NOTE: Record<PassKind, string> = {
 
 const ORDER: PassKind[] = ["judgement", "flag", "authoring", "review"];
 
+/** "1 case judged", "3 cases judged" — the per-pool line reads as a sentence. */
+const COUNTED: Record<PassKind, [string, string]> = {
+  judgement: ["case judged", "cases judged"],
+  flag: ["case flagged", "cases flagged"],
+  authoring: ["answer written", "answers written"],
+  review: ["colleague's answer reviewed", "colleagues' answers reviewed"],
+};
+
+const counted = (kind: PassKind, n: number) =>
+  `${n} ${COUNTED[kind][n === 1 ? 0 : 1]}`;
+
 const when = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, {
     day: "numeric",
@@ -68,7 +79,7 @@ function ByPool({ record }: { record: WorkRecord }) {
           </div>
           <p className="mt-1 text-[15px] text-muted">
             {ORDER.filter((k) => pool.kinds[k] > 0)
-              .map((k) => `${pool.kinds[k]} ${KIND_LABEL[k].toLowerCase()}`)
+              .map((k) => counted(k, pool.kinds[k]))
               .join(" · ")}
           </p>
         </div>
