@@ -88,16 +88,41 @@ const SEEK_PAGE_SIZE = 50;
 const MAX_PAGES = 100;
 
 /**
- * How many tasks a project holds.
+ * How many tasks a project holds, remembered for a short while.
  *
  * `/api/tasks/?project=N` reports `total` alongside the page, so one request
  * with the smallest possible page answers this — no need to walk the project.
+ *
+ * The caching is what makes the dashboard quick. Label Studio is in the United
+ * States and this app runs in Dublin, so each of these costs roughly 300ms of
+ * pure distance, and the pool list makes one per pool: the wait grew every time
+ * a pool was added, which is exactly when it started to feel slow.
+ *
+ * A count only changes when someone imports tasks into a project, which happens
+ * rarely and never from inside this app, so a number up to a minute old is
+ * accurate in every way a clinician would notice. What they watch move is how
+ * many they have reviewed, and that is counted in the database on every
+ * request, never from here.
+ *
+ * A failed lookup is deliberately not cached: it returns null so the caller can
+ * say "unknown" rather than invent a figure, and the next request tries again
+ * rather than repeating the failure for a minute.
  */
+const COUNT_TTL_MS = 60_000;
+const countCache = new Map<number, { total: number; at: number }>();
+
 export async function countTasks(projectId: number): Promise<number | null> {
+  const remembered = countCache.get(projectId);
+  if (remembered && Date.now() - remembered.at < COUNT_TTL_MS) {
+    return remembered.total;
+  }
+
   const res = await ls<{ total?: number }>(
     `/api/tasks/?project=${projectId}&page=1&page_size=1`
   );
-  return typeof res?.total === "number" ? res.total : null;
+  const total = typeof res?.total === "number" ? res.total : null;
+  if (total !== null) countCache.set(projectId, { total, at: Date.now() });
+  return total;
 }
 
 /**

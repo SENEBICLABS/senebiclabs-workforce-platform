@@ -15,13 +15,29 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(req: NextRequest) {
   return withAuth(req, async (_req, auth) => {
-    const { data: rows, error } = await supabaseAdmin
-      .from("pool_eligibility")
-      .select(
-        "pool_id, pools!inner(id, name, ls_project_id, eval_config, maximum_annotations)"
-      )
-      .eq("clinician_id", auth.clinicianId)
-      .eq("eligible", true);
+    // Both of these need only the clinician's id, so neither waits for the
+    // other. They used to run back to back, which cost a whole extra round trip
+    // to the database on every dashboard load for no reason.
+    const [
+      { data: rows, error },
+      { data: completions },
+    ] = await Promise.all([
+      supabaseAdmin
+        .from("pool_eligibility")
+        .select(
+          "pool_id, pools!inner(id, name, ls_project_id, eval_config, maximum_annotations)"
+        )
+        .eq("clinician_id", auth.clinicianId)
+        .eq("eligible", true),
+      // Readings only. Counting flags here would advance a clinician's progress
+      // through a pool for cases they explicitly declined to judge, and could
+      // mark a pool "complete" without it having been reviewed.
+      supabaseAdmin
+        .from("task_completions")
+        .select("pool_id")
+        .eq("clinician_id", auth.clinicianId)
+        .in("kind", READINGS_ONLY),
+    ]);
 
     if (error) {
       console.error("[pools] eligibility query failed", error);
@@ -36,15 +52,6 @@ export async function GET(req: NextRequest) {
       .filter(Boolean);
 
     if (pools.length === 0) return NextResponse.json({ pools: [] });
-
-    // Readings only. Counting flags here would advance a clinician's progress
-    // through a pool for cases they explicitly declined to judge, and could
-    // mark a pool "complete" without it having been reviewed.
-    const { data: completions } = await supabaseAdmin
-      .from("task_completions")
-      .select("pool_id")
-      .eq("clinician_id", auth.clinicianId)
-      .in("kind", READINGS_ONLY);
 
     const reviewedByPool = new Map<string, number>();
     for (const row of completions ?? []) {
