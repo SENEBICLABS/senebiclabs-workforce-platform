@@ -37,20 +37,58 @@ class LabelStudioError extends Error {
   }
 }
 
-async function ls<T>(path: string, init: RequestInit = {}): Promise<T> {
+/**
+ * How long we will wait for Label Studio before giving up.
+ *
+ * There was no limit at all, which is a way of saying "wait for ever". Label
+ * Studio is a separate service on another continent, and when it is slow every
+ * request that touches it was slow with it, up to whatever the platform's own
+ * ceiling happened to be. The dashboard was the worst of it: the pool list
+ * needs Label Studio only for a case count, which is decoration, and a hung
+ * count should never hold the list hostage.
+ *
+ * Two budgets, because the two kinds of call are worth different amounts of
+ * patience. Anything that would lose a clinician's work if it failed gets the
+ * longer one. A count does not, so it gets the short one and reports "unknown"
+ * instead of making someone wait.
+ */
+const LS_TIMEOUT_MS = 10_000;
+const LS_COUNT_TIMEOUT_MS = 4_000;
+
+async function ls<T>(
+  path: string,
+  init: RequestInit = {},
+  timeoutMs: number = LS_TIMEOUT_MS
+): Promise<T> {
   if (!LS_URL || !LS_TOKEN) {
     throw new LabelStudioError("Label Studio is not configured", 500);
   }
 
-  const res = await fetch(`${LS_URL}${path}`, {
-    ...init,
-    headers: {
-      Authorization: `Token ${LS_TOKEN}`,
-      "Content-Type": "application/json",
-      ...init.headers,
-    },
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${LS_URL}${path}`, {
+      ...init,
+      headers: {
+        Authorization: `Token ${LS_TOKEN}`,
+        "Content-Type": "application/json",
+        ...init.headers,
+      },
+      cache: "no-store",
+      // A caller that brought its own signal keeps it.
+      signal: init.signal ?? AbortSignal.timeout(timeoutMs),
+    });
+  } catch (err) {
+    const name = (err as { name?: string })?.name;
+    if (name === "TimeoutError" || name === "AbortError") {
+      // 504 so callers that branch on status treat it as "upstream did not
+      // answer" rather than as a refusal or a missing task.
+      throw new LabelStudioError(
+        `LS ${init.method ?? "GET"} ${path} did not answer within ${timeoutMs}ms`,
+        504
+      );
+    }
+    throw err;
+  }
 
   if (!res.ok) {
     // Body may carry detail useful in our logs — never forwarded to the client.
@@ -118,7 +156,9 @@ export async function countTasks(projectId: number): Promise<number | null> {
   }
 
   const res = await ls<{ total?: number }>(
-    `/api/tasks/?project=${projectId}&page=1&page_size=1`
+    `/api/tasks/?project=${projectId}&page=1&page_size=1`,
+    {},
+    LS_COUNT_TIMEOUT_MS
   );
   const total = typeof res?.total === "number" ? res.total : null;
   if (total !== null) countCache.set(projectId, { total, at: Date.now() });

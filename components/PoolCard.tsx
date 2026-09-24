@@ -38,7 +38,11 @@ export function PoolCard({ pool }: { pool: Pool }) {
             aria-valuenow={pool.reviewed_by_me}
             aria-valuemin={0}
             aria-valuemax={pool.items ?? undefined}
-            aria-label={`${pool.reviewed_by_me} of ${pool.items} reviewed`}
+            aria-label={
+              pool.items === null
+                ? `${pool.reviewed_by_me} reviewed; the size of this pool is not known just now`
+                : `${pool.reviewed_by_me} of ${pool.items} reviewed`
+            }
           >
             <div
               className="h-full rounded-full bg-accent"
