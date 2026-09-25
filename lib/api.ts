@@ -48,6 +48,10 @@ export interface Field {
   label?: string;
   required?: boolean;
   visible_when?: string;
+  /** The follow-up under a structured field; see findingOptionsFor. */
+  finding_label?: string;
+  finding_options?: string[];
+  finding_from_classes?: boolean;
 }
 
 export type ReviewAction = "approve" | "edit" | "reject";

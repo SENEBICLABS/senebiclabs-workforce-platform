@@ -13,8 +13,8 @@ import type { WorkTask } from "@/lib/marketing-content";
  *
  *   verdict        single      correct | incorrect | partially correct
  *   confidence     scale       1 to 5
- *   critical_miss  structured  yes or no, then which finding, over the pool's
- *                              classes, shown only after yes as visible_when does
+ *   critical_miss  structured  yes or no, then the follow-up, shown only after
+ *                              yes as visible_when does
  *   correction     text        "Corrected assessment"
  *
  * Nothing else belongs there. An earlier version showed a span highlighter and
@@ -168,8 +168,18 @@ export function WorkMock({ kind }: { kind: WorkTask["mock"] }) {
 
         <GroupLabel>Critical miss?</GroupLabel>
         <YesNo chosen="Yes" />
-        {/* The follow-up appears only once Yes is chosen, the way visible_when
-            behaves in the workspace, and picks from the pool's classes. */}
+        {/*
+          The follow-up appears only once Yes is chosen, the way visible_when
+          behaves in the workspace.
+
+          What it offers is the field's decision, not the pool's. A field
+          listing findings in finding_options shows those; a field setting
+          finding_from_classes shows the pool's classes, which is right only
+          where the classes really are the findings — as the compartments below
+          are; anything else gets a text box, because the follow-up is asking an
+          open question. This preview draws the from_classes case, so it must
+          not be read as what every structured field does.
+        */}
         <div className="mt-3 border-l-2 border-accent-soft pl-4">
           <p className="text-[13px] font-semibold text-ink">Which finding?</p>
           <div className="mt-2 overflow-hidden rounded-[8px] border border-hairline bg-surface">

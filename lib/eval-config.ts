@@ -29,6 +29,15 @@ export interface Field {
   required?: boolean;
   /** e.g. "verdict==Has errors" — the field shows only when it holds. */
   visible_when?: string;
+
+  /* The follow-up under a structured field: "Yes — and then what?" */
+
+  /** The follow-up's own question, e.g. "Name the red flag". */
+  finding_label?: string;
+  /** The findings to choose from, when the answer is one of a known set. */
+  finding_options?: string[];
+  /** Use the pool's classes as the findings. Only true where they really are. */
+  finding_from_classes?: boolean;
 }
 
 export interface ContextBlock {
@@ -45,7 +54,16 @@ export interface NormalizedConfig {
   classes: string[];
 }
 
-type RawFields = Record<string, Omit<Field, "name">> | (Field & { name: string })[];
+/**
+ * A field as it arrives in a pool's config, before normalisation.
+ *
+ * `title` is optional here and required on Field, because a config may leave it
+ * out and normalizeConfig fills it in from the field's name. The type used to
+ * demand it, which was a claim about client configs that none of them honour:
+ * every field in the live lab-interpretation pool omits it.
+ */
+type RawField = Omit<Field, "name" | "title"> & { title?: string };
+type RawFields = Record<string, RawField> | (RawField & { name: string })[];
 
 interface RawSchema {
   fields?: RawFields;
@@ -75,35 +93,37 @@ export function normalizeConfig(raw: RawEvalConfig | null): NormalizedConfig {
   const schema = raw?.schema ?? {};
   const rawFields = schema.fields;
 
-  let fields: Field[] = [];
+  // Named but not yet titled: the fallback below is what makes these Fields.
+  let named: (RawField & { name: string })[] = [];
 
   if (Array.isArray(rawFields)) {
-    fields = rawFields.filter((f) => f && f.name);
+    named = rawFields.filter((f) => f && f.name);
   } else if (rawFields && typeof rawFields === "object") {
     const entries = Object.entries(rawFields);
     const order = schema.field_order;
     if (Array.isArray(order) && order.length > 0) {
       const byName = new Map(entries);
-      fields = order
+      named = order
         .filter((name) => byName.has(name))
         .map((name) => ({ name, ...byName.get(name)! }));
       // Anything the order forgot still gets rendered, after the ordered ones.
       for (const [name, config] of entries) {
-        if (!order.includes(name)) fields.push({ name, ...config });
+        if (!order.includes(name)) named.push({ name, ...config });
       }
     } else {
       // Postgres does not preserve jsonb key order, so Object.entries here is
       // whatever the server happened to store — not the author's order. Sort by
       // name so the render order is at least deterministic and reproducible.
       // A config that cares about order must supply `field_order` or a list.
-      fields = entries
+      named = entries
         .map(([name, config]) => ({ name, ...config }))
         .sort((a, b) => a.name.localeCompare(b.name));
     }
   }
 
-  // A config may omit `title`; fall back to the field name so a label always shows.
-  fields = fields.map((f) => ({
+  // A config may omit `title`; fall back to the field name so a label always
+  // shows. This is the step that turns a raw field into a Field.
+  const fields: Field[] = named.map((f) => ({
     ...f,
     title: f.title || humanize(f.name),
   }));
@@ -184,6 +204,41 @@ export function isVisible(
 export function optionsFor(field: Field, poolClasses: string[]): string[] {
   if (field.type === "single") return field.options ?? [];
   return field.classes ?? poolClasses;
+}
+
+/**
+ * What the follow-up under a structured field offers, or null for a text box.
+ *
+ * The follow-up used to be a dropdown over the pool's classes, always. That is
+ * right only when the classes happen to answer the follow-up's question, and
+ * usually they do not. In the lab-interpretation pool the classes are answer
+ * categories — Normal, Borderline, Abnormal, Critical — while the follow-up
+ * asks which red flag the output ignored. Every option was wrong, and a
+ * clinician who answered Yes had no way to say what they meant.
+ *
+ * So the field says. An explicit list wins; the pool's classes are used only
+ * where a field opts in, which is the model_evaluation case where the classes
+ * genuinely are the findings; otherwise the finding is open-ended and the
+ * clinician types it.
+ *
+ * Returning null rather than an empty array is the point: it distinguishes
+ * "no list, so let them type" from "a list that came back empty". A field that
+ * asks for classes where none exist falls through to a text box too, because a
+ * picker with nothing in it is not an answer either.
+ *
+ * Exported so the form and the validator cannot disagree about it. They read
+ * the same rule, so nothing can be offered that would then be refused.
+ */
+export function findingOptionsFor(
+  field: Field,
+  poolClasses: string[]
+): string[] | null {
+  if (field.finding_options?.length) return field.finding_options;
+  if (field.finding_from_classes) {
+    const classes = field.classes ?? poolClasses;
+    return classes.length > 0 ? classes : null;
+  }
+  return null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -317,9 +372,13 @@ export function answersToLsResult(
           );
         }
 
+        // An allow-list applies only where the field offers a list. A typed
+        // finding is the answer to an open question, so checking it against the
+        // pool's classes would refuse every correct answer — which is what used
+        // to happen wherever the classes answered a different question.
         if (finding !== undefined && finding !== "") {
-          const allowed = optionsFor(field, config.classes);
-          if (allowed.length > 0 && !allowed.includes(String(finding))) {
+          const allowed = findingOptionsFor(field, config.classes);
+          if (allowed && !allowed.includes(String(finding))) {
             throw new TranslationError(
               `"${finding}" is not one of the findings for "${field.title}".`
             );

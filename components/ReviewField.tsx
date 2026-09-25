@@ -2,6 +2,7 @@
 
 import { Star } from "lucide-react";
 import type { Field } from "@/lib/api";
+import { findingOptionsFor } from "@/lib/eval-config";
 
 export type Answers = Record<string, unknown>;
 
@@ -56,6 +57,8 @@ export function ReviewField({
   const hintId = field.hint ? `${field.name}-hint` : undefined;
   const border = invalid ? "border-danger" : "border-hairline";
   const options = choicesFor(field, poolClasses);
+  // null means the follow-up is open-ended and the clinician types it.
+  const findingChoices = findingOptionsFor(field, poolClasses);
 
   return (
     <fieldset className="border-0 p-0">
@@ -226,24 +229,45 @@ export function ReviewField({
                 htmlFor={`${field.name}_finding`}
                 className="mb-1.5 block text-[15px] font-semibold text-ink"
               >
-                Which finding?
+                {field.finding_label ?? "Which finding?"}
               </label>
-              <select
-                id={`${field.name}_finding`}
-                value={(answers[`${field.name}_finding`] as string) ?? ""}
-                onChange={(e) =>
-                  onChange(`${field.name}_finding`, e.target.value)
-                }
-                aria-invalid={invalid || undefined}
-                className={`${CONTROL} ${border} h-10`}
-              >
-                <option value="">Select one…</option>
-                {options.map((option) => (
-                  <option key={option} value={option}>
-                    {optionLabel(option)}
-                  </option>
-                ))}
-              </select>
+              {/*
+                A picker only where the field offers findings to pick from.
+                This used to be a dropdown over the pool's classes whatever the
+                follow-up asked, so in a pool whose classes are answer
+                categories it asked which red flag was missed and offered
+                "Normal" and "Borderline". There was no right answer to give.
+              */}
+              {findingChoices ? (
+                <select
+                  id={`${field.name}_finding`}
+                  value={(answers[`${field.name}_finding`] as string) ?? ""}
+                  onChange={(e) =>
+                    onChange(`${field.name}_finding`, e.target.value)
+                  }
+                  aria-invalid={invalid || undefined}
+                  className={`${CONTROL} ${border} h-10`}
+                >
+                  <option value="">Select one…</option>
+                  {findingChoices.map((option) => (
+                    <option key={option} value={option}>
+                      {optionLabel(option)}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  id={`${field.name}_finding`}
+                  value={(answers[`${field.name}_finding`] as string) ?? ""}
+                  onChange={(e) =>
+                    onChange(`${field.name}_finding`, e.target.value)
+                  }
+                  aria-invalid={invalid || undefined}
+                  placeholder="In your own words"
+                  className={`${CONTROL} ${border} h-10 placeholder:text-placeholder`}
+                />
+              )}
             </div>
           )}
         </div>
