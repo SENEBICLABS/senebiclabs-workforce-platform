@@ -168,7 +168,13 @@ export async function adjudicate(decision: {
   idx: number;
   final_label: Record<string, unknown>;
   note: string;
-  decided_by: { clinician_id: string; email: string; credentials?: string };
+  /**
+   * Who decided it, as a single string: HEALTH validates this as one, not as
+   * an object. It is an internal audit line and never reaches a client, so it
+   * carries the address and the id — the address to recognise, the id because
+   * addresses change and it is the thing our own records join on.
+   */
+  decided_by: string;
 }): Promise<void> {
   await call<unknown>(
     "/admin/adjudicate",

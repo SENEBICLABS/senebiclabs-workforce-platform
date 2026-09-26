@@ -206,7 +206,7 @@ export async function POST(
             idx: thisCase.idx,
             final_label: answers,
             note,
-            decided_by: { clinician_id: auth.clinicianId, email: auth.email },
+            decided_by: `${auth.email} (clinician ${auth.clinicianId})`,
           });
         } catch (err) {
           console.error(`[submit] HEALTH refused the adjudication for task ${taskId}`, err);

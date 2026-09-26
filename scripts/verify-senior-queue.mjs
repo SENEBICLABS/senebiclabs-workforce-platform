@@ -238,7 +238,10 @@ check("which matches neither earlier reading",
   EARLIER.every((e) => e.answers.verdict !== sent?.final_label?.verdict));
 check("their reasoning travelled with it", String(sent?.note ?? "").includes("equivocal"), `(${String(sent?.note ?? "").slice(0, 40)})`);
 check("addressed by HEALTH's own index", sent?.idx === 7, `(${sent?.idx})`);
-check("and says who decided it", sent?.decided_by?.clinician_id === people.senior.id);
+check("and says who decided it", String(sent?.decided_by ?? "").includes(people.senior.id),
+  `(${String(sent?.decided_by ?? "").slice(0, 46)})`);
+check("as a single string, which is what HEALTH validates",
+  typeof sent?.decided_by === "string", `(${typeof sent?.decided_by})`);
 
 /* ── 5 & 6 ───────────────────────────────────────────────────────── */
 hr("5. THE PASS IS RECORDED ONCE, AS ITS OWN KIND");
