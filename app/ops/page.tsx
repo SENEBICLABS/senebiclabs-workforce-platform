@@ -76,7 +76,7 @@ interface Clinician {
 interface Pool {
   id: string; name: string; ls_project_id: number; purpose: string;
   review_required: boolean; open_access: boolean; items: number | null;
-  reviewed: number; eligible_clinicians: number;
+  reviewed: number; eligible_clinicians: number; senior_clinicians: number;
 }
 interface Invite {
   id: string; email: string; invited_by: string; sent: string; expires: string | null; expired: boolean;
@@ -93,16 +93,31 @@ const linkedinPath = (url: string) => {
 
 /* ── access picker ───────────────────────────────────────────────── */
 
+type Access = { id: string; email: string; eligible: boolean; senior: boolean };
+
 function AccessPicker({ pool, onClose, onSaved }: { pool: Pool; onClose: () => void; onSaved: () => void }) {
-  const [rows, setRows] = useState<{ id: string; email: string; eligible: boolean }[] | null>(null);
+  const [rows, setRows] = useState<Access[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    ops<{ clinicians: { id: string; email: string; eligible: boolean }[] }>(`/pools/${pool.id}/eligibility`)
+    ops<{ clinicians: Access[] }>(`/pools/${pool.id}/eligibility`)
       .then((d) => setRows(d.clinicians))
       .catch((e) => setError(String(e.message)));
   }, [pool.id]);
+
+  // Seniority without access is a state the server refuses, so the two move
+  // together here: taking a pool away takes the seniority with it.
+  const setRow = (id: string, patch: Partial<Access>) =>
+    setRows((current) =>
+      (current ?? []).map((r) => {
+        if (r.id !== id) return r;
+        const next = { ...r, ...patch };
+        return next.eligible ? next : { ...next, senior: false };
+      })
+    );
+
+  const seniorCount = rows?.filter((r) => r.eligible && r.senior).length ?? 0;
 
   const save = async () => {
     if (!rows) return;
@@ -111,7 +126,10 @@ function AccessPicker({ pool, onClose, onSaved }: { pool: Pool; onClose: () => v
     try {
       await ops(`/pools/${pool.id}/eligibility`, {
         method: "POST",
-        body: JSON.stringify({ clinician_ids: rows.filter((r) => r.eligible).map((r) => r.id) }),
+        body: JSON.stringify({
+          clinician_ids: rows.filter((r) => r.eligible).map((r) => r.id),
+          senior_ids: rows.filter((r) => r.eligible && r.senior).map((r) => r.id),
+        }),
       });
       onSaved();
       onClose();
@@ -130,25 +148,51 @@ function AccessPicker({ pool, onClose, onSaved }: { pool: Pool; onClose: () => v
         <p className="mt-1 text-[14px] text-white">
           {pool.name} — only the clinicians ticked here can see this pool.
         </p>
+        <p className="mt-2 text-[13px] leading-relaxed text-white/70">
+          A senior is offered cases where other clinicians disagreed, ahead of
+          ordinary work, and never a case they read themselves. Seniority
+          applies to this pool only.
+        </p>
 
         <div className="mt-4 max-h-[46vh] space-y-1 overflow-y-auto">
           {!rows && <p className="text-[15px] text-white">Loading…</p>}
           {rows?.map((r) => (
-            <label key={r.id} className="flex cursor-pointer items-center gap-2.5 rounded px-2 py-1.5 hover:bg-white/5">
-              <input type="checkbox" checked={r.eligible}
-                onChange={(e) => setRows(rows.map((x) => (x.id === r.id ? { ...x, eligible: e.target.checked } : x)))}
-                className="h-3.5 w-3.5 accent-[#0E7C74]" />
-              <span className="text-[15px] text-white">{r.email}</span>
-            </label>
+            <div key={r.id} className="flex items-center justify-between gap-3 rounded px-2 py-1.5 hover:bg-white/5">
+              <label className="flex min-w-0 cursor-pointer items-center gap-2.5">
+                <input type="checkbox" checked={r.eligible}
+                  onChange={(e) => setRow(r.id, { eligible: e.target.checked })}
+                  className="h-3.5 w-3.5 accent-[#0E7C74]" />
+                <span className="truncate text-[15px] text-white">{r.email}</span>
+              </label>
+              <label
+                className={`flex shrink-0 items-center gap-1.5 text-[13px] ${
+                  r.eligible ? "cursor-pointer text-white" : "cursor-not-allowed text-white/35"
+                }`}
+                title={r.eligible ? "Settles disagreements in this pool" : "Give them the pool first"}
+              >
+                <input type="checkbox" checked={r.senior} disabled={!r.eligible}
+                  onChange={(e) => setRow(r.id, { senior: e.target.checked })}
+                  className="h-3.5 w-3.5 accent-[#0E7C74]" />
+                Senior
+              </label>
+            </div>
           ))}
           {rows?.length === 0 && <p className="text-[15px] text-white">No clinicians yet.</p>}
         </div>
 
         {error && <p role="alert" className="mt-2 text-[14px] text-[#F2A9A9]">{error}</p>}
 
+        {rows && seniorCount === 0 && rows.some((r) => r.eligible) && (
+          <p className="mt-3 rounded border border-[#F2A9A9]/40 bg-[#F2A9A9]/10 px-3 py-2 text-[13px] leading-relaxed text-[#F2A9A9]">
+            Nobody is senior here. Every disagreement in this pool will wait for
+            an operator to resolve by hand.
+          </p>
+        )}
+
         <div className="mt-4 flex items-center justify-between">
           <span className="text-[14px] text-white">
             {rows?.filter((r) => r.eligible).length ?? 0} of {rows?.length ?? 0} selected
+            {seniorCount > 0 && `, ${seniorCount} senior`}
           </span>
           <div className="flex gap-2">
             <button className={btn} onClick={onClose}>Cancel</button>
@@ -344,7 +388,8 @@ export default function OpsConsole() {
           <thead><tr>
             <th className={head}>Pool</th><th className={head}>Project</th><th className={head}>Purpose</th>
             <th className={head}>Review</th><th className={head}>Items</th><th className={head}>Reviewed</th>
-            <th className={head}>Eligible</th><th className={head}>Access</th><th className={head} />
+            <th className={head}>Eligible</th><th className={head}>Seniors</th>
+            <th className={head}>Access</th><th className={head} />
           </tr></thead>
           <tbody>
             {pools.map((p) => (
@@ -356,6 +401,23 @@ export default function OpsConsole() {
                 <td className={`${cell} font-mono text-white`}>{p.items ?? "—"}</td>
                 <td className={`${cell} font-mono text-white`}>{p.reviewed}</td>
                 <td className={`${cell} font-mono text-white`}>{p.eligible_clinicians}</td>
+                {/*
+                  Worth seeing before work starts, not when a case sticks: a
+                  pool with nobody senior has no way to settle a disagreement
+                  except an operator doing it by hand.
+                */}
+                <td className={cell}>
+                  {p.senior_clinicians > 0 ? (
+                    <span className="font-mono text-white">{p.senior_clinicians}</span>
+                  ) : (
+                    <span
+                      className="font-mono text-[#F2A9A9]"
+                      title="No senior clinician: every disagreement here falls back to an operator"
+                    >
+                      none
+                    </span>
+                  )}
+                </td>
                 <td className={cell}>
                   <Toggle on={p.open_access} busy={busy === p.id} labels={["Open", "Closed"]}
                     onClick={() => act(p.id,

@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
           .select("id, name, ls_project_id, eval_config, open_access, maximum_annotations")
           .order("name"),
         supabaseAdmin.from("task_completions").select("pool_id").in("kind", READINGS_ONLY),
-        supabaseAdmin.from("pool_eligibility").select("pool_id, eligible"),
+        supabaseAdmin.from("pool_eligibility").select("pool_id, eligible, senior"),
       ]);
 
     const reviewed = new Map<string, number>();
@@ -26,9 +26,16 @@ export async function GET(req: NextRequest) {
       reviewed.set(row.pool_id, (reviewed.get(row.pool_id) ?? 0) + 1);
     }
     const eligible = new Map<string, number>();
+    // Counted separately, because a pool with nobody senior is a pool whose
+    // every disagreement falls back to an operator. That is worth an operator
+    // seeing before work starts rather than discovering when a case sticks.
+    const seniors = new Map<string, number>();
     for (const row of eligibility ?? []) {
       if (row.eligible === false) continue;
       eligible.set(row.pool_id, (eligible.get(row.pool_id) ?? 0) + 1);
+      if (row.senior === true) {
+        seniors.set(row.pool_id, (seniors.get(row.pool_id) ?? 0) + 1);
+      }
     }
 
     const rows = await Promise.all(
@@ -56,6 +63,7 @@ export async function GET(req: NextRequest) {
           items,
           reviewed: reviewed.get(p.id) ?? 0,
           eligible_clinicians: eligible.get(p.id) ?? 0,
+          senior_clinicians: seniors.get(p.id) ?? 0,
         };
       })
     );
