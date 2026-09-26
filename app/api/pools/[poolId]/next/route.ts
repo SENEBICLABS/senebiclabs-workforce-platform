@@ -67,21 +67,46 @@ export async function GET(
 
     if (pool.senior) {
       if (held.length > 0) {
-        // Cases another senior has already settled. HEALTH drops them from the
-        // held list when it records a decision, but that list is cached for a
-        // few seconds, and doing work that will be refused on submit is worse
-        // than one extra query.
-        const { data: settled } = await supabaseAdmin
-          .from("task_completions")
-          .select("ls_task_id")
-          .eq("pool_id", pool.id)
-          .eq("kind", "adjudication");
-        const decided = new Set((settled ?? []).map((r) => r.ls_task_id));
+        const heldIds = held.map((c) => c.ls_task_id);
 
-        // `seen` already holds every pass this clinician has made, so a senior
-        // who was one of the two readers is not offered their own disagreement.
+        // Two exclusions, both asked by case rather than by pool.
+        //
+        // A senior must never settle a disagreement they are part of, and the
+        // only record of who read what is this table: HEALTH sends the earlier
+        // answers with no author, deliberately, so it cannot be asked and must
+        // not be inferred. `seen` above answers nearly the same question, but
+        // it is scoped to this pool, and a case is a case whichever pool row
+        // served it — two pool rows can point at one Label Studio project. The
+        // database already takes that view: claim_task_slot matches on
+        // (clinician, task) with no pool in it, and one adjudication per case
+        // is unique on the task alone. Serving should agree with the rules it
+        // will be judged by.
+        const [{ data: settled }, { data: alreadyRead }] = await Promise.all([
+          supabaseAdmin
+            .from("task_completions")
+            .select("ls_task_id")
+            .eq("kind", "adjudication")
+            .in("ls_task_id", heldIds),
+          supabaseAdmin
+            .from("task_completions")
+            .select("ls_task_id")
+            .eq("clinician_id", auth.clinicianId)
+            .in("ls_task_id", heldIds),
+        ]);
+
+        const decided = new Set((settled ?? []).map((r) => r.ls_task_id));
+        const theirs = new Set((alreadyRead ?? []).map((r) => r.ls_task_id));
+
+        // Nothing left for this senior is a resting state, not a failure. A
+        // case whose every senior has already read it stays held, and an
+        // operator settles it through HEALTH's own review path. That is the
+        // intended floor: better a case waits for a person who has not already
+        // formed a view than be decided by one who has.
         const mine = held.find(
-          (c) => !seen.has(c.ls_task_id) && !decided.has(c.ls_task_id)
+          (c) =>
+            !seen.has(c.ls_task_id) &&
+            !theirs.has(c.ls_task_id) &&
+            !decided.has(c.ls_task_id)
         );
 
         if (mine) {

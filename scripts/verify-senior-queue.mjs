@@ -18,6 +18,8 @@
  *
  * What it proves:
  *
+ *   0. A senior who already read the case is not offered it, even when their
+ *      reading was recorded under a different pool over the same project.
  *   1. A clinician who is not senior is never offered a held case.
  *   2. A senior is offered it ahead of unclaimed work.
  *   3. The payload carries the earlier readings and no author.
@@ -94,9 +96,27 @@ const [pool] = await (await q("pools", {
   }),
 })).json();
 
+// A second pool over the same Label Studio project. A case is one case
+// whichever pool row served it, and this is what proves the exclusion is not
+// quietly scoped to a pool.
+const [poolB] = await (await q("pools", {
+  method: "POST",
+  headers: { ...H, Prefer: "return=representation" },
+  body: JSON.stringify({
+    name: `TEMP — senior queue B ${stamp}`,
+    ls_project_id: PROJECT,
+    open_access: false,
+    maximum_annotations: 3,
+    calibration_items: 0,
+    eval_config: { purpose: "evaluate", schema: { fields: {} } },
+  }),
+})).json();
+
 const people = {};
-for (const [tag, senior] of [["ordinary", false], ["senior", true]]) {
-  const email = `godwinyampoi449+sq${tag}${stamp}@gmail.com`;
+for (const [tag, senior] of [["ordinary", false], ["senior", true], ["seniorWhoRead", true]]) {
+  // Addresses are lowercase at rest — there is a check constraint saying so,
+  // and the gate normalises to match. The tag keeps its shape for the name.
+  const email = `godwinyampoi449+sq${tag.toLowerCase()}${stamp}@gmail.com`;
   const [c] = await (await q("clinicians", {
     method: "POST", headers: { ...H, Prefer: "return=representation" },
     body: JSON.stringify({ email, name: `sq-${tag}`, access_code: Math.random().toString(36).slice(2, 10).toUpperCase(), active: true }),
@@ -112,7 +132,8 @@ for (const [tag, senior] of [["ordinary", false], ["senior", true]]) {
   };
 }
 console.log(`  pool "${pool.name}" over LS project ${PROJECT}`);
-console.log(`  one ordinary clinician, one senior`);
+console.log(`  a second pool over the same project, for the cross-pool check`);
+console.log(`  one ordinary clinician, one senior, one senior who already read the case`);
 
 // Pick a real task from the project and tell the stub it is held.
 const listing = await LS(`/api/tasks/?project=${PROJECT}&page_size=5`);
@@ -134,6 +155,20 @@ await fetch(`${STUB}/__held`, {
   }),
 });
 console.log(`  stub is holding task ${HELD_TASK}, with two disagreeing readings`);
+
+// This senior read the held case already — under the other pool, which is the
+// part that would slip past a pool-scoped check.
+await q("task_completions", {
+  method: "POST",
+  body: JSON.stringify({
+    clinician_id: people.seniorWhoRead.id,
+    pool_id: poolB.id,
+    ls_task_id: HELD_TASK,
+    kind: "judgement",
+    annotation_data: { verdict: "Correct" },
+  }),
+});
+console.log(`  the third clinician's reading of task ${HELD_TASK} is recorded under the other pool`);
 
 const annotationsOn = async (taskId) =>
   ((await LS(`/api/tasks/${taskId}/`)).annotations ?? []).length;
@@ -166,6 +201,24 @@ for (const word of ["clinician_id", "email", "reviewer_id", "author_id"]) {
 check("the rubric is there as usual", Boolean(offered.eval_config?.instructions));
 
 /* ── 4 ───────────────────────────────────────────────────────────── */
+hr("3b. A SENIOR WHO ALREADY READ THE CASE IS NOT OFFERED IT");
+const partisan = await people.seniorWhoRead.call(`/api/pools/${pool.id}/next`);
+const partisanBody = partisan.status === 204 ? {} : await partisan.json();
+console.log(`  offered: HTTP ${partisan.status} phase=${partisanBody.phase} task=${partisanBody.task_id}`);
+check("not their own disagreement", partisanBody.task_id !== HELD_TASK, `(got ${partisanBody.task_id})`);
+check("and not the adjudicate phase", partisanBody.phase !== "adjudicate", `(${partisanBody.phase})`);
+check(
+  "their reading was under another pool, so a pool-scoped check would have missed it",
+  (await qj(`task_completions?clinician_id=eq.${people.seniorWhoRead.id}&ls_task_id=eq.${HELD_TASK}&select=pool_id`))[0]?.pool_id === poolB.id
+);
+// It stays held rather than being consumed or closed: a senior who has not
+// read it is still offered it. With no such senior left, this is where the
+// case waits for an operator, which is the intended floor rather than a gap.
+const stillOffered = await (await people.senior.call(`/api/pools/${pool.id}/next`)).json();
+check("the case is still waiting for a senior who has not read it",
+  stillOffered.task_id === HELD_TASK && stillOffered.phase === "adjudicate",
+  `(${stillOffered.phase} ${stillOffered.task_id})`);
+
 hr("4. A DECISION AGREEING WITH NEITHER READING STILL STANDS");
 const DECISION = { verdict: "Partial", rationale: "Both readings overstate their case; the result is equivocal and needs repeating." };
 const submitted = await people.senior.call(`/api/tasks/${HELD_TASK}/submit`, {
@@ -214,6 +267,7 @@ for (const who of Object.values(people)) {
   await q(`clinicians?id=eq.${who.id}`, { method: "DELETE" });
 }
 await q(`pools?id=eq.${pool.id}`, { method: "DELETE" });
+await q(`pools?id=eq.${poolB.id}`, { method: "DELETE" });
 const pools = await qj("pools?select=name&order=name");
 console.log(`  probe pool removed: ${!pools.some((p) => p.name.includes(stamp))}`);
 console.log(`  pools remaining: ${pools.map((p) => p.name.slice(0, 34)).join(" | ")}`);
