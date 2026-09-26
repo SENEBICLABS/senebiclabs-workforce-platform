@@ -61,9 +61,11 @@ export async function GET(
     // reason review is served ahead of authoring. Only a senior: to everyone
     // else a held case is simply not on offer, and asking for one directly is
     // refused the same way any other ineligible case is.
-    if (pool.senior) {
-      const held = await heldCases(pool.lsProjectId);
+    // Asked for once, used two ways: a senior is offered a held case, and
+    // nobody else is offered it at all.
+    const held = await heldCases(pool.lsProjectId);
 
+    if (pool.senior) {
       if (held.length > 0) {
         // Cases another senior has already settled. HEALTH drops them from the
         // held list when it records a decision, but that list is cached for a
@@ -117,6 +119,21 @@ export async function GET(
         }
       }
     }
+
+    // A held case is not ordinary work, so it is not offered as ordinary work.
+    //
+    // Prioritising it for seniors was not enough on its own: a case is held
+    // because its readings disagree, which is usually also the point at which
+    // it has reached its ceiling and stops being offered anyway. That is a
+    // coincidence, not a rule — a pool commissioning three readings holds a
+    // disagreement at two — and where it does not hold, an ordinary clinician
+    // was served the disagreement as fresh work and their reading was pulled in
+    // as a third, muddying the very split a senior was about to settle.
+    //
+    // If HEALTH cannot be reached this list is empty and the ceiling is the
+    // only protection left, which is the same position the platform was in
+    // before any of this existed.
+    for (const c of held) seen.add(c.ls_task_id);
 
     // Written work is authored once and approved once. Reviewing is served
     // ahead of authoring, so finished drafts do not queue up behind new ones.

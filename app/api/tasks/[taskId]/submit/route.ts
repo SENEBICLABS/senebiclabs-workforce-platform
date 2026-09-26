@@ -96,13 +96,36 @@ export async function POST(
     // this same case, and a flag is not a submitted review. Without the filter
     // a flagged case would answer "you have already reviewed this" to someone
     // who never judged it.
-    const { data: existing } = await supabaseAdmin
-      .from("task_completions")
-      .select("id")
-      .eq("clinician_id", auth.clinicianId)
-      .eq("ls_task_id", taskId)
-      .eq("kind", passKind)
-      .maybeSingle();
+    const [{ data: existing }, { data: alreadySettled }] = await Promise.all([
+      supabaseAdmin
+        .from("task_completions")
+        .select("id")
+        .eq("clinician_id", auth.clinicianId)
+        .eq("ls_task_id", taskId)
+        .eq("kind", passKind)
+        .maybeSingle(),
+      // Has a senior already settled this case?
+      //
+      // Once they have, no further answer belongs on it from anyone. Without
+      // this the senior who settled it could submit again, find the case no
+      // longer held — they had just removed it from the held list — and fall
+      // through to the ordinary path, writing the third annotation the whole
+      // design exists to avoid. A late submission from either original reader
+      // would do the same.
+      supabaseAdmin
+        .from("task_completions")
+        .select("id")
+        .eq("ls_task_id", taskId)
+        .eq("kind", "adjudication")
+        .maybeSingle(),
+    ]);
+
+    if (alreadySettled) {
+      return NextResponse.json(
+        { error: "This case has already been settled by a senior clinician." },
+        { status: 409 }
+      );
+    }
 
     if (existing) {
       return NextResponse.json(
