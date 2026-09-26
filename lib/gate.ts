@@ -17,6 +17,16 @@ export interface GatedPool {
   lsProjectId: number;
   maxAnnotations: number | null;
   evalConfig: Record<string, unknown> | null;
+  /**
+   * Whether this clinician settles disagreements in this pool.
+   *
+   * It rides along with eligibility because it is the same row and the same
+   * round trip, and because every place that asks "may they have this pool"
+   * is also a place that may need to ask "and do they decide here". Read from
+   * the database on every request, like eligibility itself, so revoking it is
+   * a row change rather than a deploy.
+   */
+  senior: boolean;
 }
 
 export const FORBIDDEN = () =>
@@ -43,7 +53,7 @@ export async function requireEligiblePool(
   const { data } = await supabaseAdmin
     .from("pool_eligibility")
     .select(
-      "pools!inner(id, name, ls_project_id, eval_config, maximum_annotations)"
+      "senior, pools!inner(id, name, ls_project_id, eval_config, maximum_annotations)"
     )
     .eq("clinician_id", clinicianId)
     .eq("pool_id", poolId)
@@ -59,6 +69,7 @@ export async function requireEligiblePool(
     lsProjectId: Number(pool.ls_project_id),
     maxAnnotations: (pool.maximum_annotations as number | null) ?? null,
     evalConfig: (pool.eval_config as Record<string, unknown> | null) ?? null,
+    senior: (data as unknown as { senior?: boolean })?.senior === true,
   };
 }
 
@@ -75,21 +86,23 @@ export async function requireEligiblePoolForTask(
 ): Promise<GatedPool | null> {
   const { data: rows } = await supabaseAdmin
     .from("pool_eligibility")
-    .select("pool_id, pools!inner(id, name, ls_project_id, eval_config, maximum_annotations)")
+    .select("pool_id, senior, pools!inner(id, name, ls_project_id, eval_config, maximum_annotations)")
     .eq("clinician_id", clinicianId)
     .eq("eligible", true);
 
   const match = (rows ?? [])
-    .map((row) => (row as unknown as { pools: Record<string, unknown> }).pools)
-    .find((pool) => pool && Number(pool.ls_project_id) === projectId);
+    .map((row) => row as unknown as { senior?: boolean; pools: Record<string, unknown> })
+    .find((row) => row.pools && Number(row.pools.ls_project_id) === projectId);
 
   if (!match) return null;
 
+  const pool = match.pools;
   return {
-    id: String(match.id),
-    name: String(match.name),
-    lsProjectId: Number(match.ls_project_id),
-    maxAnnotations: (match.maximum_annotations as number | null) ?? null,
-    evalConfig: (match.eval_config as Record<string, unknown> | null) ?? null,
+    id: String(pool.id),
+    name: String(pool.name),
+    lsProjectId: Number(pool.ls_project_id),
+    maxAnnotations: (pool.maximum_annotations as number | null) ?? null,
+    evalConfig: (pool.eval_config as Record<string, unknown> | null) ?? null,
+    senior: match.senior === true,
   };
 }

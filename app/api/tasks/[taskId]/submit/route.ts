@@ -19,6 +19,7 @@ import {
 } from "@/lib/eval-config";
 import { recordAuthored, reviewRequired } from "@/lib/review";
 import { READINGS_ONLY, recordPass } from "@/lib/completions";
+import { adjudicate, forgetHeld, heldCases } from "@/lib/health";
 
 export const dynamic = "force-dynamic";
 
@@ -125,6 +126,92 @@ export async function POST(
         { error: "Complete at least one field before submitting." },
         { status: 422 }
       );
+    }
+
+    // A senior settling a disagreement.
+    //
+    // Whether this is an adjudication is decided here, not by the client: they
+    // are senior for this pool and HEALTH is holding this case. A client saying
+    // so would be a way to write a final answer over two readings it disagreed
+    // with, so the claim is re-derived from the same two sources the queue used
+    // to offer it.
+    //
+    // Nothing is written to Label Studio. A third annotation would be pulled
+    // back as a third reading and re-open the very disagreement this settles,
+    // so the decision goes to HEALTH as the case's final answer instead.
+    if (pool.senior) {
+      const held = await heldCases(pool.lsProjectId);
+      const thisCase = held.find((c) => c.ls_task_id === taskId);
+
+      if (thisCase) {
+        // The row first, HEALTH second. The unique index allows one
+        // adjudication per case, so two seniors submitting together resolve
+        // here: the loser is told, before either has told HEALTH anything. The
+        // cost of this order is that a failed call can leave a row with no
+        // decision behind it, which is why the row is removed when that
+        // happens — the opposite order could leave a case decided twice.
+        const claimed = await recordPass({
+          clinicianId: auth.clinicianId,
+          poolId: pool.id,
+          taskId,
+          kind: "adjudication",
+          data: answers,
+        });
+
+        if (claimed.duplicate) {
+          return NextResponse.json(
+            { error: "Another senior clinician has already settled this case." },
+            { status: 409 }
+          );
+        }
+        if (!claimed.ok) {
+          return NextResponse.json(
+            { error: "We could not record your decision. Your answers are still here." },
+            { status: 500 }
+          );
+        }
+
+        // Their reasoning travels with the decision. It is the written field
+        // they have already filled in for this pool rather than a second box
+        // asking the same thing twice.
+        const written = config.fields.find((f) => f.type === "text");
+        const note = written ? String(answers[written.name] ?? "") : "";
+
+        try {
+          await adjudicate({
+            project_id: thisCase.project_id,
+            idx: thisCase.idx,
+            final_label: answers,
+            note,
+            decided_by: { clinician_id: auth.clinicianId, email: auth.email },
+          });
+        } catch (err) {
+          console.error(`[submit] HEALTH refused the adjudication for task ${taskId}`, err);
+          // Undo the claim, or this senior is recorded for a decision nobody
+          // received and the case stays held with no way back in.
+          await supabaseAdmin
+            .from("task_completions")
+            .delete()
+            .eq("clinician_id", auth.clinicianId)
+            .eq("ls_task_id", taskId)
+            .eq("kind", "adjudication");
+
+          return NextResponse.json(
+            { error: "We could not record your decision just now. Your answers are still here — try again in a moment." },
+            { status: 502 }
+          );
+        }
+
+        // Settled: stop offering it to the next senior who asks.
+        forgetHeld(pool.lsProjectId);
+
+        return NextResponse.json({
+          recorded: true,
+          phase: "adjudicate",
+          settled: true,
+          next: await nextTaskFor(auth.clinicianId, pool, raw),
+        });
+      }
     }
 
     // Written work is not published on submission. The draft is held until a

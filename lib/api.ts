@@ -56,12 +56,25 @@ export interface Field {
 
 export type ReviewAction = "approve" | "edit" | "reject";
 
+/** One earlier reading of a held case, as HEALTH hands it over: never an author. */
+export interface EarlierAnswer {
+  answers?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
 export interface Task {
-  /** "author" and "review" are the two phases of written work. */
-  phase?: "single" | "author" | "review";
+  /**
+   * "author" and "review" are the two phases of written work.
+   * "adjudicate" is a senior settling a case two clinicians read differently.
+   */
+  phase?: "single" | "author" | "review" | "adjudicate";
   /** Present in the review phase: what the author wrote. */
   authored?: Record<string, unknown> | null;
   revision?: number;
+  /** Present in the adjudicate phase: the earlier readings, with no authors. */
+  earlier_answers?: EarlierAnswer[];
+  /** How far apart the earlier readings were, where HEALTH reports it. */
+  agreement?: number | null;
   task_id: number;
   pool: { id: string; name: string; purpose: Purpose };
   case_id: string | null;
@@ -149,7 +162,12 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 /** One pass over a case: the unit of work the platform records. */
-export type PassKind = "judgement" | "flag" | "authoring" | "review";
+export type PassKind =
+  | "judgement"
+  | "flag"
+  | "authoring"
+  | "review"
+  | "adjudication";
 
 export interface WorkRecord {
   total: number;

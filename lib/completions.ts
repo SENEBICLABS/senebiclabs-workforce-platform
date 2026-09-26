@@ -4,13 +4,14 @@ import { supabaseAdmin } from "./supabase";
 /**
  * The record of work done, one row per pass.
  *
- * A clinician can make four kinds of pass over a case, and every one of them is
+ * A clinician can make five kinds of pass over a case, and every one of them is
  * work somebody should be paid for:
  *
- *   judgement  read the case and the model's answer, and assess it
- *   flag       read the case and say, honestly, that you cannot judge it
- *   authoring  write the answer a clinician should receive
- *   review     read a colleague's draft and approve, edit or send it back
+ *   judgement     read the case and the model's answer, and assess it
+ *   flag          read the case and say, honestly, that you cannot judge it
+ *   authoring     write the answer a clinician should receive
+ *   review        read a colleague's draft and approve, edit or send it back
+ *   adjudication  settle a case two clinicians read differently
  *
  * Only the first, third and fourth used to leave a row. Flagging left nothing,
  * so the one pass that depends entirely on a clinician's honesty was the one
@@ -21,7 +22,13 @@ import { supabaseAdmin } from "./supabase";
  * is a decision taken later and applied to these rows.
  */
 
-export const PASS_KINDS = ["judgement", "flag", "authoring", "review"] as const;
+export const PASS_KINDS = [
+  "judgement",
+  "flag",
+  "authoring",
+  "review",
+  "adjudication",
+] as const;
 export type PassKind = (typeof PASS_KINDS)[number];
 
 /**
@@ -32,6 +39,15 @@ export type PassKind = (typeof PASS_KINDS)[number];
  * not a reading: counting it would tell a clinician they had reviewed cases
  * they had explicitly declined to judge, and would tell a client a case had
  * been read when it had not.
+ *
+ * An adjudication is left out for a different reason. It is certainly a reading
+ * — a senior reads the case and decides it — but it is a second pass over a
+ * case already read to its ceiling, and every consumer of this list treats one
+ * entry as one case read once. Counting it would make a pool look further
+ * through than it is, and would show reconcile a completion with no Label
+ * Studio annotation behind it, because a senior's decision goes to HEALTH
+ * rather than to Label Studio. It is counted as its own kind on the work
+ * record, which is where a clinician looks for what they are owed.
  */
 export const READING_KINDS: PassKind[] = ["judgement", "authoring", "review"];
 

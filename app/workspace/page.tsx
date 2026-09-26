@@ -12,6 +12,7 @@ import { PurposeBadge } from "@/components/ui/Pill";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/States";
 import { ApiError, NO_CONTENT, api, type ReviewAction, type Task } from "@/lib/api";
 import { ReviewPanel } from "@/components/ReviewPanel";
+import { EarlierAnswers } from "@/components/EarlierAnswers";
 
 /** Answers survive a refresh. Only answers — never the session. */
 const draftKey = (taskId: number) => `senebiclabs:draft:${taskId}`;
@@ -268,7 +269,7 @@ function Workspace() {
       const { next } = await api.submit(submittedId, answers);
       clearDraft(submittedId);
       countReview();
-      showToast("Review submitted");
+      showToast(task.phase === "adjudicate" ? "Decision recorded" : "Review submitted");
       adopt(next);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
@@ -445,6 +446,14 @@ function Workspace() {
             </Card>
           ))}
 
+          {task.phase === "adjudicate" && (
+            <EarlierAnswers
+              readings={task.earlier_answers ?? []}
+              fields={task.eval_config.fields}
+              agreement={task.agreement}
+            />
+          )}
+
           {task.phase === "review" ? (
             // Keyed by case. The panel keeps the edited text, the send-back
             // reason and which mode it is in inside its own state, and it sits
@@ -466,11 +475,13 @@ function Workspace() {
             />
           ) : (
           <Card className="p-5">
-            <h2 className="text-section text-ink">Your assessment</h2>
+            <h2 className="text-section text-ink">
+              {task.phase === "adjudicate" ? "Your decision" : "Your assessment"}
+            </h2>
             <p className="mt-1 text-body text-muted">
-              {visibleFields.length}{" "}
-              {visibleFields.length === 1 ? "field" : "fields"}. Your answers are
-              kept if you step away.
+              {task.phase === "adjudicate"
+                ? "This settles the case. Your answer is recorded as the final one, and your reasoning is kept with it."
+                : `${visibleFields.length} ${visibleFields.length === 1 ? "field" : "fields"}. Your answers are kept if you step away.`}
             </p>
 
             {missing.length > 0 && (
@@ -583,7 +594,7 @@ function Workspace() {
               </Button>
             )}
             <Button onClick={submit} loading={busy}>
-              Submit review
+              {task.phase === "adjudicate" ? "Submit decision" : "Submit review"}
             </Button>
           </div>
         </div>

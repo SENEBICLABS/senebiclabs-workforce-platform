@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { READINGS_ONLY } from "@/lib/completions";
 import { FORBIDDEN, requireEligiblePool } from "@/lib/gate";
 import { findNextTask, getTask } from "@/lib/labelstudio";
+import { heldCases } from "@/lib/health";
 import {
   claimedTaskIds,
   itemsAwaitingReview,
@@ -54,6 +55,68 @@ export async function GET(
     ).length;
 
     const raw0 = pool.evalConfig as RawEvalConfig | null;
+
+    // A disagreement waiting on a decision is the most valuable thing in the
+    // pool, so a senior is offered it before anything unclaimed — the same
+    // reason review is served ahead of authoring. Only a senior: to everyone
+    // else a held case is simply not on offer, and asking for one directly is
+    // refused the same way any other ineligible case is.
+    if (pool.senior) {
+      const held = await heldCases(pool.lsProjectId);
+
+      if (held.length > 0) {
+        // Cases another senior has already settled. HEALTH drops them from the
+        // held list when it records a decision, but that list is cached for a
+        // few seconds, and doing work that will be refused on submit is worse
+        // than one extra query.
+        const { data: settled } = await supabaseAdmin
+          .from("task_completions")
+          .select("ls_task_id")
+          .eq("pool_id", pool.id)
+          .eq("kind", "adjudication");
+        const decided = new Set((settled ?? []).map((r) => r.ls_task_id));
+
+        // `seen` already holds every pass this clinician has made, so a senior
+        // who was one of the two readers is not offered their own disagreement.
+        const mine = held.find(
+          (c) => !seen.has(c.ls_task_id) && !decided.has(c.ls_task_id)
+        );
+
+        if (mine) {
+          let lsTask;
+          try {
+            lsTask = await getTask(mine.ls_task_id);
+          } catch (err) {
+            console.error(`[next] LS unreachable for held case ${mine.ls_task_id}`, err);
+            return NextResponse.json(
+              { error: "We could not reach the case store. Try again in a moment." },
+              { status: 502 }
+            );
+          }
+
+          const cfg = normalizeConfig(raw0);
+          const d = (lsTask.data ?? {}) as Record<string, unknown>;
+          return NextResponse.json({
+            phase: "adjudicate",
+            task_id: mine.ls_task_id,
+            pool: { id: pool.id, name: pool.name, purpose: cfg.purpose },
+            case_id: caseIdFor(raw0, d),
+            context: buildContext(raw0, d),
+            eval_config: {
+              instructions: cfg.instructions,
+              fields: cfg.fields,
+              classes: cfg.classes,
+            },
+            // What the earlier readers decided, and why. HEALTH sends these
+            // without an author and they are passed on as they arrived: a
+            // senior weighs the reasoning, never the person.
+            earlier_answers: mine.earlier_answers ?? [],
+            agreement: mine.agreement ?? null,
+            already_reviewed_count: readings,
+          });
+        }
+      }
+    }
 
     // Written work is authored once and approved once. Reviewing is served
     // ahead of authoring, so finished drafts do not queue up behind new ones.
