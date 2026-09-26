@@ -24,10 +24,16 @@ import "server-only";
  *                judgement they will think they made.
  */
 
-const BASE = process.env.HEALTH_API_URL?.replace(/\/+$/, "");
+/**
+ * Where HEALTH's project API lives, including the version and the /project
+ * segment: the endpoints hang directly off it as /admin/held/{id} and
+ * /admin/adjudicate. Keeping the whole prefix in one variable means a version
+ * bump on their side is an environment change rather than a deploy on ours.
+ */
+const BASE = process.env.HEALTH_API_BASE?.replace(/\/+$/, "");
 const KEY = process.env.HEALTH_ADMIN_KEY;
 /** Which header carries the key. Configurable so HEALTH can change it without a deploy. */
-const KEY_HEADER = process.env.HEALTH_KEY_HEADER || "x-ops-key";
+const KEY_HEADER = process.env.HEALTH_KEY_HEADER || "X-Admin-Key";
 
 /** Short, because a senior asking for work should not wait on another service. */
 const HELD_TIMEOUT_MS = 4_000;
@@ -132,7 +138,7 @@ export async function heldCases(projectId: number): Promise<HeldCase[]> {
 
   try {
     const body = await call<{ held?: HeldCase[] }>(
-      `/api/v1/project/admin/held/${projectId}`,
+      `/admin/held/${projectId}`,
       { method: "GET" },
       HELD_TIMEOUT_MS
     );
@@ -165,7 +171,7 @@ export async function adjudicate(decision: {
   decided_by: { clinician_id: string; email: string; credentials?: string };
 }): Promise<void> {
   await call<unknown>(
-    "/api/v1/project/admin/adjudicate",
+    "/admin/adjudicate",
     { method: "POST", body: JSON.stringify(decision) },
     WRITE_TIMEOUT_MS
   );
