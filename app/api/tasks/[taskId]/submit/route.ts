@@ -20,6 +20,7 @@ import {
 import { recordAuthored, reviewRequired } from "@/lib/review";
 import { READINGS_ONLY, recordPass } from "@/lib/completions";
 import { adjudicate, forgetHeld, heldCases } from "@/lib/health";
+import { summariseDecision } from "@/lib/adjudication";
 
 export const dynamic = "force-dynamic";
 
@@ -162,6 +163,11 @@ export async function POST(
     // Nothing is written to Label Studio. A third annotation would be pulled
     // back as a third reading and re-open the very disagreement this settles,
     // so the decision goes to HEALTH as the case's final answer instead.
+    //
+    // The senior was never shown the earlier readings. They judged the case as
+    // their own work, and the comparison below happens after the fact, so a
+    // third independent judgement is what HEALTH receives rather than a
+    // refereed one.
     if (pool.senior) {
       const held = await heldCases(pool.lsProjectId);
       const thisCase = held.find((c) => c.ls_task_id === taskId);
@@ -194,11 +200,23 @@ export async function POST(
           );
         }
 
-        // Their reasoning travels with the decision. It is the written field
-        // they have already filled in for this pool rather than a second box
-        // asking the same thing twice.
+        // Compared here, never rendered. Whether their answer happened to
+        // match an earlier one changes nothing about the outcome — their
+        // answer is final either way — but it is the difference between "two
+        // of three agreed" and "all three differed", and those are the facts
+        // that keep the agreement figures worth reading.
+        const decision = summariseDecision({
+          config,
+          raw,
+          answers,
+          earlier: thisCase.earlier_answers ?? [],
+        });
+
+        // Their own reasoning rides along with it, from the written field they
+        // have already filled in rather than a second box asking again.
         const written = config.fields.find((f) => f.type === "text");
-        const note = written ? String(answers[written.name] ?? "") : "";
+        const reasoning = written ? String(answers[written.name] ?? "").trim() : "";
+        const note = reasoning ? `${decision.note}\n\n${reasoning}` : decision.note;
 
         try {
           await adjudicate({
@@ -228,10 +246,10 @@ export async function POST(
         // Settled: stop offering it to the next senior who asks.
         forgetHeld(pool.lsProjectId);
 
+        // Answered as an ordinary submission would be. The senior need not
+        // know this case was contested, and nothing here tells them.
         return NextResponse.json({
           recorded: true,
-          phase: "adjudicate",
-          settled: true,
           next: await nextTaskFor(auth.clinicianId, pool, raw),
         });
       }

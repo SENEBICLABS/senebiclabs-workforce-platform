@@ -2,31 +2,30 @@
  * Evidence for the senior review queue, against a stand-in for HEALTH.
  *
  *   node scripts/stub-health.mjs &                  # on 3457
- *   HEALTH_API_URL=http://localhost:3457 \
- *   HEALTH_ADMIN_KEY=stub-key npx next start -p 3000 &
+ *   HEALTH_API_BASE=http://localhost:3457/api/v1/project \
+ *   HEALTH_ADMIN_KEY=stub-key HEALTH_KEY_HEADER=X-Admin-Key \
+ *     npx next start -p 3000 &
  *   node scripts/verify-senior-queue.mjs
  *
- * What is being tested here is this platform's behaviour, not HEALTH's, so a
- * stub is the right counterparty: it lets the whole path run — the queue, the
- * gate, the payload a senior receives, the decision that goes back — without a
- * credential for the real service and without writing a real final answer over
- * a real client's case.
+ * What is being tested is this platform's behaviour, not HEALTH's, so a stub is
+ * the right counterparty: the whole path runs — the queue, the gate, what a
+ * senior is shown, what goes back — without a credential for the real service
+ * and without settling a real client's case.
  *
  * Nothing reaches Label Studio. A senior's decision deliberately never writes
- * an annotation, so this can run against the live project's tasks: it reads
- * them to render the case and writes nothing back.
+ * an annotation, so this runs against the live project's tasks: it reads them
+ * to render the case and writes nothing back.
  *
  * What it proves:
  *
- *   0. A senior who already read the case is not offered it, even when their
+ *   1. A senior who already read the case is not offered it, even when their
  *      reading was recorded under a different pool over the same project.
- *   1. A clinician who is not senior is never offered a held case.
- *   2. A senior is offered it ahead of unclaimed work.
- *   3. The payload carries the earlier readings and no author.
- *   4. A decision that agrees with neither earlier reading still stands, and
- *      reaches HEALTH with the senior's reasoning.
- *   5. The pass is recorded once, as its own kind.
- *   6. Nothing is written to Label Studio.
+ *   2. A clinician who is not senior is never offered a held case.
+ *   3. A senior is offered it ahead of unclaimed work, and cannot tell: the
+ *      payload is an ordinary case, carrying none of the earlier readings.
+ *   4. Agreeing with an earlier reading is recorded as a majority.
+ *   5. Agreeing with neither is recorded as the senior's answer standing.
+ *   6. The pass is recorded once, and nothing reaches Label Studio.
  */
 import { sessionFor } from "./session-for.mjs";
 import { loadEnv } from "./sandbox.mjs";
@@ -54,7 +53,6 @@ const check = (label, pass, detail = "") => {
   console.log(`  ${pass ? "ok  " : "FAIL"}  ${label}${detail ? `  ${detail}` : ""}`);
 };
 
-// The stub has to be up, and the app has to have been started pointing at it.
 try {
   await fetch(`${STUB}/__reset`, { method: "POST" });
 } catch {
@@ -68,55 +66,38 @@ const stamp = Date.now().toString().slice(-6);
 /* ── setup ───────────────────────────────────────────────────────── */
 hr("SETUP");
 
-// A pool of our own over the same project, so there is unclaimed work for a
-// held case to be served ahead of. The live pool is read to its ceiling; this
-// one commissions one more reading, which makes its cases claimable again
-// without touching the live pool's configuration.
-const [pool] = await (await q("pools", {
-  method: "POST",
-  headers: { ...H, Prefer: "return=representation" },
-  body: JSON.stringify({
-    name: `TEMP — senior queue ${stamp}`,
-    ls_project_id: PROJECT,
-    open_access: false,
-    maximum_annotations: 3,
-    calibration_items: 0,
-    eval_config: {
-      purpose: "evaluate",
-      instructions: "Probe pool.",
-      schema: {
-        classes: ["Normal", "Critical"],
-        field_order: ["verdict", "rationale"],
-        fields: {
-          verdict: { type: "single", label: "Verdict", options: ["Correct", "Partial", "Incorrect"], required: true },
-          rationale: { type: "text", label: "Why you judged it this way", required: true },
-        },
-      },
+const poolConfig = {
+  purpose: "evaluate",
+  instructions: "Probe pool.",
+  schema: {
+    primary_field: "verdict",
+    classes: ["Normal", "Critical"],
+    field_order: ["verdict", "rationale"],
+    fields: {
+      verdict: { type: "single", label: "Verdict", options: ["Correct", "Partial", "Incorrect"], required: true },
+      rationale: { type: "text", label: "Why you judged it this way", required: true },
     },
-  }),
-})).json();
+  },
+};
 
-// A second pool over the same Label Studio project. A case is one case
-// whichever pool row served it, and this is what proves the exclusion is not
-// quietly scoped to a pool.
-const [poolB] = await (await q("pools", {
-  method: "POST",
-  headers: { ...H, Prefer: "return=representation" },
-  body: JSON.stringify({
-    name: `TEMP — senior queue B ${stamp}`,
-    ls_project_id: PROJECT,
-    open_access: false,
-    maximum_annotations: 3,
-    calibration_items: 0,
-    eval_config: { purpose: "evaluate", schema: { fields: {} } },
-  }),
-})).json();
+const makePool = async (name, config = poolConfig) =>
+  (await (await q("pools", {
+    method: "POST",
+    headers: { ...H, Prefer: "return=representation" },
+    body: JSON.stringify({
+      name, ls_project_id: PROJECT, open_access: false,
+      maximum_annotations: 3, calibration_items: 0, eval_config: config,
+    }),
+  })).json())[0];
+
+// Two pools over the same project: one under test, one only to record a
+// reading against, which is what proves the exclusion is not scoped to a pool.
+const pool = await makePool(`TEMP — senior queue ${stamp}`);
+const poolB = await makePool(`TEMP — senior queue B ${stamp}`, { purpose: "evaluate", schema: { fields: {} } });
 
 const people = {};
-for (const [tag, senior] of [["ordinary", false], ["senior", true], ["seniorWhoRead", true]]) {
-  // Addresses are lowercase at rest — there is a check constraint saying so,
-  // and the gate normalises to match. The tag keeps its shape for the name.
-  const email = `godwinyampoi449+sq${tag.toLowerCase()}${stamp}@gmail.com`;
+for (const [tag, senior] of [["ordinary", false], ["senior", true], ["seniorwhoread", true]]) {
+  const email = `godwinyampoi449+sq${tag}${stamp}@gmail.com`;
   const [c] = await (await q("clinicians", {
     method: "POST", headers: { ...H, Prefer: "return=representation" },
     body: JSON.stringify({ email, name: `sq-${tag}`, access_code: Math.random().toString(36).slice(2, 10).toUpperCase(), active: true }),
@@ -131,135 +112,113 @@ for (const [tag, senior] of [["ordinary", false], ["senior", true], ["seniorWhoR
     call: (p, i = {}) => fetch(`${APP}${p}`, { ...i, headers: { Cookie: `sessionToken=${token}`, "Content-Type": "application/json", ...i.headers } }),
   };
 }
-console.log(`  pool "${pool.name}" over LS project ${PROJECT}`);
-console.log(`  a second pool over the same project, for the cross-pool check`);
-console.log(`  one ordinary clinician, one senior, one senior who already read the case`);
 
-// Pick a real task from the project and tell the stub it is held.
-const listing = await LS(`/api/tasks/?project=${PROJECT}&page_size=5`);
+// Two real tasks, told to the stub as held. Two, so both note outcomes can be
+// exercised: one the senior will happen to agree with, one they will not.
+const listing = await LS(`/api/tasks/?project=${PROJECT}&page_size=8`);
 const tasks = Array.isArray(listing) ? listing : (listing.tasks ?? []);
-const HELD_TASK = tasks[0].id;
+const [AGREE_TASK, DIFFER_TASK] = [tasks[0].id, tasks[1].id];
+
+// Flat answer maps, which is the shape HEALTH actually sends.
 const EARLIER = [
-  { answers: { verdict: "Correct", rationale: "Reads as a normal result for this presentation." } },
-  { answers: { verdict: "Incorrect", rationale: "Misses the raised inflammatory markers entirely." } },
+  { verdict: "Partial", rationale: "Incomplete but safe as written." },
+  { verdict: "Correct", rationale: "Reasonable practice for this presentation." },
 ];
 await fetch(`${STUB}/__held`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
+  method: "POST", headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     project: PROJECT,
-    held: [{
-      ls_task_id: HELD_TASK, idx: 7, project_id: PROJECT, case_id: "LAB-07",
-      agreement: 0.5, content: {}, earlier_answers: EARLIER,
-    }],
+    held: [
+      { ls_task_id: AGREE_TASK, idx: 11, project_id: PROJECT, case_id: "SPLIT-AGREE", agreement: 0.5, content: {}, earlier_answers: EARLIER },
+      { ls_task_id: DIFFER_TASK, idx: 12, project_id: PROJECT, case_id: "SPLIT-DIFFER", agreement: 0.5, content: {}, earlier_answers: EARLIER },
+    ],
   }),
 });
-console.log(`  stub is holding task ${HELD_TASK}, with two disagreeing readings`);
 
-// This senior read the held case already — under the other pool, which is the
-// part that would slip past a pool-scoped check.
+// This senior read the first held case already — under the other pool.
 await q("task_completions", {
   method: "POST",
   body: JSON.stringify({
-    clinician_id: people.seniorWhoRead.id,
-    pool_id: poolB.id,
-    ls_task_id: HELD_TASK,
-    kind: "judgement",
-    annotation_data: { verdict: "Correct" },
+    clinician_id: people.seniorwhoread.id, pool_id: poolB.id,
+    ls_task_id: AGREE_TASK, kind: "judgement", annotation_data: { verdict: "Correct" },
   }),
 });
-console.log(`  the third clinician's reading of task ${HELD_TASK} is recorded under the other pool`);
 
-const annotationsOn = async (taskId) =>
-  ((await LS(`/api/tasks/${taskId}/`)).annotations ?? []).length;
-const annotationsBefore = await annotationsOn(HELD_TASK);
+console.log(`  pool "${pool.name}" over LS project ${PROJECT}`);
+console.log(`  held: ${AGREE_TASK} and ${DIFFER_TASK}; one senior has already read ${AGREE_TASK}`);
+
+const annotationsOn = async (id) => ((await LS(`/api/tasks/${id}/`)).annotations ?? []).length;
+const before = { [AGREE_TASK]: await annotationsOn(AGREE_TASK), [DIFFER_TASK]: await annotationsOn(DIFFER_TASK) };
+const sentToHealth = async () => (await (await fetch(`${STUB}/__received`)).json()).adjudications;
 
 /* ── 1 ───────────────────────────────────────────────────────────── */
-hr("1. A CLINICIAN WHO IS NOT SENIOR IS NEVER OFFERED A HELD CASE");
+hr("1. A SENIOR WHO ALREADY READ THE CASE IS NOT OFFERED IT");
+const partisan = await (await people.seniorwhoread.call(`/api/pools/${pool.id}/next`)).json();
+console.log(`  offered: task ${partisan.task_id}`);
+check("not the case they read", partisan.task_id !== AGREE_TASK, `(got ${partisan.task_id})`);
+check("their reading was under another pool, which a pool-scoped check would miss",
+  (await qj(`task_completions?clinician_id=eq.${people.seniorwhoread.id}&ls_task_id=eq.${AGREE_TASK}&select=pool_id`))[0]?.pool_id === poolB.id);
+
+/* ── 2 ───────────────────────────────────────────────────────────── */
+hr("2. A CLINICIAN WHO IS NOT SENIOR IS NEVER OFFERED A HELD CASE");
 const ordinary = await (await people.ordinary.call(`/api/pools/${pool.id}/next`)).json();
-console.log(`  offered: phase=${ordinary.phase} task=${ordinary.task_id}`);
-check("not the held case", ordinary.task_id !== HELD_TASK, `(got ${ordinary.task_id})`);
-check("and not the adjudicate phase", ordinary.phase !== "adjudicate", `(${ordinary.phase})`);
+console.log(`  offered: task ${ordinary.task_id}`);
+check("neither held case", ![AGREE_TASK, DIFFER_TASK].includes(ordinary.task_id), `(got ${ordinary.task_id})`);
 check("they are given ordinary work instead", Boolean(ordinary.task_id));
 
-/* ── 2 & 3 ───────────────────────────────────────────────────────── */
-hr("2. A SENIOR IS OFFERED IT AHEAD OF UNCLAIMED WORK");
+/* ── 3 ───────────────────────────────────────────────────────────── */
+hr("3. THE SENIOR CANNOT TELL THE CASE WAS CONTESTED");
 const offered = await (await people.senior.call(`/api/pools/${pool.id}/next`)).json();
 console.log(`  offered: phase=${offered.phase} task=${offered.task_id} case=${offered.case_id}`);
-check("the held case", offered.task_id === HELD_TASK, `(got ${offered.task_id})`);
-check("in the adjudicate phase", offered.phase === "adjudicate", `(${offered.phase})`);
-check("even though unclaimed work exists", Boolean(ordinary.task_id) && ordinary.task_id !== HELD_TASK);
-
-hr("3. THE PAYLOAD CARRIES THE DISAGREEMENT, AND NO AUTHOR");
-check("both earlier readings are there", (offered.earlier_answers ?? []).length === 2, `(${(offered.earlier_answers ?? []).length})`);
-check("their reasoning too", JSON.stringify(offered.earlier_answers ?? []).includes("inflammatory markers"));
-const blob = JSON.stringify(offered);
-check("no clinician id anywhere in it", !blob.includes(people.ordinary.id) && !blob.includes(people.senior.id));
-for (const word of ["clinician_id", "email", "reviewer_id", "author_id"]) {
-  check(`no "${word}" in the payload`, !blob.includes(word));
+check("a held case, ahead of unclaimed work", [AGREE_TASK, DIFFER_TASK].includes(offered.task_id), `(got ${offered.task_id})`);
+check("served as an ordinary case", offered.phase === "single", `(${offered.phase})`);
+const payload = JSON.stringify(offered);
+check("no earlier answers in the payload", offered.earlier_answers === undefined);
+check("no agreement figure either", offered.agreement === undefined);
+for (const word of ["Incomplete but safe", "Reasonable practice", "adjudicat"]) {
+  check(`nothing about the disagreement: "${word}"`, !payload.includes(word));
 }
+check("no author, as before", !/clinician_id|author_id|reviewer_id/.test(payload));
 check("the rubric is there as usual", Boolean(offered.eval_config?.instructions));
 
 /* ── 4 ───────────────────────────────────────────────────────────── */
-hr("3b. A SENIOR WHO ALREADY READ THE CASE IS NOT OFFERED IT");
-const partisan = await people.seniorWhoRead.call(`/api/pools/${pool.id}/next`);
-const partisanBody = partisan.status === 204 ? {} : await partisan.json();
-console.log(`  offered: HTTP ${partisan.status} phase=${partisanBody.phase} task=${partisanBody.task_id}`);
-check("not their own disagreement", partisanBody.task_id !== HELD_TASK, `(got ${partisanBody.task_id})`);
-check("and not the adjudicate phase", partisanBody.phase !== "adjudicate", `(${partisanBody.phase})`);
-check(
-  "their reading was under another pool, so a pool-scoped check would have missed it",
-  (await qj(`task_completions?clinician_id=eq.${people.seniorWhoRead.id}&ls_task_id=eq.${HELD_TASK}&select=pool_id`))[0]?.pool_id === poolB.id
-);
-// It stays held rather than being consumed or closed: a senior who has not
-// read it is still offered it. With no such senior left, this is where the
-// case waits for an operator, which is the intended floor rather than a gap.
-const stillOffered = await (await people.senior.call(`/api/pools/${pool.id}/next`)).json();
-check("the case is still waiting for a senior who has not read it",
-  stillOffered.task_id === HELD_TASK && stillOffered.phase === "adjudicate",
-  `(${stillOffered.phase} ${stillOffered.task_id})`);
+hr("4. AGREEING WITH AN EARLIER READING IS RECORDED AS A MAJORITY");
+const agreeing = { verdict: "Partial", rationale: "Judged on its own merits; incomplete for this presentation." };
+const r1 = await people.senior.call(`/api/tasks/${AGREE_TASK}/submit`, { method: "POST", body: JSON.stringify({ answers: agreeing }) });
+console.log(`  submit → HTTP ${r1.status}`);
+check("accepted", r1.status === 200, `(${r1.status})`);
+const first = (await sentToHealth()).find((a) => a.idx === 11);
+console.log(`  note: ${String(first?.note ?? "").split("\n")[0]}`);
+check("HEALTH was told", Boolean(first));
+check("their own answer is the final label", first?.final_label?.verdict === "Partial");
+check("the note records a majority", /matched an earlier reading/.test(first?.note ?? ""));
+check("and says it was judged independently", /judging the case independently/.test(first?.note ?? ""));
+check("their reasoning travelled too", /on its own merits/.test(first?.note ?? ""));
+check("decided_by is a string naming them", typeof first?.decided_by === "string" && first.decided_by.includes(people.senior.id));
 
-hr("4. A DECISION AGREEING WITH NEITHER READING STILL STANDS");
-const DECISION = { verdict: "Partial", rationale: "Both readings overstate their case; the result is equivocal and needs repeating." };
-const submitted = await people.senior.call(`/api/tasks/${HELD_TASK}/submit`, {
-  method: "POST", body: JSON.stringify({ answers: DECISION }),
-});
-const body = await submitted.json();
-console.log(`  POST submit → HTTP ${submitted.status}  ${JSON.stringify({ phase: body.phase, settled: body.settled })}`);
-check("accepted", submitted.status === 200, `(${submitted.status})`);
-check("reported as settled", body.settled === true);
+/* ── 5 ───────────────────────────────────────────────────────────── */
+hr("5. AGREEING WITH NEITHER IS RECORDED AS THE SENIOR'S ANSWER STANDING");
+const differing = { verdict: "Incorrect", rationale: "Both the plan and its framing are wrong here." };
+const r2 = await people.senior.call(`/api/tasks/${DIFFER_TASK}/submit`, { method: "POST", body: JSON.stringify({ answers: differing }) });
+console.log(`  submit → HTTP ${r2.status}`);
+check("accepted", r2.status === 200, `(${r2.status})`);
+const second = (await sentToHealth()).find((a) => a.idx === 12);
+console.log(`  note: ${String(second?.note ?? "").split("\n")[0]}`);
+check("the note records that no majority formed", /no majority formed/.test(second?.note ?? ""));
+check("and that the senior's answer stands", /senior's answer stands/.test(second?.note ?? ""));
+check("it names what everyone said", /"Incorrect"/.test(second?.note ?? "") && /"Partial"/.test(second?.note ?? ""));
+check("their answer is still the final label", second?.final_label?.verdict === "Incorrect");
 
-const received = await (await fetch(`${STUB}/__received`)).json();
-const sent = received.adjudications?.[0];
-console.log(`  HEALTH received: ${JSON.stringify(sent?.final_label)}`);
-check("HEALTH was told", Boolean(sent));
-check("with the senior's own answer", sent?.final_label?.verdict === "Partial", `(${sent?.final_label?.verdict})`);
-check("which matches neither earlier reading",
-  EARLIER.every((e) => e.answers.verdict !== sent?.final_label?.verdict));
-check("their reasoning travelled with it", String(sent?.note ?? "").includes("equivocal"), `(${String(sent?.note ?? "").slice(0, 40)})`);
-check("addressed by HEALTH's own index", sent?.idx === 7, `(${sent?.idx})`);
-check("and says who decided it", String(sent?.decided_by ?? "").includes(people.senior.id),
-  `(${String(sent?.decided_by ?? "").slice(0, 46)})`);
-check("as a single string, which is what HEALTH validates",
-  typeof sent?.decided_by === "string", `(${typeof sent?.decided_by})`);
-
-/* ── 5 & 6 ───────────────────────────────────────────────────────── */
-hr("5. THE PASS IS RECORDED ONCE, AS ITS OWN KIND");
-const rows = await qj(`task_completions?ls_task_id=eq.${HELD_TASK}&clinician_id=eq.${people.senior.id}&select=kind`);
-check("one row", rows.length === 1, `(${rows.length})`);
-check("of kind adjudication", rows[0]?.kind === "adjudication", `(${rows[0]?.kind})`);
-
-const repeat = await people.senior.call(`/api/tasks/${HELD_TASK}/submit`, {
-  method: "POST", body: JSON.stringify({ answers: DECISION }),
-});
-console.log(`  submitting again → HTTP ${repeat.status}  ${JSON.stringify(await repeat.json()).slice(0, 80)}`);
+/* ── 6 ───────────────────────────────────────────────────────────── */
+hr("6. RECORDED ONCE, AND NOTHING REACHES LABEL STUDIO");
+for (const [task, label] of [[AGREE_TASK, "majority"], [DIFFER_TASK, "senior"]]) {
+  const rows = await qj(`task_completions?ls_task_id=eq.${task}&kind=eq.adjudication&select=clinician_id`);
+  check(`${label}: one adjudication row`, rows.length === 1, `(${rows.length})`);
+  check(`${label}: annotations unchanged at ${before[task]}`, (await annotationsOn(task)) === before[task]);
+}
+const repeat = await people.senior.call(`/api/tasks/${AGREE_TASK}/submit`, { method: "POST", body: JSON.stringify({ answers: agreeing }) });
 check("a second submission is refused", repeat.status === 409, `(${repeat.status})`);
-check("still one row", (await qj(`task_completions?ls_task_id=eq.${HELD_TASK}&kind=eq.adjudication&select=id`)).length === 1);
-check("and HEALTH was not told twice", (await (await fetch(`${STUB}/__received`)).json()).adjudications.length === 1);
-
-hr("6. NOTHING WAS WRITTEN TO LABEL STUDIO");
-const annotationsAfter = await annotationsOn(HELD_TASK);
-check(`annotations unchanged at ${annotationsBefore}`, annotationsAfter === annotationsBefore, `(now ${annotationsAfter})`);
+check("HEALTH was not told twice", (await sentToHealth()).filter((a) => a.idx === 11).length === 1);
 
 /* ── cleanup ─────────────────────────────────────────────────────── */
 hr("CLEANUP");
@@ -269,12 +228,11 @@ for (const who of Object.values(people)) {
   }
   await q(`clinicians?id=eq.${who.id}`, { method: "DELETE" });
 }
-await q(`pools?id=eq.${pool.id}`, { method: "DELETE" });
-await q(`pools?id=eq.${poolB.id}`, { method: "DELETE" });
+for (const p of [pool.id, poolB.id]) await q(`pools?id=eq.${p}`, { method: "DELETE" });
 const pools = await qj("pools?select=name&order=name");
-console.log(`  probe pool removed: ${!pools.some((p) => p.name.includes(stamp))}`);
+console.log(`  probe pools removed: ${!pools.some((p) => p.name.includes(stamp))}`);
 console.log(`  pools remaining: ${pools.map((p) => p.name.slice(0, 34)).join(" | ")}`);
-console.log(`  annotations on task ${HELD_TASK}: ${await annotationsOn(HELD_TASK)} (unchanged)`);
+console.log(`  annotations: ${AGREE_TASK} → ${await annotationsOn(AGREE_TASK)}, ${DIFFER_TASK} → ${await annotationsOn(DIFFER_TASK)} (unchanged)`);
 
 console.log(failures === 0 ? "\n  ALL CHECKS PASSED" : `\n  ${failures} CHECK(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);

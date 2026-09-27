@@ -56,25 +56,19 @@ export interface Field {
 
 export type ReviewAction = "approve" | "edit" | "reject";
 
-/** One earlier reading of a held case, as HEALTH hands it over: never an author. */
-export interface EarlierAnswer {
-  answers?: Record<string, unknown>;
-  [key: string]: unknown;
-}
-
 export interface Task {
   /**
    * "author" and "review" are the two phases of written work.
-   * "adjudicate" is a senior settling a case two clinicians read differently.
+   *
+   * There is deliberately no phase for a contested case. A senior settling one
+   * is served it exactly as any other case, and nothing in this payload says
+   * otherwise — a third reader who knows a case was contested is no longer an
+   * independent one.
    */
-  phase?: "single" | "author" | "review" | "adjudicate";
+  phase?: "single" | "author" | "review";
   /** Present in the review phase: what the author wrote. */
   authored?: Record<string, unknown> | null;
   revision?: number;
-  /** Present in the adjudicate phase: the earlier readings, with no authors. */
-  earlier_answers?: EarlierAnswer[];
-  /** How far apart the earlier readings were, where HEALTH reports it. */
-  agreement?: number | null;
   task_id: number;
   pool: { id: string; name: string; purpose: Purpose };
   case_id: string | null;

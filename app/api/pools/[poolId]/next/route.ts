@@ -123,8 +123,16 @@ export async function GET(
 
           const cfg = normalizeConfig(raw0);
           const d = (lsTask.data ?? {}) as Record<string, unknown>;
+
+          // Served as an ordinary case, because that is what it should look
+          // like. A senior who knows a case was contested is no longer an
+          // independent third reader of it, and the earlier answers are the
+          // strongest possible hint: shown them, they would be refereeing a
+          // disagreement rather than judging a case. So the payload carries
+          // nothing the ordinary one does not, and the comparison waits until
+          // they have submitted.
           return NextResponse.json({
-            phase: "adjudicate",
+            phase: reviewRequired(raw0) ? "author" : "single",
             task_id: mine.ls_task_id,
             pool: { id: pool.id, name: pool.name, purpose: cfg.purpose },
             case_id: caseIdFor(raw0, d),
@@ -134,11 +142,6 @@ export async function GET(
               fields: cfg.fields,
               classes: cfg.classes,
             },
-            // What the earlier readers decided, and why. HEALTH sends these
-            // without an author and they are passed on as they arrived: a
-            // senior weighs the reasoning, never the person.
-            earlier_answers: mine.earlier_answers ?? [],
-            agreement: mine.agreement ?? null,
             already_reviewed_count: readings,
           });
         }
