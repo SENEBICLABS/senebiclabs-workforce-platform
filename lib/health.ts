@@ -35,8 +35,21 @@ const KEY = process.env.HEALTH_ADMIN_KEY;
 /** Which header carries the key. Configurable so HEALTH can change it without a deploy. */
 const KEY_HEADER = process.env.HEALTH_KEY_HEADER || "X-Admin-Key";
 
-/** Short, because a senior asking for work should not wait on another service. */
-const HELD_TIMEOUT_MS = 4_000;
+/**
+ * Long enough for a cold connection, short enough not to hang a queue.
+ *
+ * Measured against the live service: the first call from a fresh process takes
+ * over four seconds — DNS, TLS and whatever the far side does to wake up — and
+ * every call after it lands in under one. At four seconds the first request
+ * from each new instance timed out, and because this fails soft that was
+ * invisible: the senior was quietly given ordinary work and the held case sat
+ * there. A held case not being offered is the failure this whole queue exists
+ * to prevent, so it is worth waiting for.
+ *
+ * The cost is bounded and paid once: the answer is cached, so only the first
+ * request on a cold instance can wait this long.
+ */
+const HELD_TIMEOUT_MS = 8_000;
 /** Longer: losing this call loses a clinician's judgement. */
 const WRITE_TIMEOUT_MS = 10_000;
 /**
@@ -136,19 +149,39 @@ export async function heldCases(projectId: number): Promise<HeldCase[]> {
     return remembered.cases;
   }
 
-  try {
-    const body = await call<{ held?: HeldCase[] }>(
-      `/admin/held/${projectId}`,
-      { method: "GET" },
-      HELD_TIMEOUT_MS
-    );
-    const cases = Array.isArray(body?.held) ? body.held : [];
-    heldCache.set(projectId, { cases, at: Date.now() });
-    return cases;
-  } catch (err) {
-    console.error(`[health] could not read held cases for project ${projectId}`, err);
-    return [];
+  // One retry, and only for a connection that failed rather than one that ran
+  // out of time. A refused or reset connection fails in milliseconds and is
+  // usually gone by the next attempt, so retrying costs nothing and saves a
+  // senior from being quietly handed ordinary work. A timeout is different: it
+  // has already spent the whole budget, and trying again would double a wait
+  // that was chosen to be bearable.
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const body = await call<{ held?: HeldCase[] }>(
+        `/admin/held/${projectId}`,
+        { method: "GET" },
+        HELD_TIMEOUT_MS
+      );
+      const cases = Array.isArray(body?.held) ? body.held : [];
+      heldCache.set(projectId, { cases, at: Date.now() });
+      return cases;
+    } catch (err) {
+      const timedOut = err instanceof HealthError && err.status === 504;
+      const cause = (err as { cause?: { code?: string } })?.cause?.code;
+      const lastChance = attempt === 2 || timedOut;
+
+      console.error(
+        `[health] could not read held cases for project ${projectId} ` +
+          `(attempt ${attempt}${lastChance ? ", giving up" : ", retrying"})` +
+          `${cause ? ` cause=${cause}` : ""}`,
+        err
+      );
+
+      if (lastChance) return [];
+    }
   }
+
+  return [];
 }
 
 /** Drops the cached list, so a case just settled stops being offered at once. */
