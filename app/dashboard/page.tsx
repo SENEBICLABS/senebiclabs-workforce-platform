@@ -102,9 +102,8 @@ export default function DashboardPage() {
               <div className="min-w-0">
                 <h3 className="text-section text-ink">{resume.name}</h3>
                 <p className="tnum mt-1 text-body text-muted">
-                  {resume.reviewed_by_me.toLocaleString()} reviewed
-                  {resume.items !== null &&
-                    ` of ${resume.items.toLocaleString()}`}
+                  You have reviewed {resume.reviewed_by_me.toLocaleString()}{" "}
+                  {resume.reviewed_by_me === 1 ? "case" : "cases"} in this pool
                 </p>
               </div>
               <Button
@@ -114,23 +113,13 @@ export default function DashboardPage() {
               </Button>
             </div>
 
-            {resume.items !== null && resume.items > 0 && (
-              <div
-                className="mt-5 h-1.5 w-full overflow-hidden rounded-full bg-hairline"
-                role="progressbar"
-                aria-valuenow={resume.reviewed_by_me}
-                aria-valuemin={0}
-                aria-valuemax={resume.items}
-                aria-label={`${resume.reviewed_by_me} of ${resume.items} reviewed`}
-              >
-                <div
-                  className="h-full rounded-full bg-accent"
-                  style={{
-                    width: `${Math.min((resume.reviewed_by_me / resume.items) * 100, 100)}%`,
-                  }}
-                />
-              </div>
-            )}
+            {/*
+              No progress bar. A bar needs a total to fill, and the only total
+              available was the pool's task count, which is not a thing this
+              clinician can work through: other clinicians take cases from the
+              same pool. A bar drawn against it showed them falling behind a
+              finish line that was never theirs.
+            */}
           </Card>
         </div>
       )}

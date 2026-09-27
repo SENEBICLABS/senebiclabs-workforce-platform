@@ -17,14 +17,20 @@ export interface Me {
 }
 
 export type Purpose = "evaluate" | "label" | "create";
-export type PoolStatus = "not_started" | "in_progress" | "complete";
+/**
+ * How far a clinician has got in a pool, from their own work alone.
+ *
+ * There is no "complete": completion would need a total, and a total is not
+ * something a clinician can work through — other clinicians take cases too.
+ */
+export type PoolStatus = "not_started" | "in_progress";
 
 export interface Pool {
   id: string;
   name: string;
   purpose: Purpose;
   description: string | null;
-  items: number | null;
+  /** Their own count. There is deliberately no pool total; see /api/pools. */
   reviewed_by_me: number;
   status: PoolStatus;
 }

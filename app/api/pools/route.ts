@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
 import { supabaseAdmin } from "@/lib/supabase";
 import { READINGS_ONLY } from "@/lib/completions";
-import { countTasks } from "@/lib/labelstudio";
 import { normalizeConfig, type RawEvalConfig } from "@/lib/eval-config";
 
 export const dynamic = "force-dynamic";
@@ -10,8 +9,12 @@ export const dynamic = "force-dynamic";
 /**
  * Pools this clinician is eligible for. Nothing else is ever listed.
  *
- * `items` comes from the backing LS project; if LS cannot be reached for a
- * pool, the pool is still listed with items null rather than a made-up count.
+ * Deliberately carries no pool total. A pool's task count is not work this
+ * clinician can do: cases at their reviewer ceiling are gone, cases they have
+ * judged or flagged are gone, and a senior may have one contested case waiting
+ * while the total says ten. Shown as a denominator it promised an allocation
+ * that does not exist — cases are claimed competitively — so what is reported
+ * is what they have done, which is theirs and is always true.
  */
 export async function GET(req: NextRequest) {
   return withAuth(req, async (_req, auth) => {
@@ -66,26 +69,19 @@ export async function GET(req: NextRequest) {
         );
         const reviewed = reviewedByPool.get(id) ?? 0;
 
-        let items: number | null = null;
-        try {
-          items = await countTasks(Number(pool.ls_project_id));
-        } catch (err) {
-          console.error(`[pools] LS project ${pool.ls_project_id} unreachable`, err);
-        }
-
-        const status =
-          items !== null && reviewed >= items && items > 0
-            ? "complete"
-            : reviewed > 0
-              ? "in_progress"
-              : "not_started";
+        // Only what they have done. "Complete" used to mean their own count
+        // had reached the pool's total, which a clinician can never do once
+        // anyone else takes a case: it read as finished while work remained,
+        // and it disabled the button that would have shown them otherwise.
+        // Whether anything is left for them is answered by asking for the next
+        // case, which says "you are all caught up" when there is not.
+        const status = reviewed > 0 ? "in_progress" : "not_started";
 
         return {
           id,
           name: String(pool.name),
           purpose: config.purpose,
           description: config.title,
-          items,
           reviewed_by_me: reviewed,
           status,
         };

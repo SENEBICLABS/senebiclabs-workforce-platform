@@ -13,12 +13,13 @@ import { useAsync } from "@/lib/use-async";
 
 type PurposeFilter = Purpose | "all";
 type StatusFilter = PoolStatus | "all";
-type SortKey = "remaining" | "reviewed" | "items" | "name";
+// No "most remaining" or "largest pool": both ranked pools by a total that is
+// not work this clinician can claim, and both would put a pool of a thousand
+// cases already at their ceiling above one with a contested case waiting.
+type SortKey = "reviewed" | "name";
 
 const SORT_LABEL: Record<SortKey, string> = {
-  remaining: "Most remaining",
   reviewed: "Most reviewed by me",
-  items: "Largest pool",
   name: "Name (A–Z)",
 };
 
@@ -35,7 +36,7 @@ export default function QueuePage() {
 
   const [purpose, setPurpose] = useState<PurposeFilter>("all");
   const [status, setStatus] = useState<StatusFilter>("all");
-  const [sort, setSort] = useState<SortKey>("remaining");
+  const [sort, setSort] = useState<SortKey>("name");
 
   const rows = useMemo(() => {
     const filtered = (pools.data ?? []).filter(
@@ -44,19 +45,12 @@ export default function QueuePage() {
         (status === "all" || p.status === status)
     );
 
-    const remaining = (p: (typeof filtered)[number]) =>
-      p.items === null ? -1 : p.items - p.reviewed_by_me;
-
     return [...filtered].sort((a, b) => {
       switch (sort) {
         case "name":
           return a.name.localeCompare(b.name);
-        case "items":
-          return (b.items ?? 0) - (a.items ?? 0);
         case "reviewed":
           return b.reviewed_by_me - a.reviewed_by_me;
-        case "remaining":
-          return remaining(b) - remaining(a);
       }
     });
   }, [pools.data, purpose, status, sort]);
@@ -128,7 +122,6 @@ export default function QueuePage() {
               <option value="all">All statuses</option>
               <option value="not_started">Not started</option>
               <option value="in_progress">In progress</option>
-              <option value="complete">Complete</option>
             </select>
 
             <label className="sr-only" htmlFor="sort-order">
@@ -168,9 +161,6 @@ export default function QueuePage() {
                         Purpose
                       </th>
                       <th scope="col" className="px-4 py-3 text-right text-label uppercase text-muted">
-                        Items
-                      </th>
-                      <th scope="col" className="px-4 py-3 text-right text-label uppercase text-muted">
                         Reviewed by me
                       </th>
                       <th scope="col" className="px-4 py-3 text-label uppercase text-muted">
@@ -183,7 +173,6 @@ export default function QueuePage() {
                   </thead>
                   <tbody>
                     {rows.map((pool) => {
-                      const complete = pool.status === "complete";
                       return (
                         <tr
                           key={pool.id}
@@ -203,9 +192,6 @@ export default function QueuePage() {
                             <PurposeBadge purpose={pool.purpose} />
                           </td>
                           <td className="tnum px-4 py-4 text-right text-body text-ink">
-                            {pool.items === null ? "—" : pool.items.toLocaleString()}
-                          </td>
-                          <td className="tnum px-4 py-4 text-right text-body text-ink">
                             {pool.reviewed_by_me.toLocaleString()}
                           </td>
                           <td className="px-4 py-4">
@@ -215,16 +201,14 @@ export default function QueuePage() {
                             <Button
                               size="sm"
                               variant="secondary"
-                              disabled={!available || complete}
+                              disabled={!available}
                               onClick={() =>
                                 router.push(`/workspace?pool=${pool.id}`)
                               }
                             >
-                              {complete
-                                ? "Fully reviewed"
-                                : pool.reviewed_by_me > 0
-                                  ? "Resume reviewing"
-                                  : "Start reviewing"}
+                              {pool.reviewed_by_me > 0
+                                ? "Resume reviewing"
+                                : "Start reviewing"}
                             </Button>
                           </td>
                         </tr>

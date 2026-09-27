@@ -424,7 +424,11 @@ function Workspace() {
         </div>
         <span className="tnum text-[15px] text-muted">
           {task.case_id ? `Case ${task.case_id} · ` : ""}
-          {task.already_reviewed_count.toLocaleString()} reviewed in this pool
+          {/*
+            "3 reviewed in this pool" could be read as three reviewed by
+            anyone. It is their own count, and says so.
+          */}
+          you have reviewed {task.already_reviewed_count.toLocaleString()} here
         </span>
       </div>
 
