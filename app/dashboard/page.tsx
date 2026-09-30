@@ -53,10 +53,10 @@ export default function DashboardPage() {
       {/*
         Stats. Only figures with a real source are rendered.
 
-        Flags are shown, and shown apart. A flagged case is paid as a completed
-        one is, so a clinician who flags honestly should see that work rather
-        than wonder where it went; but a flag is not a review, and adding it to
-        the reviewed figure would overstate how many cases they judged.
+        Flags are shown, and shown apart. A flag is recorded work, so a
+        clinician who flags honestly should see it rather than wonder where it
+        went; but a flag is not a review, and adding it to the reviewed figure
+        would overstate how many cases they judged.
       */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.loading ? (
@@ -85,7 +85,7 @@ export default function DashboardPage() {
               value={stats.data.flagged_total.toLocaleString()}
               note={
                 stats.data.flagged_total > 0
-                  ? "Cases you could not judge. Recorded and paid as a completed case is."
+                  ? "Cases you could not judge. Recorded as work on your work record."
                   : "Cases you could not judge are recorded and paid as completed ones are."
               }
             />

@@ -73,8 +73,8 @@ export async function GET(
   const raw = (pool.eval_config ?? null) as RawEvalConfig | null;
   const config = normalizeConfig(raw);
 
-  // What a client is shown is readings. A flag is recorded work and is paid,
-  // but it carries no judgement of the case and belongs in no deliverable.
+  // What a client is shown is readings. A flag is recorded work, but it
+  // carries no judgement of the case and belongs in no deliverable.
   const { data: completions, error } = await supabaseAdmin
     .from("task_completions")
     .select("clinician_id, ls_task_id, annotation_data, completed_at")

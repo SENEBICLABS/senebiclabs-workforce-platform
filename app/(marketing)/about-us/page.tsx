@@ -55,7 +55,7 @@ const PRINCIPLES = [
 const PROMISES = [
   {
     title: "No reward for guessing",
-    body: "You are recorded for the pass you make, not for the outcome you reach. Flagging a case you cannot judge is recorded as a pass and paid as a completed one is, and sending written work back to be rewritten counts exactly as approving it does. A platform that pays only for answers ends up buying guesses; this one does not.",
+    body: "You are recorded for the pass you make, not for the outcome you reach. Sending written work back to be rewritten counts exactly as approving it does. And if you cannot judge a case, flag it rather than guess: we would rather have an honest flag than an answer you are not sure of, and the flag is recorded as work.",
   },
   {
     title: "Your time stays yours",

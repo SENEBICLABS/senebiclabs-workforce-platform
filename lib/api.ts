@@ -90,7 +90,7 @@ export interface Task {
 export interface Stats {
   reviewed_total: number;
   reviewed_this_week: number;
-  /** Kept apart from the reviewed figures: a flag is paid work, but not a review. */
+  /** Kept apart from the reviewed figures: a flag is recorded work, but not a review. */
   flagged_total: number;
   flagged_this_week: number;
 }

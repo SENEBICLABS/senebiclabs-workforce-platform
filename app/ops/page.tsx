@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { formatFlagRate } from "@/lib/flag-rate";
 
 /* ── shared plumbing ─────────────────────────────────────────────── */
 
@@ -71,7 +72,7 @@ interface Overview {
 interface Clinician {
   id: string; email: string; name: string | null; active: boolean;
   can_invite: boolean; joined: string; invited_by: string | null;
-  reviews: number; pools: number;
+  reviews: number; flags: number; flag_rate: number | null; pools: number;
 }
 interface Pool {
   id: string; name: string; ls_project_id: number; purpose: string;
@@ -334,10 +335,13 @@ export default function OpsConsole() {
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search email or name"
             className="h-8 w-56 rounded-md border border-white/15 bg-black/20 px-2.5 text-[15px] text-white outline-none focus:border-[#0E7C74]" />
         }>
-        <table className="w-full min-w-[980px]">
+        <table className="w-full min-w-[1120px]">
           <thead><tr>
             <th className={head}>Email</th><th className={head}>Name</th><th className={head}>Joined</th>
-            <th className={head}>Invited by</th><th className={head}>Reviews</th><th className={head}>Pools</th>
+            <th className={head}>Invited by</th><th className={head}>Reviews</th>
+            <th className={head}>Flags</th>
+            <th className={head} title="Flags as a share of the cases they acted on. Flagging is expected; flagging everything is not.">Flag rate</th>
+            <th className={head}>Pools</th>
             <th className={head}>Can invite</th><th className={head}>Sessions</th>
           </tr></thead>
           <tbody>
@@ -348,6 +352,12 @@ export default function OpsConsole() {
                 <td className={`${cell} text-white`}>{fmt(c.joined)}</td>
                 <td className={`${cell} text-white`}>{c.invited_by ?? "—"}</td>
                 <td className={`${cell} font-mono text-white`}>{c.reviews}</td>
+                {/* The count and the share, in separate columns. Either alone
+                    misleads: 40 flags is unreadable without knowing it is out
+                    of 2,000, and 50% is unreadable when it is one flag out of
+                    two. */}
+                <td className={`${cell} font-mono text-white`}>{c.flags}</td>
+                <td className={`${cell} font-mono text-white`}>{formatFlagRate(c.flag_rate)}</td>
                 <td className={`${cell} font-mono text-white`}>{c.pools}</td>
                 <td className={cell}>
                   <Toggle on={c.can_invite} busy={busy === c.id} labels={["Yes", "No"]}

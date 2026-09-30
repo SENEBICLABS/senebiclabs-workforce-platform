@@ -9,8 +9,8 @@ export const dynamic = "force-dynamic";
  * Real counts only.
  *
  * Reviews and flags are counted apart and reported apart. A flag is recorded
- * work and is paid as a completed case is, so a clinician who flags honestly
- * should see that work represented rather than absent. But it is not a review,
+ * work, so a clinician who flags honestly should see that work represented
+ * rather than absent. But it is not a review,
  * and folding it into a "reviews" figure would tell them something untrue about
  * how many cases they judged. Two numbers, each meaning exactly one thing.
  *

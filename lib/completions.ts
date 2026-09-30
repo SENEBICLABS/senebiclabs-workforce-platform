@@ -34,11 +34,10 @@ export type PassKind = (typeof PASS_KINDS)[number];
 /**
  * The kinds that count as a reading of the case.
  *
- * Everywhere a number is shown as "reviewed", or compared against how many
- * cases a pool holds, it means these. A flag is a pass and is paid, but it is
- * not a reading: counting it would tell a clinician they had reviewed cases
- * they had explicitly declined to judge, and would tell a client a case had
- * been read when it had not.
+ * Everywhere a number is shown as "reviewed", it means these. A flag is a
+ * recorded pass, but it is not a reading: counting it would tell a clinician
+ * they had reviewed cases they had explicitly declined to judge, and would tell
+ * a client a case had been read when it had not.
  *
  * An adjudication is left out for a different reason. It is certainly a reading
  * — a senior reads the case and decides it — but it is a second pass over a

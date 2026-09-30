@@ -82,8 +82,8 @@ const SAFEGUARDS = [
     body: "For written work, one clinician writes and a different one approves, edits or sends it back. The platform will not offer a reviewer their own work.",
   },
   {
-    title: "Flagging is paid",
-    body: "A clinician who cannot judge a case flags it, and it goes to someone else rather than being guessed at. Flagging a case you cannot judge is recorded as a pass and paid as a completed one is, so nobody is paid more for guessing than for saying so.",
+    title: "An honest flag is wanted",
+    body: "A clinician who cannot judge a case flags it, and it goes to someone else rather than being guessed at. We would rather have an honest flag than an answer a clinician is not sure of, and the flag is recorded as work rather than leaving no trace.",
   },
 ];
 
