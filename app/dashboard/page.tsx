@@ -86,7 +86,7 @@ export default function DashboardPage() {
               note={
                 stats.data.flagged_total > 0
                   ? "Cases you could not judge. Recorded as work on your work record."
-                  : "Cases you could not judge are recorded and paid as completed ones are."
+                  : "If you cannot judge a case, flag it rather than guess."
               }
             />
           </>
