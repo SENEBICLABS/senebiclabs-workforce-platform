@@ -83,7 +83,7 @@ const SAFEGUARDS = [
   },
   {
     title: "An honest flag is wanted",
-    body: "A clinician who cannot judge a case flags it, and it goes to someone else rather than being guessed at. We would rather have an honest flag than an answer a clinician is not sure of, and the flag is recorded as work rather than leaving no trace.",
+    body: "A clinician who cannot judge a case flags it rather than guessing at it. We would rather have an honest flag than an answer a clinician is not sure of, and the flag is recorded as work rather than leaving no trace.",
   },
 ];
 

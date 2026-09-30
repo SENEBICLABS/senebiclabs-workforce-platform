@@ -121,7 +121,7 @@ export function ReviewPanel({
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="What needs to change, so the next author can fix it."
+              placeholder="What needs to change, and why."
               className="focusable w-full resize-y rounded-card border border-hairline bg-surface px-3 py-2.5 text-body text-ink placeholder:text-placeholder"
             />
           </div>

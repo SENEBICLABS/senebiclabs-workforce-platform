@@ -122,7 +122,7 @@ export async function POST(
     // cannot do what the queue would never offer.
     if (item.author_id === auth.clinicianId) {
       return NextResponse.json(
-        { error: "You wrote this one. Another clinician reviews it." },
+        { error: "You wrote this one, so you cannot review it." },
         { status: 403 }
       );
     }
@@ -131,7 +131,7 @@ export async function POST(
     if (action === "reject") {
       if (reason.length < 3) {
         return NextResponse.json(
-          { error: "Say briefly why, so the next author knows what to fix." },
+          { error: "Say briefly what needs to change, and why." },
           { status: 422 }
         );
       }

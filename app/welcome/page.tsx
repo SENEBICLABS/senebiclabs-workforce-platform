@@ -16,7 +16,7 @@ const POINTS = [
   },
   {
     title: "When something is unclear",
-    body: "If you cannot judge a case, flag it rather than guess. We would rather have an honest flag than an answer you are not sure of. It goes to a second clinician, it stops being offered to you, and the flag is recorded as work on your work record.",
+    body: "If you cannot judge a case, flag it rather than guess. We would rather have an honest flag than an answer you are not sure of. It stops being offered to you, and the flag is recorded as work on your work record.",
   },
 ];
 

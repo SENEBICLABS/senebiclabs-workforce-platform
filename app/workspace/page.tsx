@@ -331,7 +331,7 @@ function Workspace() {
     try {
       await api.flag(flaggedId, "Unclear or outside my area");
       clearDraft(flaggedId);
-      showToast("Flagged for another clinician");
+      showToast("Flagged. You will not be offered this case again.");
       await load();
     } catch (err) {
       setSubmitError(
@@ -543,8 +543,8 @@ function Workspace() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           {confirmFlag ? (
             <p role="status" className="text-[14px] text-ink">
-              This case goes to another clinician, and anything you have entered
-              on it is discarded.
+              This case stops being offered to you, and anything you have
+              entered on it is discarded.
             </p>
           ) : (
             // No keyboard to press it on, and on a phone it was crowding the
@@ -573,7 +573,7 @@ function Workspace() {
                 </Button>
                 <Button variant="danger" onClick={flag} loading={busy}>
                   <Flag size={14} aria-hidden="true" />
-                  Yes, hand it on
+                  Yes, flag it
                 </Button>
               </>
             ) : (

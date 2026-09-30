@@ -65,7 +65,7 @@ export const FAQS: Faq[] = [
   {
     category: "The work",
     q: "What if a case is outside my area?",
-    a: "If you cannot judge a case, flag it rather than guess. We would rather have an honest flag than an answer you are not sure of. A flagged case goes to another clinician instead, it stops being offered to you, and the flag is recorded as work on your work record.",
+    a: "If you cannot judge a case, flag it rather than guess. We would rather have an honest flag than an answer you are not sure of. It stops being offered to you, and the flag is recorded as work on your work record.",
   },
   {
     category: "The work",
@@ -213,7 +213,7 @@ export const WHY_SENEBICLABS: WhyJoin[] = [
   {
     title: "Nothing to gain by waving work through",
     lead: "You are recorded for the pass you make, not for the outcome you reach. Sending written work back to be rewritten counts exactly as approving it does. And if you cannot judge a case, flag it rather than guess: we would rather have an honest flag than an answer you are not sure of.",
-    detail: "That is not a policy, it is how the code counts. A reviewer who sends a draft back is recorded for that pass, and is not recorded a second time when the rewrite comes back to them. Flagging writes a record of the work too, alongside the note that the case should go to someone else, so an honest flag is never invisible. You can see every pass you have made, by kind and by pool, on your own work record.",
+    detail: "That is not a policy, it is how the code counts. A reviewer who sends a draft back is recorded for that pass, and is not recorded a second time when the rewrite comes back to them. Flagging writes a record of the work too, alongside the note that you could not judge it, so an honest flag is never invisible. You can see every pass you have made, by kind and by pool, on your own work record.",
   },
   {
     title: "You choose the work and the hours",

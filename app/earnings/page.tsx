@@ -20,17 +20,17 @@ const KIND_LABEL: Record<PassKind, string> = {
   judgement: "Cases judged",
   flag: "Cases flagged",
   authoring: "Answers written",
-  review: "Colleagues' work reviewed",
-  adjudication: "Disagreements settled",
+  review: "Drafts reviewed",
+  adjudication: "Cases decided",
 };
 
 const KIND_NOTE: Record<PassKind, string> = {
   judgement: "You read the case and assessed the answer it was given.",
   flag: "You read the case and said you could not judge it. That is a pass, and it is recorded as one.",
   authoring: "You wrote the answer a clinician should receive.",
-  review: "You read a colleague's draft and approved, edited or sent it back.",
+  review: "You read a draft answer and approved, edited or sent it back.",
   adjudication:
-    "Two clinicians read the case differently and you decided it. Your answer stands as the final one.",
+    "You read the case and decided it. Your answer is the one recorded.",
 };
 
 const ORDER: PassKind[] = ["judgement", "flag", "authoring", "review", "adjudication"];
@@ -40,8 +40,8 @@ const COUNTED: Record<PassKind, [string, string]> = {
   judgement: ["case judged", "cases judged"],
   flag: ["case flagged", "cases flagged"],
   authoring: ["answer written", "answers written"],
-  review: ["colleague's answer reviewed", "colleagues' answers reviewed"],
-  adjudication: ["disagreement settled", "disagreements settled"],
+  review: ["draft reviewed", "drafts reviewed"],
+  adjudication: ["case decided", "cases decided"],
 };
 
 const counted = (kind: PassKind, n: number) =>
