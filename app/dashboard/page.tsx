@@ -12,7 +12,7 @@ import {
   LoadingBlock,
   Skeleton,
 } from "@/components/ui/States";
-import { api } from "@/lib/api";
+import { api, poolLine, poolStatus } from "@/lib/api";
 import { useAsync } from "@/lib/use-async";
 
 function StatTile({
@@ -46,7 +46,13 @@ export default function DashboardPage() {
   const pools = useAsync(() => api.pools(), []);
   const stats = useAsync(() => api.stats(), []);
 
-  const resume = pools.data?.find((p) => p.status === "in_progress");
+  // Somewhere to pick up, which means a pool with work in it and a history of
+  // their own. A pool they have worked through is not somewhere to continue,
+  // and offering it here was the same lie the card told: a button that led
+  // only to "you're all caught up".
+  const resume = pools.data?.find(
+    (p) => poolStatus(p) === "available" && p.completed_by_you > 0
+  );
 
   return (
     <AppLayout title="Dashboard">
@@ -102,8 +108,9 @@ export default function DashboardPage() {
               <div className="min-w-0">
                 <h3 className="text-section text-ink">{resume.name}</h3>
                 <p className="tnum mt-1 text-body text-muted">
-                  You have reviewed {resume.reviewed_by_me.toLocaleString()}{" "}
-                  {resume.reviewed_by_me === 1 ? "case" : "cases"} in this pool
+                  {poolLine(resume)} · you have reviewed{" "}
+                  {resume.completed_by_you.toLocaleString()}{" "}
+                  {resume.completed_by_you === 1 ? "case" : "cases"} here
                 </p>
               </div>
               <Button

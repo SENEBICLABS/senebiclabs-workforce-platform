@@ -131,7 +131,23 @@ async function call<T>(
   return (res.status === 204 ? undefined : await res.json()) as T;
 }
 
-const heldCache = new Map<number, { cases: HeldCase[]; at: number }>();
+const heldCache = new Map<number, { cases: HeldCase[]; known: boolean; at: number }>();
+
+/**
+ * The held list, and whether it is worth believing.
+ *
+ * "HEALTH is holding nothing" and "we could not ask HEALTH" are the same empty
+ * array, and they mean opposite things to anything deciding whether a pool is
+ * finished: the first says the work is done, the second says we do not know.
+ * Serving can treat them alike, because a senior not being offered a held case
+ * for a few seconds is a small loss. Declaring a pool closed cannot, because
+ * that hides the work from everybody.
+ */
+export interface HeldSnapshot {
+  cases: HeldCase[];
+  /** False when the list is empty only because the read failed. */
+  known: boolean;
+}
 
 /**
  * The cases HEALTH is holding for a project, or an empty list if it cannot say.
@@ -142,11 +158,18 @@ const heldCache = new Map<number, { cases: HeldCase[]; at: number }>();
  * interrupting their work for.
  */
 export async function heldCases(projectId: number): Promise<HeldCase[]> {
-  if (!healthConfigured()) return [];
+  return (await heldSnapshot(projectId)).cases;
+}
+
+export async function heldSnapshot(projectId: number): Promise<HeldSnapshot> {
+  // Not configured is not the same as nothing held either. A deployment with no
+  // HEALTH credentials cannot see disagreements at all, and must not conclude
+  // from that silence that there are none.
+  if (!healthConfigured()) return { cases: [], known: false };
 
   const remembered = heldCache.get(projectId);
   if (remembered && Date.now() - remembered.at < HELD_TTL_MS) {
-    return remembered.cases;
+    return { cases: remembered.cases, known: remembered.known };
   }
 
   // One retry, and only for a connection that failed rather than one that ran
@@ -163,8 +186,8 @@ export async function heldCases(projectId: number): Promise<HeldCase[]> {
         HELD_TIMEOUT_MS
       );
       const cases = Array.isArray(body?.held) ? body.held : [];
-      heldCache.set(projectId, { cases, at: Date.now() });
-      return cases;
+      heldCache.set(projectId, { cases, known: true, at: Date.now() });
+      return { cases, known: true };
     } catch (err) {
       const timedOut = err instanceof HealthError && err.status === 504;
       const cause = (err as { cause?: { code?: string } })?.cause?.code;
@@ -177,11 +200,11 @@ export async function heldCases(projectId: number): Promise<HeldCase[]> {
         err
       );
 
-      if (lastChance) return [];
+      if (lastChance) return { cases: [], known: false };
     }
   }
 
-  return [];
+  return { cases: [], known: false };
 }
 
 /** Drops the cached list, so a case just settled stops being offered at once. */

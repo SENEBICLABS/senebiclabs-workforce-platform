@@ -8,7 +8,14 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PurposeBadge, StatusPill } from "@/components/ui/Pill";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/States";
-import { api, type PoolStatus, type Purpose } from "@/lib/api";
+import {
+  api,
+  poolIsWorkable,
+  poolLine,
+  poolStatus,
+  type PoolStatus,
+  type Purpose,
+} from "@/lib/api";
 import { useAsync } from "@/lib/use-async";
 
 type PurposeFilter = Purpose | "all";
@@ -16,9 +23,10 @@ type StatusFilter = PoolStatus | "all";
 // No "most remaining" or "largest pool": both ranked pools by a total that is
 // not work this clinician can claim, and both would put a pool of a thousand
 // cases already at their ceiling above one with a contested case waiting.
-type SortKey = "reviewed" | "name";
+type SortKey = "available" | "reviewed" | "name";
 
 const SORT_LABEL: Record<SortKey, string> = {
+  available: "Most available to me",
   reviewed: "Most reviewed by me",
   name: "Name (A–Z)",
 };
@@ -42,15 +50,20 @@ export default function QueuePage() {
     const filtered = (pools.data ?? []).filter(
       (p) =>
         (purpose === "all" || p.purpose === purpose) &&
-        (status === "all" || p.status === status)
+        (status === "all" || poolStatus(p) === status)
     );
 
+    // Closed pools sink whatever the sort, because they are a record of work
+    // done rather than work to do.
     return [...filtered].sort((a, b) => {
+      if (a.closed !== b.closed) return a.closed ? 1 : -1;
       switch (sort) {
         case "name":
           return a.name.localeCompare(b.name);
         case "reviewed":
-          return b.reviewed_by_me - a.reviewed_by_me;
+          return b.completed_by_you - a.completed_by_you;
+        case "available":
+          return (b.available_to_you ?? -1) - (a.available_to_you ?? -1);
       }
     });
   }, [pools.data, purpose, status, sort]);
@@ -120,8 +133,10 @@ export default function QueuePage() {
               onChange={(e) => setStatus(e.target.value as StatusFilter)}
             >
               <option value="all">All statuses</option>
-              <option value="not_started">Not started</option>
-              <option value="in_progress">In progress</option>
+              <option value="available">Open to me</option>
+              <option value="up_to_date">Up to date</option>
+              <option value="none_available">Nothing available</option>
+              <option value="closed">Closed</option>
             </select>
 
             <label className="sr-only" htmlFor="sort-order">
@@ -192,24 +207,29 @@ export default function QueuePage() {
                             <PurposeBadge purpose={pool.purpose} />
                           </td>
                           <td className="tnum px-4 py-4 text-right text-body text-ink">
-                            {pool.reviewed_by_me.toLocaleString()}
+                            {pool.completed_by_you.toLocaleString()}
                           </td>
                           <td className="px-4 py-4">
-                            <StatusPill status={pool.status} />
+                            <span className="block text-body text-ink">
+                              {poolLine(pool)}
+                            </span>
+                            <StatusPill status={poolStatus(pool)} />
                           </td>
                           <td className="px-5 py-4 text-right">
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              disabled={!available}
-                              onClick={() =>
-                                router.push(`/workspace?pool=${pool.id}`)
-                              }
-                            >
-                              {pool.reviewed_by_me > 0
-                                ? "Resume reviewing"
-                                : "Start reviewing"}
-                            </Button>
+                            {poolIsWorkable(pool) && (
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                disabled={!available}
+                                onClick={() =>
+                                  router.push(`/workspace?pool=${pool.id}`)
+                                }
+                              >
+                                {pool.completed_by_you > 0
+                                  ? "Resume reviewing"
+                                  : "Start reviewing"}
+                              </Button>
+                            )}
                           </td>
                         </tr>
                       );

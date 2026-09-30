@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
 import { supabaseAdmin } from "@/lib/supabase";
-import { FORBIDDEN, requireEligiblePoolForTask } from "@/lib/gate";
+import { FORBIDDEN, POOL_CLOSED, requireEligiblePoolForTask } from "@/lib/gate";
 import {
   createAnnotation,
   deleteAnnotation,
@@ -83,6 +83,7 @@ export async function POST(
       projectId
     );
     if (!pool) return FORBIDDEN();
+    if (pool.closedAt) return POOL_CLOSED();
 
     const raw = pool.evalConfig as RawEvalConfig | null;
     const config = normalizeConfig(raw);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
 import { recordPass } from "@/lib/completions";
-import { FORBIDDEN, requireEligiblePoolForTask } from "@/lib/gate";
+import { FORBIDDEN, POOL_CLOSED, requireEligiblePoolForTask } from "@/lib/gate";
 import {
   createAnnotation,
   deleteAnnotation,
@@ -100,6 +100,7 @@ export async function POST(
     const projectId = Number((lsTask as unknown as { project?: number }).project);
     const pool = await requireEligiblePoolForTask(auth.clinicianId, taskId, projectId);
     if (!pool) return FORBIDDEN();
+    if (pool.closedAt) return POOL_CLOSED();
 
     const raw = pool.evalConfig as RawEvalConfig | null;
     if (!reviewRequired(raw)) {

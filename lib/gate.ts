@@ -1,6 +1,7 @@
 import "server-only";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "./supabase";
+import { closedAtFor } from "./pool-closure";
 
 /**
  * The confidentiality gate.
@@ -27,12 +28,29 @@ export interface GatedPool {
    * a row change rather than a deploy.
    */
   senior: boolean;
+  /** When an operator closed this pool to clinicians, or null while it is open. */
+  closedAt: string | null;
 }
 
 export const FORBIDDEN = () =>
   NextResponse.json(
     { error: "You are not eligible for this pool." },
     { status: 403 }
+  );
+
+/**
+ * A pool an operator has closed takes no more work.
+ *
+ * Separate from FORBIDDEN, and worded plainly, because it is not a refusal of
+ * this clinician: they were eligible a moment ago and the pool stopped, which
+ * is a different thing to be told. It is a real refusal rather than a greyed
+ * button, because a tab open since before the pool closed would otherwise still
+ * submit into a project that has already gone downstream.
+ */
+export const POOL_CLOSED = () =>
+  NextResponse.json(
+    { error: "This pool is closed and is no longer taking work." },
+    { status: 409 }
   );
 
 /**
@@ -70,6 +88,7 @@ export async function requireEligiblePool(
     maxAnnotations: (pool.maximum_annotations as number | null) ?? null,
     evalConfig: (pool.eval_config as Record<string, unknown> | null) ?? null,
     senior: (data as unknown as { senior?: boolean })?.senior === true,
+    closedAt: await closedAtFor(String(pool.id)),
   };
 }
 
@@ -104,5 +123,6 @@ export async function requireEligiblePoolForTask(
     maxAnnotations: (pool.maximum_annotations as number | null) ?? null,
     evalConfig: (pool.eval_config as Record<string, unknown> | null) ?? null,
     senior: match.senior === true,
+    closedAt: await closedAtFor(String(pool.id)),
   };
 }

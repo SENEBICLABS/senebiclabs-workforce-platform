@@ -9,6 +9,10 @@ import "server-only";
  * through the functions here.
  */
 
+import type { TaskState } from "./availability-rules";
+
+export type { TaskState };
+
 const LS_URL = process.env.LABEL_STUDIO_API_URL;
 const LS_TOKEN = process.env.LABEL_STUDIO_API_TOKEN;
 
@@ -173,6 +177,44 @@ export async function countTasks(projectId: number): Promise<number | null> {
  * a 1,300-task project costs one page, not seven — and the cost no longer grows
  * with the size of the client's pool.
  */
+/**
+ * Every task's availability state in a project, remembered for a short while.
+ *
+ * This is the one read behind both "what is left for this clinician" and "what
+ * would they be served next", which used to be two different questions answered
+ * by two different means: the pool list counted tasks in the project, and the
+ * queue walked pages until it found one on offer. They disagreed, and the pool
+ * list was the one that was wrong.
+ *
+ * Cached because the dashboard asks it once per pool on every load, and a
+ * project's task states change only when someone submits. The cache is dropped
+ * on write rather than waited out, so a clinician who finishes a case sees the
+ * count fall.
+ */
+const STATE_TTL_MS = 30_000;
+const stateCache = new Map<number, { states: TaskState[]; at: number }>();
+
+export async function taskStates(projectId: number): Promise<TaskState[]> {
+  const remembered = stateCache.get(projectId);
+  if (remembered && Date.now() - remembered.at < STATE_TTL_MS) {
+    return remembered.states;
+  }
+
+  const states = (await listTasks(projectId)).map((task) => ({
+    id: task.id,
+    is_labeled: Boolean(task.is_labeled),
+    total_annotations: Number(task.total_annotations ?? 0),
+  }));
+
+  stateCache.set(projectId, { states, at: Date.now() });
+  return states;
+}
+
+/** Drops the cached states, so a submitted case stops being counted at once. */
+export function forgetTaskStates(projectId: number): void {
+  stateCache.delete(projectId);
+}
+
 export async function findNextTask(
   projectId: number,
   excludeTaskIds: Set<number>,
@@ -249,12 +291,19 @@ export async function createAnnotation(
       }),
     }
   );
+  // Every cached availability figure just became one case out of date. Which
+  // project this task belongs to is not known here, and looking it up to drop
+  // one entry would cost a round trip to save re-listing a handful of pools, so
+  // the whole map goes. The alternative is a clinician submitting a case and
+  // still being told it is available.
+  stateCache.clear();
   return created.id;
 }
 
 /** Compensating rollback: used only when the completion record fails to save. */
 export async function deleteAnnotation(annotationId: number): Promise<void> {
   await ls<void>(`/api/annotations/${annotationId}/`, { method: "DELETE" });
+  stateCache.clear();
 }
 
 /**

@@ -17,22 +17,82 @@ export interface Me {
 }
 
 export type Purpose = "evaluate" | "label" | "create";
-/**
- * How far a clinician has got in a pool, from their own work alone.
- *
- * There is no "complete": completion would need a total, and a total is not
- * something a clinician can work through — other clinicians take cases too.
- */
-export type PoolStatus = "not_started" | "in_progress";
 
 export interface Pool {
   id: string;
   name: string;
   purpose: Purpose;
   description: string | null;
-  /** Their own count. There is deliberately no pool total; see /api/pools. */
-  reviewed_by_me: number;
-  status: PoolStatus;
+  /**
+   * Cases that could be served to this clinician right now, or null when the
+   * case store could not be read. Null is not zero and is never shown as one.
+   */
+  available_to_you: number | null;
+  /** Cases they have read here. A flag is a pass, not a reading. */
+  completed_by_you: number;
+  /** Finished, or delivered downstream. Either way it takes no more work. */
+  closed: boolean;
+}
+
+/**
+ * What a pool is to this clinician, in one word.
+ *
+ * Derived rather than sent, because it is a reading of two numbers the server
+ * already gives and there is no third fact behind it. The card, the queue row
+ * and the pill all ask this, so they cannot disagree with each other about a
+ * pool the way the card and the workspace used to.
+ *
+ * There is no "complete": completion would need a pool total, and a total is
+ * not something a clinician can work through, since cases are claimed
+ * competitively. "Up to date" is the honest version of it — true of them, now,
+ * and it stops being true when more cases arrive.
+ */
+export type PoolStatus =
+  | "closed"
+  | "available"
+  | "up_to_date"
+  | "none_available"
+  | "unknown";
+
+export function poolStatus(pool: Pool): PoolStatus {
+  if (pool.closed) return "closed";
+  if (pool.available_to_you === null) return "unknown";
+  if (pool.available_to_you > 0) return "available";
+  return pool.completed_by_you > 0 ? "up_to_date" : "none_available";
+}
+
+/** The line the card and the queue row both show. */
+export function poolLine(pool: Pool): string {
+  switch (poolStatus(pool)) {
+    case "closed":
+      return "Closed";
+    case "available": {
+      const n = pool.available_to_you ?? 0;
+      return `${n.toLocaleString()} ${n === 1 ? "case" : "cases"} available`;
+    }
+    case "up_to_date":
+      return "You're up to date in this pool";
+    case "none_available":
+      return "No cases available right now";
+    case "unknown":
+      // Never "no cases available": that would send them away from a pool that
+      // may be full of work, on the strength of a failed request.
+      return "We could not check this pool just now";
+  }
+}
+
+/**
+ * Whether to offer the button.
+ *
+ * Offered when there is work, and when we could not find out — a clinician who
+ * wants to try should be allowed to, and the workspace will tell them plainly
+ * if there is nothing there. Never offered for a closed pool, and never for one
+ * we know to be empty for them, because a button that leads only to "you're all
+ * caught up" is the bug this whole change exists to remove.
+ */
+export function poolIsWorkable(pool: Pool): boolean {
+  const status = poolStatus(pool);
+  return status === "available" || status === "unknown";
 }
 
 export interface Field {

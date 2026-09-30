@@ -46,13 +46,19 @@ export function PurposeBadge({ purpose }: { purpose: Purpose }) {
 }
 
 const STATUS_TONE: Record<PoolStatus, Tone> = {
-  not_started: "neutral",
-  in_progress: "accent",
+  closed: "neutral",
+  available: "accent",
+  up_to_date: "neutral",
+  none_available: "neutral",
+  unknown: "neutral",
 };
 
 const STATUS_LABEL: Record<PoolStatus, string> = {
-  not_started: "Not started",
-  in_progress: "In progress",
+  closed: "Closed",
+  available: "Open",
+  up_to_date: "Up to date",
+  none_available: "Nothing available",
+  unknown: "Unavailable",
 };
 
 export function StatusPill({ status }: { status: PoolStatus }) {

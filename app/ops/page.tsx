@@ -76,7 +76,7 @@ interface Clinician {
 }
 interface Pool {
   id: string; name: string; ls_project_id: number; purpose: string;
-  review_required: boolean; open_access: boolean; items: number | null;
+  review_required: boolean; open_access: boolean; closed_at: string | null; items: number | null;
   reviewed: number; eligible_clinicians: number; senior_clinicians: number;
 }
 interface Invite {
@@ -394,11 +394,12 @@ export default function OpsConsole() {
 
       {/* Pools */}
       <Section title="Pools">
-        <table className="w-full min-w-[980px]">
+        <table className="w-full min-w-[1120px]">
           <thead><tr>
             <th className={head}>Pool</th><th className={head}>Project</th><th className={head}>Purpose</th>
             <th className={head}>Review</th><th className={head}>Items</th><th className={head}>Reviewed</th>
             <th className={head}>Eligible</th><th className={head}>Seniors</th>
+            <th className={head} title="Whether clinicians are still offered this pool. Closed refuses submissions too.">Taking work</th>
             <th className={head}>Access</th><th className={head} />
           </tr></thead>
           <tbody>
@@ -427,6 +428,26 @@ export default function OpsConsole() {
                       none
                     </span>
                   )}
+                </td>
+                {/*
+                  Not the same control as access. That one decides who is
+                  granted the pool; this decides whether the pool is still being
+                  worked at all, which is the fact no count can tell you — a
+                  project can be delivered downstream with cases still under the
+                  ceiling, and readings taken after that are work nobody asked
+                  for.
+                */}
+                <td className={cell}>
+                  <Toggle on={!p.closed_at} busy={busy === `work-${p.id}`} labels={["Taking work", "Closed"]}
+                    onClick={() => {
+                      const closing = !p.closed_at;
+                      if (closing && !confirm(`Close ${p.name}? Clinicians stop being offered it, and submissions to it are refused.`)) return;
+                      act(`work-${p.id}`,
+                        () => ops(`/pools/${p.id}/closed`, { method: "POST", body: JSON.stringify({ value: closing }) }),
+                        closing
+                          ? `${p.name} is closed. It is no longer offered, and submissions are refused.`
+                          : `${p.name} is taking work again.`);
+                    }} />
                 </td>
                 <td className={cell}>
                   <Toggle on={p.open_access} busy={busy === p.id} labels={["Open", "Closed"]}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withOps } from "@/lib/ops-auth";
 import { supabaseAdmin } from "@/lib/supabase";
+import { closedPools } from "@/lib/pool-closure";
 import { READINGS_ONLY } from "@/lib/completions";
 import { countTasks } from "@/lib/labelstudio";
 import { normalizeConfig, type RawEvalConfig } from "@/lib/eval-config";
@@ -38,6 +39,8 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const closed = await closedPools();
+
     const rows = await Promise.all(
       (pools ?? []).map(async (p) => {
         const raw = (p.eval_config ?? null) as RawEvalConfig | null;
@@ -59,6 +62,7 @@ export async function GET(req: NextRequest) {
           purpose: config.purpose,
           review_required: reviewRequired(raw),
           open_access: p.open_access === true,
+          closed_at: closed.get(String(p.id)) ?? null,
           max_annotations: p.maximum_annotations,
           items,
           reviewed: reviewed.get(p.id) ?? 0,

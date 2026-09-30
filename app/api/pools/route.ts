@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
 import { supabaseAdmin } from "@/lib/supabase";
-import { READINGS_ONLY } from "@/lib/completions";
+import { availabilityFor, type PoolFacts } from "@/lib/availability";
+import { closedPools } from "@/lib/pool-closure";
 import { normalizeConfig, type RawEvalConfig } from "@/lib/eval-config";
 
 export const dynamic = "force-dynamic";
@@ -9,37 +10,45 @@ export const dynamic = "force-dynamic";
 /**
  * Pools this clinician is eligible for. Nothing else is ever listed.
  *
- * Deliberately carries no pool total. A pool's task count is not work this
- * clinician can do: cases at their reviewer ceiling are gone, cases they have
- * judged or flagged are gone, and a senior may have one contested case waiting
- * while the total says ten. Shown as a denominator it promised an allocation
- * that does not exist — cases are claimed competitively — so what is reported
- * is what they have done, which is theirs and is always true.
+ * Every number here is theirs. There is no pool total, because a pool's task
+ * count is not work this clinician can do — cases at the reviewer ceiling are
+ * gone, cases they have judged or flagged are gone, and a senior may have one
+ * contested case waiting while the total says ten. Shown as a denominator it
+ * promised an allocation that does not exist, since cases are claimed
+ * competitively.
+ *
+ * What replaced it is not a smaller number from the same source but a different
+ * question, asked of lib/availability and answered the same way the queue
+ * answers it. The two used to disagree: a pool worked to the end still showed a
+ * card reading "in progress" with a button that led to "you're all caught up",
+ * because the card came from a project's task count and the workspace came from
+ * what was actually on offer. One computation now serves both.
+ *
+ * It costs. This route made no upstream call at all and answered in about half
+ * a second; it now reads the project's task states from Label Studio and the
+ * held list from HEALTH, each around 1.3s, in parallel across pools, so a cold
+ * instance answers in about 4s and a warm one in about 1s. That is the price of
+ * the number being true, and the half-second version was fast because it was
+ * answering an easier question wrongly. The task states are cached for 30s and
+ * dropped on any annotation write, which covers the common case of a clinician
+ * working through a pool and watching their own count fall.
+ *
+ * The count can still go stale between the card rendering and the button being
+ * pressed, because cases are claimed competitively and another clinician may
+ * take the last one first. That is not a bug this can remove, and the workspace
+ * says so plainly when it happens.
  */
 export async function GET(req: NextRequest) {
   return withAuth(req, async (_req, auth) => {
-    // Both of these need only the clinician's id, so neither waits for the
-    // other. They used to run back to back, which cost a whole extra round trip
-    // to the database on every dashboard load for no reason.
-    const [
-      { data: rows, error },
-      { data: completions },
-    ] = await Promise.all([
+    const [{ data: rows, error }, closed] = await Promise.all([
       supabaseAdmin
         .from("pool_eligibility")
         .select(
-          "pool_id, pools!inner(id, name, ls_project_id, eval_config, maximum_annotations)"
+          "pool_id, senior, pools!inner(id, name, ls_project_id, eval_config, maximum_annotations)"
         )
         .eq("clinician_id", auth.clinicianId)
         .eq("eligible", true),
-      // Readings only. Counting flags here would advance a clinician's progress
-      // through a pool for cases they explicitly declined to judge, and could
-      // mark a pool "complete" without it having been reviewed.
-      supabaseAdmin
-        .from("task_completions")
-        .select("pool_id")
-        .eq("clinician_id", auth.clinicianId)
-        .in("kind", READINGS_ONLY),
+      closedPools(),
     ]);
 
     if (error) {
@@ -50,45 +59,57 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const pools = (rows ?? [])
-      .map((row) => (row as unknown as { pools: Record<string, unknown> }).pools)
-      .filter(Boolean);
+    const eligible = (rows ?? [])
+      .map((row) => row as unknown as { senior?: boolean; pools: Record<string, unknown> })
+      .filter((row) => Boolean(row.pools));
 
-    if (pools.length === 0) return NextResponse.json({ pools: [] });
-
-    const reviewedByPool = new Map<string, number>();
-    for (const row of completions ?? []) {
-      reviewedByPool.set(row.pool_id, (reviewedByPool.get(row.pool_id) ?? 0) + 1);
-    }
+    if (eligible.length === 0) return NextResponse.json({ pools: [] });
 
     const listed = await Promise.all(
-      pools.map(async (pool) => {
-        const id = String(pool.id);
-        const config = normalizeConfig(
-          (pool.eval_config ?? null) as RawEvalConfig | null
-        );
-        const reviewed = reviewedByPool.get(id) ?? 0;
+      eligible.map(async (row) => {
+        const pool = row.pools;
+        const raw = (pool.eval_config ?? null) as RawEvalConfig | null;
+        const config = normalizeConfig(raw);
 
-        // Only what they have done. "Complete" used to mean their own count
-        // had reached the pool's total, which a clinician can never do once
-        // anyone else takes a case: it read as finished while work remained,
-        // and it disabled the button that would have shown them otherwise.
-        // Whether anything is left for them is answered by asking for the next
-        // case, which says "you are all caught up" when there is not.
-        const status = reviewed > 0 ? "in_progress" : "not_started";
+        const facts: PoolFacts = {
+          id: String(pool.id),
+          lsProjectId: Number(pool.ls_project_id),
+          maxAnnotations: (pool.maximum_annotations as number | null) ?? null,
+          evalConfig: (pool.eval_config as Record<string, unknown> | null) ?? null,
+          senior: row.senior === true,
+          closedAt: closed.get(String(pool.id)) ?? null,
+        };
+
+        // Fails soft, one pool at a time, and inside availabilityFor rather
+        // than here: a pool whose case store cannot be reached comes back with
+        // a null count and their own completed figure intact. Null is not zero
+        // and the card must not render it as one — "no cases available" would
+        // send a clinician away from a pool that is full of work.
+        const state = await availabilityFor(facts, auth.clinicianId);
 
         return {
-          id,
+          id: facts.id,
           name: String(pool.name),
           purpose: config.purpose,
           description: config.title,
-          reviewed_by_me: reviewed,
-          status,
+          available_to_you: state.available,
+          completed_by_you: state.completed,
+          closed: state.closed,
         };
       })
     );
 
-    listed.sort((a, b) => a.name.localeCompare(b.name));
+    // Closed pools last: they are a record of work done rather than work to do,
+    // and a clinician scanning for something to pick up should not have to read
+    // past them.
+    listed.sort((a, b) =>
+      a.closed === b.closed
+        ? a.name.localeCompare(b.name)
+        : a.closed
+          ? 1
+          : -1
+    );
+
     return NextResponse.json({ pools: listed });
   });
 }
