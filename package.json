@@ -14,7 +14,7 @@
     "@supabase/supabase-js": "^2.41.0",
     "jose": "^5.2.0",
     "lucide-react": "^1.33.0",
-    "next": "16.3.6",
+    "next": "16.3.8",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "recharts": "^3.10.1",
