@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandMark } from "./BrandMark";
 
 /**
  * The public site's footer. Mirrors the header's routes so nothing is orphaned.
@@ -11,10 +12,13 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-hairline">
       <div className="mx-auto max-w-[1100px] px-5 py-10 text-center lg:px-8">
-        <p className="text-[16px] font-bold tracking-tight text-ink">
+        <p className="inline-flex items-center gap-2.5 text-[16px] font-semibold tracking-[0.04em] text-ink">
+          <span className="text-accent">
+            <BrandMark size={18} />
+          </span>
           Senebiclabs
         </p>
-        <p className="mt-1 text-[15px] text-muted">
+        <p className="mt-2 text-[15px] text-muted">
           Clinical review platform for licensed clinicians
         </p>
 

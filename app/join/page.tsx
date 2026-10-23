@@ -2,8 +2,12 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Hourglass, Mail } from "lucide-react";
+import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { buttonClass } from "@/components/ui/button-class";
+import { Card, IconBadge } from "@/components/ui/Card";
+import { Pill } from "@/components/ui/Pill";
 import {
   AuthShell,
   GoogleButton,
@@ -104,8 +108,8 @@ function Join() {
   if (!state) {
     return (
       <AuthShell>
-        <Card className="p-6">
-          <div className="h-44 animate-pulse-soft rounded-card bg-hairline" />
+        <Card className="p-7 sm:p-8">
+          <div className="h-64 animate-pulse-soft rounded-btn bg-surface-raised" />
         </Card>
       </AuthShell>
     );
@@ -115,18 +119,17 @@ function Join() {
     const copy = DEAD[state.problem ?? "not_found"] ?? DEAD.not_found;
     return (
       <AuthShell>
-        <Card className="p-6 text-center">
-          <div
-            aria-hidden="true"
-            className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-canvas text-[20px]"
-          >
-            ⌛
+        <Card elevated className="p-7 text-center sm:p-8">
+          <div className="flex justify-center">
+            <IconBadge size="lg" tone="neutral">
+              <Hourglass size={22} strokeWidth={1.75} />
+            </IconBadge>
           </div>
-          <h1 className="text-section text-ink">{copy.title}</h1>
-          <p className="mt-2 text-body text-muted">{copy.body}</p>
+          <h1 className="mt-5 text-title text-ink">{copy.title}</h1>
+          <p className="mt-2 text-[15px] leading-relaxed text-muted">{copy.body}</p>
           <a
             href="/login"
-            className="focusable mt-5 inline-flex h-10 items-center justify-center rounded-btn border border-hairline bg-surface px-4 text-[15px] font-semibold text-ink transition-colors hover:bg-accent-soft"
+            className={buttonClass({ variant: "secondary", className: "mt-6" })}
           >
             Go to sign in
           </a>
@@ -137,15 +140,15 @@ function Join() {
 
   return (
     <AuthShell footer="By joining you agree to review case material in confidence.">
-      <Card className="p-6">
+      <Card elevated className="p-7 sm:p-8">
         <>
-            <p className="text-label uppercase text-muted">
+            <Pill tone="accent" dot>
               You have been invited
-            </p>
-            <h1 className="mt-1.5 text-section text-ink">
+            </Pill>
+            <h1 className="mt-4 text-title text-ink">
               Join Senebiclabs
             </h1>
-            <p className="mt-2 text-body text-muted">
+            <p className="mt-2 text-[15px] leading-relaxed text-muted">
               {state.inviter ? (
                 <>
                   <span className="font-semibold text-ink">{state.inviter}</span>{" "}
@@ -160,24 +163,20 @@ function Join() {
               )}
             </p>
 
-            <div className="mt-4 rounded-card border border-hairline bg-canvas px-4 py-3">
-              <p className="text-label uppercase text-muted">
-                This invitation is for
-              </p>
-              <p className="mt-0.5 text-body font-semibold text-ink">
-                {state.invited_email}
-              </p>
+            <div className="mt-5 flex items-center gap-3 rounded-btn border border-hairline-soft bg-canvas-top px-4 py-3">
+              <Mail size={17} aria-hidden="true" className="shrink-0 text-accent" />
+              <div className="min-w-0">
+                <p className="text-[13px] text-subtle">This invitation is for</p>
+                <p className="truncate text-[15px] font-semibold text-ink">
+                  {state.invited_email}
+                </p>
+              </div>
             </div>
 
             {bounced && (
-              <div
-                role="alert"
-                className="mt-4 rounded-card border border-danger bg-danger-soft px-4 py-3"
-              >
-                <p className="text-[15px] text-ink">
-                  {GATE_ERRORS[bounced] ?? GATE_ERRORS.google_failed}
-                </p>
-              </div>
+              <Alert tone="danger" role="alert" className="mt-4">
+                {GATE_ERRORS[bounced] ?? GATE_ERRORS.google_failed}
+              </Alert>
             )}
 
             {/* Two ways in, and neither sends another email. The invitation
@@ -196,18 +195,19 @@ function Join() {
               variant="secondary"
               onClick={accept}
               loading={loading}
-              className="h-11 w-full"
+              size="lg"
+              className="w-full"
             >
               Continue with email
             </Button>
 
             {error && (
-              <p role="alert" className="mt-3 text-[15px] text-danger">
+              <Alert tone="danger" role="alert" className="mt-4">
                 {error}
-              </p>
+              </Alert>
             )}
 
-            <p className="mt-4 text-center text-[14px] text-muted">
+            <p className="mt-4 text-center text-[13px] leading-relaxed text-subtle">
               Either way your account is created on this address. Google just
               gives you a password-free way back in next time.
             </p>
@@ -222,8 +222,8 @@ export default function JoinPage() {
     <Suspense
       fallback={
         <AuthShell>
-          <Card className="p-6">
-            <div className="h-44 animate-pulse-soft rounded-card bg-hairline" />
+          <Card className="p-7 sm:p-8">
+            <div className="h-64 animate-pulse-soft rounded-btn bg-surface-raised" />
           </Card>
         </AuthShell>
       }

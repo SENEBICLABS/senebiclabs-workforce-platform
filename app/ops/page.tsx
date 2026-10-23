@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Lock, Search } from "lucide-react";
+import { BrandMark } from "@/components/landing/BrandMark";
+import { Alert } from "@/components/ui/Alert";
+import { buttonClass, DISABLED } from "@/components/ui/button-class";
+import { Input } from "@/components/ui/Field";
 import { formatFlagRate } from "@/lib/flag-rate";
 
 /* ── shared plumbing ─────────────────────────────────────────────── */
@@ -28,24 +33,33 @@ async function ops<T>(path: string, init: RequestInit = {}): Promise<T> {
   return body as T;
 }
 
-const cell = "px-3 py-2 text-[15px] align-middle";
-const head = "px-3 py-2 text-[12px] uppercase tracking-wider text-white text-left font-medium";
-const rowLine = "border-t border-white/10";
-const btn =
-  "rounded-md border border-white/15 px-2.5 py-1 text-[14px] text-white hover:bg-white/10 disabled:opacity-40";
-const btnPrimary =
-  "rounded-md bg-[#0E7C74] px-3 py-1.5 text-[15px] font-medium text-white hover:bg-[#0A5A54] disabled:opacity-40";
+// No colour on the cell: it inherits text-strong from the table's frame, so a
+// cell that needs its own (a name, an expired date) can set one without two
+// colour utilities competing on the same element.
+const cell = "px-3 py-3 text-[14px] align-middle first:pl-4 last:pr-4";
+const head =
+  "whitespace-nowrap bg-canvas-top px-3 py-2.5 first:pl-4 last:pr-4 text-left text-label font-medium uppercase text-subtle";
+const rowLine = "border-t border-hairline-soft transition-colors hover:bg-accent-soft/30";
+const btn = `${buttonClass({ variant: "secondary", size: "sm" })} ${DISABLED}`;
+const btnPrimary = `${buttonClass({ size: "sm" })} ${DISABLED}`;
 const fmt = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
-function Section({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
+function Section({ title, count, action, children }: { title: string; count?: number; action?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="mt-8">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 className="text-[15px] font-semibold uppercase tracking-wider text-white">{title}</h2>
+    <section className="mt-10">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="flex items-center gap-2 text-section text-ink">
+          {title}
+          {count !== undefined && count > 0 && (
+            <span className="tnum rounded-full bg-accent-soft px-2 py-0.5 text-[12px] font-semibold text-accent ring-1 ring-inset ring-accent/25">
+              {count}
+            </span>
+          )}
+        </h2>
         {action}
       </div>
-      <div className="overflow-x-auto rounded-lg border border-white/10 bg-black/20">{children}</div>
+      <div className="overflow-x-auto rounded-card border border-hairline bg-surface text-strong shadow-card">{children}</div>
     </section>
   );
 }
@@ -53,9 +67,12 @@ function Section({ title, action, children }: { title: string; action?: React.Re
 function Toggle({ on, onClick, busy, labels = ["On", "Off"] }: { on: boolean; onClick: () => void; busy: boolean; labels?: [string, string] | string[] }) {
   return (
     <button onClick={onClick} disabled={busy}
-      className={`rounded-md px-2.5 py-1 text-[14px] font-medium disabled:opacity-40 ${
-        on ? "bg-[#0E7C74] text-white" : "border border-white/15 text-white hover:bg-white/10"
+      className={`focusable inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[13px] font-semibold ring-1 ring-inset transition-colors disabled:opacity-40 ${
+        on
+          ? "bg-accent-soft text-accent ring-accent/35 hover:bg-accent-soft/70"
+          : "bg-surface-raised text-muted ring-hairline hover:text-ink"
       }`}>
+      <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${on ? "bg-accent" : "bg-subtle"}`} />
       {on ? labels[0] : labels[1]}
     </button>
   );
@@ -120,6 +137,12 @@ function AccessPicker({ pool, onClose, onSaved }: { pool: Pool; onClose: () => v
 
   const seniorCount = rows?.filter((r) => r.eligible && r.senior).length ?? 0;
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   const save = async () => {
     if (!rows) return;
     setBusy(true);
@@ -143,55 +166,60 @@ function AccessPicker({ pool, onClose, onSaved }: { pool: Pool; onClose: () => v
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative w-full max-w-md rounded-lg border border-white/15 bg-[#0C2422] p-5">
-        <h3 className="text-[15px] font-semibold text-white">Manage access</h3>
-        <p className="mt-1 text-[14px] text-white">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="access-title"
+        className="animate-rise relative w-full max-w-md rounded-card bg-surface-raised p-6 shadow-pop"
+      >
+        <h3 id="access-title" className="text-section text-ink">Manage access</h3>
+        <p className="mt-1 text-[14px] text-strong">
           {pool.name} — only the clinicians ticked here can see this pool.
         </p>
-        <p className="mt-2 text-[13px] leading-relaxed text-white/70">
+        <p className="mt-2 text-[13px] leading-relaxed text-muted">
           A senior is offered cases where other clinicians disagreed, ahead of
           ordinary work, and never a case they read themselves. Seniority
           applies to this pool only.
         </p>
 
-        <div className="mt-4 max-h-[46vh] space-y-1 overflow-y-auto">
-          {!rows && <p className="text-[15px] text-white">Loading…</p>}
+        <div className="mt-4 max-h-[46vh] space-y-0.5 overflow-y-auto rounded-btn border border-hairline-soft bg-canvas-top p-1.5">
+          {!rows && <p className="px-2 py-1.5 text-[14px] text-muted">Loading…</p>}
           {rows?.map((r) => (
-            <div key={r.id} className="flex items-center justify-between gap-3 rounded px-2 py-1.5 hover:bg-white/5">
+            <div key={r.id} className="flex items-center justify-between gap-3 rounded-[6px] px-2.5 py-2 hover:bg-accent-soft/50">
               <label className="flex min-w-0 cursor-pointer items-center gap-2.5">
                 <input type="checkbox" checked={r.eligible}
                   onChange={(e) => setRow(r.id, { eligible: e.target.checked })}
-                  className="h-3.5 w-3.5 accent-[#0E7C74]" />
-                <span className="truncate text-[15px] text-white">{r.email}</span>
+                  className="focusable h-4 w-4 accent-accent" />
+                <span className="truncate text-[14px] text-ink">{r.email}</span>
               </label>
               <label
                 className={`flex shrink-0 items-center gap-1.5 text-[13px] ${
-                  r.eligible ? "cursor-pointer text-white" : "cursor-not-allowed text-white/35"
+                  r.eligible ? "cursor-pointer text-strong" : "cursor-not-allowed text-subtle"
                 }`}
                 title={r.eligible ? "Settles disagreements in this pool" : "Give them the pool first"}
               >
                 <input type="checkbox" checked={r.senior} disabled={!r.eligible}
                   onChange={(e) => setRow(r.id, { senior: e.target.checked })}
-                  className="h-3.5 w-3.5 accent-[#0E7C74]" />
+                  className="focusable h-4 w-4 accent-accent" />
                 Senior
               </label>
             </div>
           ))}
-          {rows?.length === 0 && <p className="text-[15px] text-white">No clinicians yet.</p>}
+          {rows?.length === 0 && <p className="px-2 py-1.5 text-[14px] text-muted">No clinicians yet.</p>}
         </div>
 
-        {error && <p role="alert" className="mt-2 text-[14px] text-[#F2A9A9]">{error}</p>}
+        {error && <p role="alert" className="mt-2 text-[14px] text-danger">{error}</p>}
 
         {rows && seniorCount === 0 && rows.some((r) => r.eligible) && (
-          <p className="mt-3 rounded border border-[#F2A9A9]/40 bg-[#F2A9A9]/10 px-3 py-2 text-[13px] leading-relaxed text-[#F2A9A9]">
+          <Alert tone="warning" className="mt-3">
             Nobody is senior here. Every disagreement in this pool will wait for
             an operator to resolve by hand.
-          </p>
+          </Alert>
         )}
 
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-[14px] text-white">
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+          <span className="tnum text-[13px] text-muted">
             {rows?.filter((r) => r.eligible).length ?? 0} of {rows?.length ?? 0} selected
             {seniorCount > 0 && `, ${seniorCount} senior`}
           </span>
@@ -297,11 +325,21 @@ export default function OpsConsole() {
     : [];
 
   return (
-    <div className="mx-auto max-w-[1180px] px-6 py-6">
-      <header className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
-        <div>
-          <h1 className="text-[16px] font-semibold tracking-tight text-white">Operator console</h1>
-          <p className="text-[14px] text-white">Not part of the clinician platform.</p>
+    <div className="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8">
+      <header className="flex items-center justify-between gap-4 border-b border-hairline-soft pb-5">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-btn bg-accent-soft text-accent ring-1 ring-inset ring-accent/30">
+            <BrandMark size={19} />
+          </span>
+          <div>
+            <h1 className="flex items-center gap-2 text-[18px] font-bold tracking-[-0.015em] text-ink">
+              Operator console
+              <span className="rounded-full bg-warning-soft px-2 py-0.5 font-mono text-[10.5px] font-medium uppercase tracking-[0.1em] text-warning ring-1 ring-inset ring-warning/25">
+                Internal
+              </span>
+            </h1>
+            <p className="text-[13px] text-subtle">Not part of the clinician platform.</p>
+          </div>
         </div>
         <button className={btn}
           onClick={async () => {
@@ -309,31 +347,39 @@ export default function OpsConsole() {
             router.push("/ops/unlock");
             router.refresh();
           }}>
+          <Lock size={14} aria-hidden="true" />
           Lock
         </button>
       </header>
 
       {notice && (
-        <p role="status" className="mt-4 rounded-md border border-white/15 bg-black/30 px-3 py-2 text-[15px] text-white">
+        <Alert role="status" tone="info" className="mt-5">
           {notice}
-        </p>
+        </Alert>
       )}
 
       {/* Overview */}
-      <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
         {stats.map(([label, value]) => (
-          <div key={label} className="rounded-lg border border-white/10 bg-black/20 px-3 py-2.5">
-            <p className="text-[12px] uppercase tracking-wider text-white">{label}</p>
-            <p className="mt-1 font-mono text-[16px] text-white">{value}</p>
+          <div key={label} className="rounded-card border border-hairline bg-surface px-4 py-3.5 shadow-card">
+            <p className="text-[12.5px] font-medium text-muted">{label}</p>
+            <p className="tnum mt-1.5 text-[20px] font-bold leading-tight tracking-[-0.02em] text-ink">{value}</p>
           </div>
         ))}
+        {!overview &&
+          Array.from({ length: 7 }, (_, i) => (
+            <div key={i} className="h-[78px] animate-pulse-soft rounded-card border border-hairline-soft bg-surface" />
+          ))}
       </div>
 
       {/* Clinicians */}
       <Section title="Clinicians"
         action={
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search email or name"
-            className="h-8 w-56 rounded-md border border-white/15 bg-black/20 px-2.5 text-[15px] text-white outline-none focus:border-[#0E7C74]" />
+          <div className="relative w-full sm:w-64">
+            <Search size={15} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-subtle" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search email or name"
+              aria-label="Search clinicians" controlSize="sm" className="pl-9" />
+          </div>
         }>
         <table className="w-full min-w-[1120px]">
           <thead><tr>
@@ -347,18 +393,18 @@ export default function OpsConsole() {
           <tbody>
             {clinicians.map((c) => (
               <tr key={c.id} className={rowLine}>
-                <td className={`${cell} text-white`}>{c.email}</td>
-                <td className={`${cell} text-white`}>{c.name ?? "—"}</td>
-                <td className={`${cell} text-white`}>{fmt(c.joined)}</td>
-                <td className={`${cell} text-white`}>{c.invited_by ?? "—"}</td>
-                <td className={`${cell} font-mono text-white`}>{c.reviews}</td>
+                <td className={`${cell} font-medium text-ink`}>{c.email}</td>
+                <td className={`${cell} min-w-[140px]`}>{c.name ?? "—"}</td>
+                <td className={`${cell} whitespace-nowrap`}>{fmt(c.joined)}</td>
+                <td className={`${cell}`}>{c.invited_by ?? "—"}</td>
+                <td className={`${cell} tnum`}>{c.reviews}</td>
                 {/* The count and the share, in separate columns. Either alone
                     misleads: 40 flags is unreadable without knowing it is out
                     of 2,000, and 50% is unreadable when it is one flag out of
                     two. */}
-                <td className={`${cell} font-mono text-white`}>{c.flags}</td>
-                <td className={`${cell} font-mono text-white`}>{formatFlagRate(c.flag_rate)}</td>
-                <td className={`${cell} font-mono text-white`}>{c.pools}</td>
+                <td className={`${cell} tnum`}>{c.flags}</td>
+                <td className={`${cell} tnum`}>{formatFlagRate(c.flag_rate)}</td>
+                <td className={`${cell} tnum`}>{c.pools}</td>
                 <td className={cell}>
                   <Toggle on={c.can_invite} busy={busy === c.id} labels={["Yes", "No"]}
                     onClick={() => act(c.id,
@@ -368,7 +414,7 @@ export default function OpsConsole() {
                 <td className={cell}>
                   {/* Signs them out everywhere on their next request. Their
                       account, history and pool access are untouched. */}
-                  <button className={btn} disabled={busy === `s-${c.id}`}
+                  <button className={`${btn} whitespace-nowrap`} disabled={busy === `s-${c.id}`}
                     onClick={() => {
                       if (!confirm(`End every session ${c.email} is signed in with? They are signed out on every device on their next request, and can sign in again.`)) return;
                       act(`s-${c.id}`,
@@ -386,7 +432,7 @@ export default function OpsConsole() {
               </tr>
             ))}
             {clinicians.length === 0 && (
-              <tr><td colSpan={8} className={`${cell} text-white`}>No clinicians match.</td></tr>
+              <tr><td colSpan={10} className={`${cell} py-8 text-center text-muted`}>No clinicians match.</td></tr>
             )}
           </tbody>
         </table>
@@ -405,13 +451,13 @@ export default function OpsConsole() {
           <tbody>
             {pools.map((p) => (
               <tr key={p.id} className={rowLine}>
-                <td className={`${cell} text-white`}>{p.name}</td>
-                <td className={`${cell} font-mono text-white`}>{p.ls_project_id}</td>
-                <td className={`${cell} text-white`}>{p.purpose}</td>
-                <td className={`${cell} text-white`}>{p.review_required ? "two-phase" : "—"}</td>
-                <td className={`${cell} font-mono text-white`}>{p.items ?? "—"}</td>
-                <td className={`${cell} font-mono text-white`}>{p.reviewed}</td>
-                <td className={`${cell} font-mono text-white`}>{p.eligible_clinicians}</td>
+                <td className={`${cell} min-w-[190px] font-medium text-ink`}>{p.name}</td>
+                <td className={`${cell} tnum`}>{p.ls_project_id}</td>
+                <td className={`${cell} capitalize`}>{p.purpose}</td>
+                <td className={`${cell}`}>{p.review_required ? "two-phase" : "—"}</td>
+                <td className={`${cell} tnum`}>{p.items ?? "—"}</td>
+                <td className={`${cell} tnum`}>{p.reviewed}</td>
+                <td className={`${cell} tnum`}>{p.eligible_clinicians}</td>
                 {/*
                   Worth seeing before work starts, not when a case sticks: a
                   pool with nobody senior has no way to settle a disagreement
@@ -419,10 +465,10 @@ export default function OpsConsole() {
                 */}
                 <td className={cell}>
                   {p.senior_clinicians > 0 ? (
-                    <span className="font-mono text-white">{p.senior_clinicians}</span>
+                    <span className="tnum">{p.senior_clinicians}</span>
                   ) : (
                     <span
-                      className="font-mono text-[#F2A9A9]"
+                      className="font-semibold text-danger"
                       title="No senior clinician: every disagreement here falls back to an operator"
                     >
                       none
@@ -458,7 +504,7 @@ export default function OpsConsole() {
                         : `${p.name} is open. Clinicians receive it on their next sign-in.`)} />
                 </td>
                 <td className={`${cell} whitespace-nowrap text-right`}>
-                  <button className={btn} onClick={() => setPicker(p)}>Manage access</button>{" "}
+                  <button className={`${btn} mr-2`} onClick={() => setPicker(p)}>Manage access</button>
                   <button className={btn} disabled={busy === `revoke-${p.id}`}
                     onClick={() => {
                       if (!confirm(`Close ${p.name} and revoke access for all ${p.eligible_clinicians} clinician(s)?`)) return;
@@ -477,7 +523,7 @@ export default function OpsConsole() {
 
       {/* Access requests. Review only: nothing here sends an invitation. If
           someone is a fit, reach out, then invite them from Invites below. */}
-      <Section title={`Access requests${requests.length ? ` (${requests.length})` : ""}`}>
+      <Section title="Access requests" count={requests.length}>
         <table className="w-full min-w-[880px]">
           <thead><tr>
             <th className={head}>Name</th><th className={head}>Email</th><th className={head}>Specialty</th>
@@ -487,24 +533,24 @@ export default function OpsConsole() {
           <tbody>
             {requests.map((r) => (
               <tr key={r.id} className={rowLine}>
-                <td className={`${cell} text-white`}>{r.full_name}</td>
-                <td className={`${cell} text-white`}>{r.email}</td>
-                <td className={`${cell} text-white`}>{r.specialty}</td>
-                <td className={`${cell} text-white`}>{r.country}</td>
+                <td className={`${cell} font-medium text-ink`}>{r.full_name}</td>
+                <td className={`${cell}`}>{r.email}</td>
+                <td className={`${cell}`}>{r.specialty}</td>
+                <td className={`${cell}`}>{r.country}</td>
                 <td className={cell}>
                   {r.linkedin_url ? (
                     // Only https on linkedin.com gets this far — the API and the
                     // table's CHECK both hold that line — and it opens without a
                     // referrer or opener handle.
                     <a href={r.linkedin_url} target="_blank" rel="noopener noreferrer nofollow"
-                      className="text-[#6ADABD] underline-offset-2 hover:underline">
+                      className="focusable rounded-btn text-accent underline-offset-4 hover:underline">
                       {linkedinPath(r.linkedin_url)}
                     </a>
                   ) : (
-                    <span className="text-white">—</span>
+                    <span className="text-subtle">—</span>
                   )}
                 </td>
-                <td className={`${cell} text-white`}>{fmt(r.created_at)}</td>
+                <td className={`${cell} whitespace-nowrap`}>{fmt(r.created_at)}</td>
                 <td className={`${cell} whitespace-nowrap text-right`}>
                   <button className={btn} disabled={busy === `req-${r.id}`}
                     onClick={() => act(`req-${r.id}`,
@@ -516,7 +562,7 @@ export default function OpsConsole() {
               </tr>
             ))}
             {requests.length === 0 && (
-              <tr><td colSpan={7} className={`${cell} text-white`}>No requests waiting.</td></tr>
+              <tr><td colSpan={7} className={`${cell} py-8 text-center text-muted`}>No requests waiting.</td></tr>
             )}
           </tbody>
         </table>
@@ -525,16 +571,16 @@ export default function OpsConsole() {
       {/* Invites */}
       <Section title="Invites"
         action={
-          <form className="flex gap-2"
+          <form className="flex w-full gap-2 sm:w-auto"
             onSubmit={(e) => {
               e.preventDefault();
               act("invite",
                 () => ops("/invites", { method: "POST", body: JSON.stringify({ email: inviteEmail }) }),
                 `Invitation sent to ${inviteEmail}.`).then(() => setInviteEmail(""));
             }}>
-            <input type="email" required value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)}
-              placeholder="colleague@hospital.org"
-              className="h-8 w-56 rounded-md border border-white/15 bg-black/20 px-2.5 text-[15px] text-white outline-none focus:border-[#0E7C74]" />
+            <Input type="email" required value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)}
+              placeholder="colleague@hospital.org" aria-label="Email to invite"
+              controlSize="sm" className="min-w-0 sm:w-64" />
             <button type="submit" className={btnPrimary} disabled={busy === "invite"}>
               {busy === "invite" ? "Sending…" : "Send invite"}
             </button>
@@ -548,10 +594,10 @@ export default function OpsConsole() {
           <tbody>
             {invites.map((i) => (
               <tr key={i.id} className={rowLine}>
-                <td className={`${cell} text-white`}>{i.email}</td>
-                <td className={`${cell} text-white`}>{i.invited_by}</td>
-                <td className={`${cell} text-white`}>{fmt(i.sent)}</td>
-                <td className={`${cell} ${i.expired ? "text-[#F2A9A9]" : "text-white"}`}>
+                <td className={`${cell} font-medium text-ink`}>{i.email}</td>
+                <td className={`${cell}`}>{i.invited_by}</td>
+                <td className={`${cell}`}>{fmt(i.sent)}</td>
+                <td className={`${cell} ${i.expired ? "text-danger" : ""}`}>
                   {fmt(i.expires)}{i.expired ? " (expired)" : ""}
                 </td>
                 <td className={`${cell} text-right`}>
@@ -565,7 +611,7 @@ export default function OpsConsole() {
               </tr>
             ))}
             {invites.length === 0 && (
-              <tr><td colSpan={5} className={`${cell} text-white`}>No invitations pending.</td></tr>
+              <tr><td colSpan={5} className={`${cell} py-8 text-center text-muted`}>No invitations pending.</td></tr>
             )}
           </tbody>
         </table>

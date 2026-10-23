@@ -22,62 +22,63 @@
    * carries the colour. That is a great deal of teal on a page without a
    * single tinted surface.
    */
-  --color-surface: #0D0D0D;
+  --color-surface: #0C0E0E;
   --color-canvas: #000000;
-  --color-canvas-top: #060606;
-  /* Monochrome text, hierarchy by opacity. */
+  --color-canvas-top: #070909;
+  /* One step above a card: menus, dialogs, the selected row of a segmented
+   * control. Still neutral, so the teal stays in the edges and the accents. */
+  --color-surface-raised: #141817;
+
+  /* ---- Text --------------------------------------------------------
+   *
+   * Hierarchy is back, without grey. Flattening everything to white took the
+   * dullness out but took the order with it: a heading, a hint and a
+   * timestamp all asked for the same attention. The secondary steps are
+   * tinted with the accent instead of dimmed, which is the same move the
+   * placeholder already made, so they read as quieter rather than as greyed
+   * out.
+   *
+   *   ink      #FFFFFF   headings, values, anything that is the answer
+   *   strong   #E6F0ED   lead paragraphs, a step below a heading
+   *   muted    #A3BDB6   body copy that supports, hints, descriptions  9.7:1
+   *   subtle   #739089   captions, timestamps, disabled                5.4:1
+   */
   --color-ink: #FFFFFF;
-  --color-strong: #FFFFFF;
-  --color-muted: #FFFFFF;
+  --color-strong: #E6F0ED;
+  --color-muted: #A3BDB6;
+  --color-subtle: #739089;
   /* The one thing that must not be white: an empty field would look filled.
-     Tinted with the accent rather than dimmed to grey. */
-  --color-placeholder: rgb(79 191 164 / 0.55);
-  /* The accent at low alpha rather than white. This is where most of the
-   * teal on the page comes from: it is on every card, every divider and
-   * every field, and it composites to 31 steps of chroma over a raised
-   * surface, which is enough to read as colour rather than as a grey line.
-   * It is also slightly more visible than the white it replaces, 1.69
-   * against 1.55. */
-  --color-hairline: rgb(79 191 164 / 0.28);
-  /* A human teal, not an electric one.
-   *
-   * Three things separate the two, and the previous #22F0D5 was at the
-   * extreme of all of them: its brightest channel sat at 240, near the top
-   * of the range, and its chroma at 206, near the widest possible. That is
-   * the recipe for a terminal green rather than something a clinician would
-   * want to look at for an hour. This sits at 191 and 112, still leaning
-   * green rather than cyan, which is the side of teal that reads as living
-   * rather than lit.
-   *
-   * It also stops fighting the semantics. Those are soft pastels, and a
-   * neon accent beside them looked like two palettes in one interface.
-   *
-   * There is no contrast cost worth naming: 8.63 against a card, where the
-   * neon managed 13.41 and nobody needed the difference. */
+     Tinted with the accent rather than dimmed. */
+  --color-placeholder: rgb(79 191 164 / 0.5);
+  /* Edges carry the teal. Three strengths: the card edge, the quieter line
+   * between rows inside a card, and the firmer edge of a control you type in. */
+  --color-hairline: rgb(79 191 164 / 0.22);
+  --color-hairline-soft: rgb(79 191 164 / 0.12);
+  --color-hairline-strong: rgb(79 191 164 / 0.38);
+  /* A human teal, not an electric one: brightest channel at 191, chroma at
+   * 112, leaning green rather than cyan. 8.6:1 against a card. */
   --color-accent: #4FBFA4;
   /* Brighter on hover, not darker. On a dark ground, up is forward. */
   --color-accent-hover: #6ADABD;
-  /* Recessed rather than raised. On a teal ground a lighter chip would have
-   * pushed accent text down to 4.46; sitting below the card keeps it at 6.09
-   * and still reads as a distinct surface. */
-  --color-accent-soft: #0E332D;
-  /* Fills are light, so the type on them is dark rather than white. White on
-   * the accent measures 2.6 and is unreadable; this measures 7.53. */
+  /* Recessed rather than raised, so accent text on it keeps 6:1. */
+  --color-accent-soft: #0E2B26;
+  /* Fills are light, so the type on them is dark. White on the accent
+   * measures 2.6; this measures 7.5. */
   --color-on-fill: #03211C;
   /* Semantics invert too: the colour is light and the chip is dark. */
   --color-warning: #FBBF24;
-  --color-warning-soft: #3B2C0A;
+  --color-warning-soft: #2E230A;
   --color-danger: #FCA5A5;
-  --color-danger-soft: #3D1717;
+  --color-danger-soft: #331414;
   --color-info: #93C5FD;
-  --color-info-soft: #152A4D;
+  --color-info-soft: #13233F;
   --color-success: #6EE7B7;
-  --color-success-soft: #0B3527;
+  --color-success-soft: #0B2E22;
 
   /* Sidebar, on the same ramp: barely-raised at rest, raised on hover. */
-  --color-rail: #060606;
-  --color-rail-hover: #0D0D0D;
-  --color-rail-text: #FFFFFF;
+  --color-rail: #050707;
+  --color-rail-hover: #0E1312;
+  --color-rail-text: #A3BDB6;
 
   /* ---- Type ------------------------------------------------------- */
   /* Body. Every sentence on the platform. */
@@ -107,17 +108,30 @@
 
   /* Eyebrows. Mono, uppercase and widely tracked, which is what separates them
    * from body text now that neither carries a colour of its own. */
-  --text-label: 12px;
+  --text-label: 11.5px;
   --text-label--line-height: 1.4;
   --text-label--font-weight: 500;
-  --text-label--letter-spacing: 0.12em;
+  --text-label--letter-spacing: 0.1em;
 
   /* ---- Geometry --------------------------------------------------- */
-  --radius-btn: 6px;
-  --radius-card: 8px;
+  --radius-btn: 8px;
+  --radius-card: 12px;
+
+  /* ---- Depth ------------------------------------------------------
+   * On black a shadow cannot darken anything, so elevation is a faint top
+   * highlight plus a shadow that only shows where it falls on the canvas. */
+  --shadow-card: inset 0 1px 0 0 rgb(255 255 255 / 0.03), 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  --shadow-pop: 0 0 0 1px rgb(79 191 164 / 0.22), 0 24px 48px -12px rgb(0 0 0 / 0.8);
+  --shadow-glow: 0 0 0 1px rgb(79 191 164 / 0.35), 0 8px 28px -6px rgb(79 191 164 / 0.22);
 
   /* ---- Motion ----------------------------------------------------- */
   --animate-pulse-soft: pulse-soft 1.6s ease-in-out infinite;
+  --animate-rise: rise 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pulse-soft {
@@ -194,6 +208,12 @@ body {
 .focusable:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+/* Text selection in the brand's colour rather than the browser's blue. */
+::selection {
+  background: rgb(79 191 164 / 0.35);
+  color: #FFFFFF;
 }
 
 @media (prefers-reduced-motion: reduce) {

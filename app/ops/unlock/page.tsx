@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { KeyRound } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { FieldError, Input, Label } from "@/components/ui/Field";
 
 export default function Unlock() {
   const router = useRouter();
@@ -36,36 +39,42 @@ export default function Unlock() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-5">
-      <form onSubmit={submit} className="w-full max-w-[360px]">
-        <h1 className="text-[16px] font-semibold tracking-tight text-white">
+    <div className="ground-blend flex min-h-screen items-center justify-center px-4">
+      <form onSubmit={submit} className="animate-rise w-full max-w-[380px] rounded-card border border-hairline bg-surface p-7 shadow-pop">
+        <span className="grid h-11 w-11 place-items-center rounded-btn bg-warning-soft text-warning ring-1 ring-inset ring-warning/25">
+          <KeyRound size={20} aria-hidden="true" />
+        </span>
+        <h1 className="mt-5 text-title text-ink">
           Operator console
         </h1>
-        <p className="mt-1 text-[15px] text-white">
+        <p className="mt-1.5 text-[15px] text-muted">
           This area is not part of the clinician platform.
         </p>
 
-        <label htmlFor="key" className="mt-6 mb-1.5 block text-[12px] uppercase tracking-wider text-white">
-          Operator key
-        </label>
-        <input
-          id="key"
-          type="password"
-          autoFocus
-          autoComplete="off"
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
-          className="h-10 w-full rounded-md border border-white/15 bg-black/20 px-3 font-mono text-[15px] text-white outline-none focus:border-[#0E7C74]"
-        />
-        {error && <p role="alert" className="mt-2 text-[15px] text-[#F2A9A9]">{error}</p>}
+        <div className="mt-6">
+          <Label htmlFor="key">Operator key</Label>
+          <Input
+            id="key"
+            type="password"
+            autoFocus
+            autoComplete="off"
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            invalid={Boolean(error)}
+            className="font-mono"
+          />
+          {error && <FieldError>{error}</FieldError>}
+        </div>
 
-        <button
+        <Button
           type="submit"
-          disabled={busy || !key}
-          className="mt-4 h-10 w-full rounded-md bg-[#0E7C74] text-[15px] font-medium text-white disabled:opacity-40"
+          disabled={!key}
+          loading={busy}
+          size="lg"
+          className="mt-5 w-full"
         >
           {busy ? "Checking…" : "Unlock"}
-        </button>
+        </Button>
       </form>
     </div>
   );

@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { UserPlus } from "lucide-react";
+import { Alert } from "@/components/ui/Alert";
+import { Card, IconBadge } from "@/components/ui/Card";
+import { FieldError, Input, Label } from "@/components/ui/Field";
 import { ApiError, api } from "@/lib/api";
 
 /**
@@ -36,36 +39,37 @@ export function InviteColleague() {
   };
 
   return (
-    <Card className="p-5">
-      <h2 className="text-section text-ink">Invite a colleague</h2>
-      <p className="mt-1 text-body text-muted">
-        Senebiclabs is invite-only. An invitation is for one address, is good
-        once, and expires after seven days.
-      </p>
+    <Card className="p-5 sm:p-6">
+      <div className="flex items-start gap-4">
+        <IconBadge>
+          <UserPlus size={17} />
+        </IconBadge>
+        <div className="min-w-0">
+          <h2 className="text-section text-ink">Invite a colleague</h2>
+          <p className="mt-1 text-[15px] text-muted">
+            Senebiclabs is invite-only. An invitation is for one address, is good
+            once, and expires after seven days.
+          </p>
+        </div>
+      </div>
 
       {sentTo ? (
-        <div className="mt-4 rounded-card border border-hairline bg-canvas px-4 py-3">
-          <p className="text-body text-ink">
-            Invitation sent to{" "}
-            <span className="font-semibold">{sentTo}</span>.
-          </p>
+        <div className="mt-5">
+          <Alert tone="success" role="status">
+            Invitation sent to <span className="font-semibold text-ink">{sentTo}</span>.
+          </Alert>
           <button
             onClick={() => setSentTo(null)}
-            className="focusable mt-2 rounded-btn text-[15px] font-semibold text-accent underline-offset-2 hover:underline"
+            className="focusable mt-3 rounded-btn text-[15px] font-semibold text-accent underline-offset-4 hover:underline"
           >
             Invite someone else
           </button>
         </div>
       ) : (
-        <form onSubmit={submit} className="mt-4">
-          <label
-            htmlFor="invite-email"
-            className="mb-1.5 block text-label uppercase text-muted"
-          >
-            Their email address
-          </label>
-          <div className="flex flex-wrap gap-2">
-            <input
+        <form onSubmit={submit} className="mt-5">
+          <Label htmlFor="invite-email">Their email address</Label>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
               id="invite-email"
               type="email"
               required
@@ -75,20 +79,14 @@ export function InviteColleague() {
                 setEmail(e.target.value);
                 setError("");
               }}
-              aria-invalid={Boolean(error)}
-              className={`focusable h-10 min-w-[220px] flex-1 rounded-card border bg-surface px-3 text-body text-ink placeholder:text-placeholder ${
-                error ? "border-danger" : "border-hairline"
-              }`}
+              invalid={Boolean(error)}
+              className="sm:flex-1"
             />
-            <Button type="submit" loading={busy}>
+            <Button type="submit" size="lg" loading={busy} className="sm:h-11">
               Send invitation
             </Button>
           </div>
-          {error && (
-            <p role="alert" className="mt-2 text-[15px] text-danger">
-              {error}
-            </p>
-          )}
+          {error && <FieldError>{error}</FieldError>}
         </form>
       )}
     </Card>

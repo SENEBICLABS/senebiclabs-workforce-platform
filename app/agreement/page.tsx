@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { Check, FileText } from "lucide-react";
+import { OnboardingShell } from "@/components/auth/AuthShell";
+import { Card, IconBadge } from "@/components/ui/Card";
+import { FieldError } from "@/components/ui/Field";
 import { ApiError, api } from "@/lib/api";
 
 const CLAUSES = [
@@ -61,31 +64,26 @@ export default function AgreementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-canvas px-5 py-12">
-      <div className="mx-auto w-full max-w-[680px]">
-        <div className="mb-6 flex items-center gap-2" aria-label="Step 2 of 3">
-          <span className="h-1 flex-1 rounded-full bg-accent" />
-          <span className="h-1 flex-1 rounded-full bg-accent" />
-          <span className="h-1 flex-1 rounded-full bg-hairline" />
-          <span className="ml-2 text-label uppercase text-muted">
-            Step 2 of 3
-          </span>
-        </div>
-
-        <h1 className="text-title text-ink">Reviewer agreement</h1>
-        <p className="mt-1.5 text-body text-muted">
+    <OnboardingShell step={2}>
+        <IconBadge size="lg">
+          <FileText size={22} strokeWidth={1.75} />
+        </IconBadge>
+        <h1 className="mt-5 text-[28px] font-bold leading-tight tracking-[-0.03em] text-ink sm:text-[32px]">
+          Reviewer agreement
+        </h1>
+        <p className="mt-2 text-body text-muted">
           Read this through before you begin. It covers what the work is, how
           you are paid, and how case material must be handled.
         </p>
 
-        <Card className="mt-6">
-          <div className="max-h-[420px] divide-y divide-hairline overflow-y-auto">
+        <Card className="mt-8 overflow-hidden">
+          <div className="max-h-[440px] divide-y divide-hairline-soft overflow-y-auto">
             {CLAUSES.map((clause) => (
-              <section key={clause.heading} className="px-5 py-4">
-                <h2 className="text-body font-semibold text-ink">
+              <section key={clause.heading} className="px-5 py-5 sm:px-6">
+                <h2 className="text-[15px] font-semibold text-ink">
                   {clause.heading}
                 </h2>
-                <p className="mt-1 text-body leading-relaxed text-muted">
+                <p className="mt-1.5 text-[15px] leading-relaxed text-muted">
                   {clause.body}
                 </p>
               </section>
@@ -93,7 +91,15 @@ export default function AgreementPage() {
           </div>
         </Card>
 
-        <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-card border border-hairline bg-surface p-4 transition-colors hover:bg-accent-soft">
+        <label
+          className={`mt-5 flex cursor-pointer items-start gap-3 rounded-card border p-4 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
+            accepted
+              ? "border-accent bg-accent-soft"
+              : error
+                ? "border-danger/60 bg-surface"
+                : "border-hairline bg-surface hover:border-accent/55"
+          }`}
+        >
           <input
             type="checkbox"
             checked={accepted}
@@ -101,28 +107,31 @@ export default function AgreementPage() {
               setAccepted(e.target.checked);
               setError("");
             }}
-            className="focusable mt-0.5 h-4 w-4 shrink-0 accent-accent"
+            className="sr-only"
           />
-          <span className="text-body text-ink">
+          <span
+            aria-hidden="true"
+            className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-[5px] border-2 transition-colors ${
+              accepted ? "border-accent bg-accent text-on-fill" : "border-hairline-strong"
+            }`}
+          >
+            {accepted && <Check size={13} strokeWidth={3} />}
+          </span>
+          <span className="text-[15px] text-ink">
             I have read the reviewer agreement and I accept its terms.
           </span>
         </label>
 
-        {error && (
-          <p role="alert" className="mt-3 text-[15px] text-danger">
-            {error}
-          </p>
-        )}
+        {error && <FieldError>{error}</FieldError>}
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Button size="lg" loading={loading} onClick={handleAccept}>
-            Accept and continue
-          </Button>
+        <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row">
           <Button size="lg" variant="secondary" onClick={() => router.push("/")}>
             Back to sign in
           </Button>
+          <Button size="lg" loading={loading} onClick={handleAccept} className="sm:ml-auto">
+            Accept and continue
+          </Button>
         </div>
-      </div>
-    </div>
+    </OnboardingShell>
   );
 }

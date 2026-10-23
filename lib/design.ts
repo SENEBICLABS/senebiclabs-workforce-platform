@@ -7,24 +7,27 @@
  */
 
 export const COLOR = {
-  surface: "#FFFFFF",
-  canvas: "#F6F8F8",
-  ink: "#10312E",
-  muted: "#5B6A68",
-  hairline: "#E3ECE9",
-  accent: "#0E7C74",
-  accentHover: "#0A5A54",
-  accentSoft: "#E7F2F0",
-  warning: "#B4780C",
-  danger: "#D64545",
-  info: "#3B7CE8",
-  success: "#0F7B52",
-  rail: "#0C2422",
+  surface: "#0C0E0E",
+  surfaceRaised: "#141817",
+  canvas: "#000000",
+  ink: "#FFFFFF",
+  strong: "#E6F0ED",
+  muted: "#A3BDB6",
+  subtle: "#739089",
+  hairline: "rgba(79, 191, 164, 0.22)",
+  accent: "#4FBFA4",
+  accentHover: "#6ADABD",
+  accentSoft: "#0E2B26",
+  warning: "#FBBF24",
+  danger: "#FCA5A5",
+  info: "#93C5FD",
+  success: "#6EE7B7",
+  rail: "#050707",
 } as const;
 
 export const RADIUS = {
-  button: 6,
-  card: 8,
+  button: 8,
+  card: 12,
   pill: 999,
 } as const;
 

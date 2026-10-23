@@ -30,7 +30,7 @@ export default function RequestAccessPage() {
           add you to the list. When we open to clinicians, we will email you.
         </p>
 
-        <div className="mx-auto mt-14 w-full max-w-[440px]">
+        <div className="mx-auto mt-14 w-full max-w-[480px]">
           {/* Read here, on the server, and handed to the form. The page is
               prerendered, so this is read at build time: a changed key takes
               effect on the next deploy. */}

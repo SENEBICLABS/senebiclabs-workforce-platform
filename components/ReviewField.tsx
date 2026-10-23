@@ -1,7 +1,8 @@
 "use client";
 
-import { Star } from "lucide-react";
+import { Check } from "lucide-react";
 import type { Field } from "@/lib/api";
+import { Input, Select, Textarea } from "@/components/ui/Field";
 import { findingOptionsFor } from "@/lib/eval-config";
 
 export type Answers = Record<string, unknown>;
@@ -21,8 +22,32 @@ function choicesFor(field: Field, poolClasses: string[]): string[] {
   return field.classes ?? poolClasses;
 }
 
-const CONTROL =
-  "focusable w-full rounded-card border bg-surface px-3 text-body text-ink transition-colors";
+/**
+ * An option the clinician picks, drawn as a card. The native input stays in it,
+ * visually hidden, so the keyboard and a screen reader work exactly as they do
+ * on a plain radio; the ring shows where focus is.
+ */
+const OPTION =
+  "flex cursor-pointer items-center gap-3 rounded-btn border px-4 py-3 transition-[background-color,border-color] duration-150 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent";
+
+function optionState(selected: boolean, border: string) {
+  return selected
+    ? "border-accent bg-accent-soft"
+    : `${border} bg-canvas-top hover:border-accent/55 hover:bg-accent-soft/40`;
+}
+
+function RadioDot({ selected }: { selected: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border-2 transition-colors ${
+        selected ? "border-accent" : "border-hairline-strong"
+      }`}
+    >
+      {selected && <span className="h-2 w-2 rounded-full bg-accent" />}
+    </span>
+  );
+}
 
 /**
  * Renders one field from a project's eval_config. Nothing here is
@@ -62,7 +87,7 @@ export function ReviewField({
 
   return (
     <fieldset className="border-0 p-0">
-      <legend className="mb-1 text-body font-semibold text-ink">
+      <legend className="mb-1 text-[16px] font-semibold leading-snug text-ink">
         {field.title}
         {field.required && (
           <>
@@ -75,19 +100,20 @@ export function ReviewField({
       </legend>
 
       {field.hint && (
-        <p id={hintId} className="mb-3 text-[15px] text-muted">
+        <p id={hintId} className="mb-3 text-[15px] leading-snug text-muted">
           {field.hint}
         </p>
       )}
 
+      {!field.hint && <div className="mb-3" />}
+
       {(field.type === "single" || field.type === "from_classes") &&
         (options.length > 6 ? (
-          <select
+          <Select
             value={(value as string) ?? ""}
             onChange={(e) => onChange(field.name, e.target.value)}
             aria-describedby={hintId}
-            aria-invalid={invalid || undefined}
-            className={`${CONTROL} ${border} h-10`}
+            invalid={invalid}
           >
             <option value="">Select one…</option>
             {options.map((option) => (
@@ -95,19 +121,15 @@ export function ReviewField({
                 {optionLabel(option)}
               </option>
             ))}
-          </select>
+          </Select>
         ) : (
-          <div className="space-y-2" role="radiogroup" aria-describedby={hintId}>
+          <div className="grid gap-2" role="radiogroup" aria-describedby={hintId}>
             {options.map((option) => {
               const selected = value === option;
               return (
                 <label
                   key={option}
-                  className={`flex cursor-pointer items-center gap-3 rounded-card border px-3 py-2.5 transition-colors ${
-                    selected
-                      ? "border-accent bg-accent-soft"
-                      : `${border} hover:bg-accent-soft`
-                  }`}
+                  className={`${OPTION} ${optionState(selected, border)}`}
                 >
                   <input
                     type="radio"
@@ -115,9 +137,12 @@ export function ReviewField({
                     value={option}
                     checked={selected}
                     onChange={() => onChange(field.name, option)}
-                    className="focusable h-4 w-4 shrink-0 accent-accent"
+                    className="sr-only"
                   />
-                  <span className="text-body text-ink">{optionLabel(option)}</span>
+                  <RadioDot selected={selected} />
+                  <span className={`text-[15px] ${selected ? "font-semibold text-ink" : "text-strong"}`}>
+                    {optionLabel(option)}
+                  </span>
                 </label>
               );
             })}
@@ -125,59 +150,58 @@ export function ReviewField({
         ))}
 
       {field.type === "scale" && (
-        <div
-          className="flex items-center gap-1"
-          role="radiogroup"
-          aria-label={field.title}
-          aria-describedby={hintId}
-        >
-          {Array.from({ length: field.max ?? 5 }, (_, i) => i + 1).map((n) => (
-            <button
-              key={n}
-              type="button"
-              role="radio"
-              aria-checked={value === n}
-              aria-label={`${n} of ${field.max ?? 5}`}
-              onClick={() => onChange(field.name, n)}
-              className="focusable rounded-btn p-1 transition-transform duration-150 hover:scale-110"
-            >
-              <Star
-                size={22}
-                aria-hidden="true"
-                className={
-                  typeof value === "number" && value >= n
-                    ? "fill-accent text-accent"
-                    : "text-hairline"
-                }
-              />
-            </button>
-          ))}
-          {typeof value === "number" && (
-            <span className="tnum ml-2 text-[15px] text-muted">
-              {value} of {field.max ?? 5}
-            </span>
-          )}
+        <div className="flex flex-wrap items-center gap-3">
+          <div
+            className={`inline-flex rounded-btn border bg-canvas-top p-1 ${border}`}
+            role="radiogroup"
+            aria-label={field.title}
+            aria-describedby={hintId}
+          >
+            {Array.from({ length: field.max ?? 5 }, (_, i) => i + 1).map((n) => {
+              const on = typeof value === "number" && value >= n;
+              const exact = value === n;
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  role="radio"
+                  aria-checked={exact}
+                  aria-label={`${n} of ${field.max ?? 5}`}
+                  onClick={() => onChange(field.name, n)}
+                  className={`focusable tnum h-10 w-11 rounded-[6px] text-[15px] font-semibold transition-colors duration-150 ${
+                    exact
+                      ? "bg-accent text-on-fill"
+                      : on
+                        ? "bg-accent-soft text-accent"
+                        : "text-muted hover:bg-accent-soft/60 hover:text-ink"
+                  }`}
+                >
+                  {n}
+                </button>
+              );
+            })}
+          </div>
+          <span className="tnum text-[14px] text-subtle">
+            {typeof value === "number"
+              ? `${value} of ${field.max ?? 5}`
+              : `1 is lowest, ${field.max ?? 5} is highest`}
+          </span>
         </div>
       )}
 
       {field.type === "text" && (
-        <textarea
+        <Textarea
           value={(value as string) ?? ""}
           onChange={(e) => onChange(field.name, e.target.value)}
           aria-describedby={hintId}
-          aria-invalid={invalid || undefined}
+          invalid={invalid}
           rows={field.rows ?? 4}
           placeholder="Type your assessment…"
-          className={`${CONTROL} ${border} resize-y py-2.5 placeholder:text-placeholder`}
         />
       )}
 
       {field.type === "flag" && (
-        <label
-          className={`flex cursor-pointer items-center gap-3 rounded-card border px-3 py-2.5 transition-colors ${
-            value ? "border-accent bg-accent-soft" : `${border} hover:bg-accent-soft`
-          }`}
-        >
+        <label className={`${OPTION} ${optionState(Boolean(value), border)}`}>
           <input
             type="checkbox"
             checked={Boolean(value)}
@@ -185,9 +209,17 @@ export function ReviewField({
               onChange(field.name, e.target.checked ? (field.label ?? "Yes") : "")
             }
             aria-describedby={hintId}
-            className="focusable h-4 w-4 shrink-0 accent-accent"
+            className="sr-only"
           />
-          <span className="text-body text-ink">{field.label ?? field.title}</span>
+          <span
+            aria-hidden="true"
+            className={`grid h-[18px] w-[18px] shrink-0 place-items-center rounded-[5px] border-2 transition-colors ${
+              value ? "border-accent bg-accent text-on-fill" : "border-hairline-strong"
+            }`}
+          >
+            {Boolean(value) && <Check size={12} strokeWidth={3} />}
+          </span>
+          <span className="text-[15px] text-ink">{field.label ?? field.title}</span>
         </label>
       )}
 
@@ -203,11 +235,7 @@ export function ReviewField({
               return (
                 <label
                   key={option}
-                  className={`flex flex-1 cursor-pointer items-center justify-center rounded-card border px-3 py-2.5 transition-colors ${
-                    selected
-                      ? "border-accent bg-accent-soft font-semibold"
-                      : `${border} hover:bg-accent-soft`
-                  }`}
+                  className={`${OPTION} flex-1 justify-center ${optionState(selected, border)}`}
                 >
                   <input
                     type="radio"
@@ -217,14 +245,17 @@ export function ReviewField({
                     onChange={() => onChange(field.name, option)}
                     className="sr-only"
                   />
-                  <span className="text-body text-ink">{option}</span>
+                  <RadioDot selected={selected} />
+                  <span className={`text-[15px] ${selected ? "font-semibold text-ink" : "text-strong"}`}>
+                    {option}
+                  </span>
                 </label>
               );
             })}
           </div>
 
           {value === "Yes" && (
-            <div className="border-l-2 border-accent-soft pl-4">
+            <div className="animate-rise rounded-btn border-l-2 border-accent bg-accent-soft/30 py-3 pl-4 pr-3">
               <label
                 htmlFor={`${field.name}_finding`}
                 className="mb-1.5 block text-[15px] font-semibold text-ink"
@@ -239,14 +270,13 @@ export function ReviewField({
                 "Normal" and "Borderline". There was no right answer to give.
               */}
               {findingChoices ? (
-                <select
+                <Select
                   id={`${field.name}_finding`}
                   value={(answers[`${field.name}_finding`] as string) ?? ""}
                   onChange={(e) =>
                     onChange(`${field.name}_finding`, e.target.value)
                   }
-                  aria-invalid={invalid || undefined}
-                  className={`${CONTROL} ${border} h-10`}
+                  invalid={invalid}
                 >
                   <option value="">Select one…</option>
                   {findingChoices.map((option) => (
@@ -254,18 +284,17 @@ export function ReviewField({
                       {optionLabel(option)}
                     </option>
                   ))}
-                </select>
+                </Select>
               ) : (
-                <input
+                <Input
                   type="text"
                   id={`${field.name}_finding`}
                   value={(answers[`${field.name}_finding`] as string) ?? ""}
                   onChange={(e) =>
                     onChange(`${field.name}_finding`, e.target.value)
                   }
-                  aria-invalid={invalid || undefined}
+                  invalid={invalid}
                   placeholder="In your own words"
-                  className={`${CONTROL} ${border} h-10 placeholder:text-placeholder`}
                 />
               )}
             </div>
@@ -328,7 +357,7 @@ function SpanPicker({
     <div className="space-y-3">
       {source && (
         <p
-          className={`rounded-card border px-3 py-2.5 text-body leading-relaxed text-ink ${border}`}
+          className={`rounded-btn border bg-canvas-top px-4 py-3 text-body leading-relaxed text-ink selection:bg-accent/45 ${border}`}
         >
           {source}
         </p>
@@ -340,7 +369,7 @@ function SpanPicker({
             key={label}
             type="button"
             onClick={() => capture(label)}
-            className="focusable rounded-btn border border-hairline bg-surface px-3 py-1.5 text-[15px] font-semibold text-ink transition-colors hover:bg-accent-soft"
+            className="focusable rounded-full border border-hairline-strong bg-surface-raised px-3.5 py-1.5 text-[14px] font-semibold text-ink transition-colors hover:border-accent/60 hover:bg-accent-soft"
           >
             Tag selection as {label}
           </button>
@@ -352,7 +381,7 @@ function SpanPicker({
           {value.map((span, i) => (
             <li
               key={`${span.start}-${span.label}-${i}`}
-              className="flex items-center justify-between gap-3 rounded-card bg-canvas px-3 py-2"
+              className="flex items-center justify-between gap-3 rounded-btn border border-hairline-soft bg-canvas-top px-3 py-2"
             >
               <span className="min-w-0 truncate text-[15px] text-ink">
                 <span className="font-semibold">{span.label}</span> — “{span.text}”

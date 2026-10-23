@@ -2,10 +2,19 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown, Flag } from "lucide-react";
+import {
+  AlertTriangle,
+  BookOpen,
+  ChevronDown,
+  Flag,
+  ListChecks,
+  PartyPopper,
+  Send,
+} from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { useAppState } from "@/components/AppState";
 import { ReviewField, isVisible, type Answers } from "@/components/ReviewField";
+import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { PurposeBadge } from "@/components/ui/Pill";
@@ -38,7 +47,7 @@ function Guidelines({ instructions }: { instructions: string | null }) {
   const [open, setOpen] = useState(false);
 
   const body = instructions ? (
-    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-muted">
+    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-strong">
       {instructions}
     </p>
   ) : (
@@ -56,11 +65,12 @@ function Guidelines({ instructions }: { instructions: string | null }) {
   return (
     <>
       <aside className="hidden lg:block">
-        <Card className="sticky top-24 p-5">
-          <h2 className="mb-3 text-label uppercase text-muted">
-            Review guidelines
-          </h2>
-          {body}
+        <Card className="sticky top-24 overflow-hidden">
+          <div className="flex items-center gap-2.5 border-b border-hairline-soft bg-canvas-top px-5 py-3.5">
+            <BookOpen size={16} aria-hidden="true" className="text-accent" />
+            <h2 className="text-[14px] font-semibold text-ink">Review guidelines</h2>
+          </div>
+          <div className="max-h-[calc(100vh-12rem)] overflow-y-auto px-5 py-4">{body}</div>
         </Card>
       </aside>
 
@@ -72,7 +82,8 @@ function Guidelines({ instructions }: { instructions: string | null }) {
             aria-expanded={open}
             className="focusable flex w-full items-center justify-between px-5 py-3.5 text-left"
           >
-            <span className="text-label uppercase text-muted">
+            <span className="flex items-center gap-2.5 text-[14px] font-semibold text-ink">
+              <BookOpen size={16} aria-hidden="true" className="text-accent" />
               Review guidelines
             </span>
             <ChevronDown
@@ -82,11 +93,29 @@ function Guidelines({ instructions }: { instructions: string | null }) {
             />
           </button>
           {open && (
-            <div className="border-t border-hairline px-5 py-4">{body}</div>
+            <div className="border-t border-hairline-soft px-5 py-4">{body}</div>
           )}
         </Card>
       </div>
     </>
+  );
+}
+
+/** How far through the form they are. Counts what is on screen, nothing more. */
+function AnsweredMeter({ answered, total }: { answered: number; total: number }) {
+  const share = total === 0 ? 0 : Math.round((answered / total) * 100);
+  return (
+    <div className="flex items-center gap-3" aria-label={`${answered} of ${total} answered`}>
+      <span className="tnum text-[13px] font-medium text-muted">
+        {answered} of {total} answered
+      </span>
+      <span aria-hidden="true" className="h-1.5 w-20 overflow-hidden rounded-full bg-surface-raised">
+        <span
+          className="block h-full rounded-full bg-accent transition-[width] duration-300"
+          style={{ width: `${share}%` }}
+        />
+      </span>
+    </div>
   );
 }
 
@@ -366,6 +395,7 @@ function Workspace() {
   if (!poolId) {
     return (
       <EmptyState
+        icon={ListChecks}
         title="No pool selected"
         body="Open a pool from your review queue to start working through it."
         action={
@@ -402,6 +432,7 @@ function Workspace() {
   if (drained || !task) {
     return (
       <EmptyState
+        icon={PartyPopper}
         title="You're all caught up"
         body="Every case open to you in this pool has been reviewed. More arrive as they are added."
         action={
@@ -417,13 +448,19 @@ function Workspace() {
 
   return (
     <>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <PurposeBadge purpose={task.pool.purpose} />
-          <span className="text-body font-semibold text-ink">{task.pool.name}</span>
+          <span className="truncate text-[17px] font-semibold tracking-[-0.01em] text-ink">
+            {task.pool.name}
+          </span>
         </div>
-        <span className="tnum text-[15px] text-muted">
-          {task.case_id ? `Case ${task.case_id} · ` : ""}
+        <span className="tnum text-[14px] text-muted">
+          {task.case_id && (
+            <span className="mr-2 rounded-full border border-hairline bg-surface px-2.5 py-1 font-mono text-[12px] text-strong">
+              Case {task.case_id}
+            </span>
+          )}
           {/*
             "3 reviewed in this pool" could be read as three reviewed by
             anyone. It is their own count, and says so.
@@ -438,16 +475,26 @@ function Workspace() {
             <Guidelines instructions={instructions} />
           </div>
 
-          {task.context.map((block, i) => (
-            <Card key={`${block.label}-${i}`} className="p-5">
-              <h2 className="mb-2 text-label uppercase text-muted">
-                {block.label}
-              </h2>
-              <p className="whitespace-pre-wrap text-body leading-relaxed text-ink">
-                {block.value}
-              </p>
+          {/* The case as one document, its parts in the order the pool gives
+              them, rather than a stack of separate boxes. */}
+          {task.context.length > 0 && (
+            <Card className="overflow-hidden">
+              {task.context.map((block, i) => (
+                <section
+                  key={`${block.label}-${i}`}
+                  className="border-b border-hairline-soft px-5 py-5 last:border-b-0 sm:px-6"
+                >
+                  <h2 className="mb-2.5 flex items-center gap-2 text-label uppercase text-accent">
+                    <span aria-hidden="true" className="h-1 w-1 rounded-full bg-accent" />
+                    {block.label}
+                  </h2>
+                  <p className="whitespace-pre-wrap text-[16px] leading-[1.7] text-ink">
+                    {block.value}
+                  </p>
+                </section>
+              ))}
             </Card>
-          ))}
+          )}
 
           {task.phase === "review" ? (
             // Keyed by case. The panel keeps the edited text, the send-back
@@ -469,46 +516,63 @@ function Workspace() {
               onReject={(reason) => decide("reject", { reason })}
             />
           ) : (
-          <Card className="p-5">
-            <h2 className="text-section text-ink">Your assessment</h2>
-            <p className="mt-1 text-body text-muted">
-              {visibleFields.length}{" "}
-              {visibleFields.length === 1 ? "field" : "fields"}. Your answers are
-              kept if you step away.
-            </p>
-
-            {missing.length > 0 && (
-              <div
-                role="alert"
-                className="mt-4 rounded-card border border-danger bg-danger-soft px-4 py-3"
-              >
-                <p className="text-[15px] font-semibold text-danger">
-                  {missing.length === 1
-                    ? "One required field is still empty."
-                    : `${missing.length} required fields are still empty.`}{" "}
-                  Complete them to submit this review.
+          <Card className="overflow-hidden">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-hairline-soft px-5 py-4 sm:px-6">
+              <div>
+                <h2 className="text-section text-ink">Your assessment</h2>
+                <p className="mt-1 text-[15px] text-muted">
+                  {visibleFields.length}{" "}
+                  {visibleFields.length === 1 ? "field" : "fields"}. Your answers are
+                  kept if you step away.
                 </p>
+              </div>
+              <AnsweredMeter
+                answered={visibleFields.filter((f) => {
+                  const v = answers[f.name];
+                  return v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0);
+                }).length}
+                total={visibleFields.length}
+              />
+            </div>
+
+            {(missing.length > 0 || submitError) && (
+              <div className="space-y-3 px-5 pt-5 sm:px-6">
+                {missing.length > 0 && (
+                  <Alert tone="danger" role="alert">
+                    {missing.length === 1
+                      ? "One required field is still empty."
+                      : `${missing.length} required fields are still empty.`}{" "}
+                    Complete them to submit this review.
+                  </Alert>
+                )}
+
+                {submitError && (
+                  <Alert
+                    id="submit-error"
+                    tone="danger"
+                    role="alert"
+                    title={submitError}
+                  >
+                    Nothing was lost — your answers are still below.
+                  </Alert>
+                )}
               </div>
             )}
 
-            {submitError && (
-              <div
-                id="submit-error"
-                role="alert"
-                className="mt-4 rounded-card border border-danger bg-danger-soft px-4 py-3"
-              >
-                <p className="text-[15px] font-semibold text-danger">
-                  {submitError}
-                </p>
-                <p className="mt-1 text-[14px] text-danger">
-                  Nothing was lost — your answers are still below.
-                </p>
-              </div>
-            )}
-
-            <div className="mt-6 space-y-8">
-              {visibleFields.map((field) => (
-                <div key={field.name} id={`field-${field.name}`}>
+            <ol className="divide-y divide-hairline-soft">
+              {visibleFields.map((field, i) => (
+                <li
+                  key={field.name}
+                  id={`field-${field.name}`}
+                  className="flex gap-4 px-5 py-6 sm:px-6"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="tnum mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border border-hairline-strong font-mono text-[11px] text-muted"
+                  >
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
                   <ReviewField
                     field={field}
                     answers={answers}
@@ -519,9 +583,10 @@ function Workspace() {
                       missing.includes(`${field.name}_finding`)
                     }
                   />
-                </div>
+                  </div>
+                </li>
               ))}
-            </div>
+            </ol>
           </Card>
           )}
         </div>
@@ -539,23 +604,24 @@ function Workspace() {
         applies only below md, which is the only place that bar exists.
       */}
       {task.phase !== "review" && (
-      <div className="sticky bottom-16 z-10 -mx-5 mt-6 border-t border-hairline bg-surface/95 px-5 py-3 backdrop-blur md:bottom-0 lg:-mx-8 lg:px-8">
+      <div className="sticky bottom-16 z-10 -mx-4 mt-6 border-t border-hairline bg-canvas-top/90 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:bottom-0 lg:-mx-8 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {confirmFlag ? (
-            <p role="status" className="text-[14px] text-ink">
+            <p role="status" className="flex items-start gap-2 text-[14px] text-strong">
+              <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0 text-warning" />
               This case stops being offered to you, and anything you have
               entered on it is discarded.
             </p>
           ) : (
             // No keyboard to press it on, and on a phone it was crowding the
             // buttons off the bar.
-            <p className="hidden text-[14px] text-muted sm:block">
+            <p className="hidden text-[14px] text-subtle sm:block">
               Press{" "}
-              <kbd className="rounded border border-hairline bg-canvas px-1.5 py-0.5 font-sans text-[12px] text-ink">
+              <kbd className="rounded-[5px] border border-hairline-strong border-b-2 bg-surface px-1.5 py-0.5 font-mono text-[12px] text-ink">
                 {isMac ? "⌘" : "Ctrl"}
               </kbd>{" "}
               +{" "}
-              <kbd className="rounded border border-hairline bg-canvas px-1.5 py-0.5 font-sans text-[12px] text-ink">
+              <kbd className="rounded-[5px] border border-hairline-strong border-b-2 bg-surface px-1.5 py-0.5 font-mono text-[12px] text-ink">
                 Enter
               </kbd>{" "}
               to submit
@@ -587,6 +653,7 @@ function Workspace() {
               </Button>
             )}
             <Button onClick={submit} loading={busy}>
+              {!busy && <Send size={15} aria-hidden="true" />}
               Submit review
             </Button>
           </div>
