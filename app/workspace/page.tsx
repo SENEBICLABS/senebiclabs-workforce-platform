@@ -46,7 +46,7 @@ function readDraft(taskId: number): Answers {
 function Guidelines({ instructions }: { instructions: string | null }) {
   const [open, setOpen] = useState(false);
 
-  const body = instructions ? (
+  const rubric = instructions ? (
     <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-strong">
       {instructions}
     </p>
@@ -60,6 +60,23 @@ function Guidelines({ instructions }: { instructions: string | null }) {
         cannot judge on that basis rather than guessing.
       </p>
     </div>
+  );
+
+  // Under every rubric, because these hold whatever the project asks for.
+  const body = (
+    <>
+      {rubric}
+      <div className="mt-4 border-t border-hairline-soft pt-4">
+        <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-subtle">
+          On every case
+        </p>
+        <ul className="mt-2 space-y-1.5 text-[14px] leading-relaxed text-muted">
+          <li>Call out anything that could harm a patient, even if the rest is right.</li>
+          <li>Flag the case if it is outside your area or you cannot judge it.</li>
+          <li>Keep case material inside the platform. Do not copy or share it.</li>
+        </ul>
+      </div>
+    </>
   );
 
   return (

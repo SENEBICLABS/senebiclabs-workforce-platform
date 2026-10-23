@@ -11,6 +11,7 @@ import {
   Timer,
   type LucideIcon,
 } from "lucide-react";
+import { AgreementNotice } from "@/components/AgreementNotice";
 import { AppLayout } from "@/components/AppLayout";
 import { PoolCard } from "@/components/PoolCard";
 import { useAppState } from "@/components/AppState";
@@ -76,9 +77,11 @@ export default function DashboardPage() {
           {me?.name ? `Welcome back, ${me.name}` : "Welcome back"}
         </h2>
         <p className="mt-1.5 text-body text-muted">
-          Your pools and your recent work, in one place.
+          The work open to you, and what you have done so far.
         </p>
       </div>
+
+      <AgreementNotice className="mb-6" />
 
       {/*
         Stats. Only figures with a real source are rendered.
@@ -175,7 +178,7 @@ export default function DashboardPage() {
       {/* Pools */}
       <div className="mt-10">
         <SectionHeading
-          description="Every pool open to you, and what is waiting in each."
+          description="The pools you have been given access to. What is available changes as projects start and finish."
           action={
             (pools.data?.length ?? 0) > 0 ? (
               <Link

@@ -253,9 +253,9 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
           {done ? "You are on the list" : "You are already on the list"}
         </h2>
         <p className="mt-4 text-body leading-relaxed text-muted">
-          {done ? "Thank you. " : ""}We will email{" "}
-          <span className="font-semibold text-ink">{email}</span> when
-          Senebiclabs opens to clinicians.
+          {done ? "Thank you. " : ""}Our team reviews every request. If we have work
+          that fits your practice, we will send an invitation to{" "}
+          <span className="font-semibold text-ink">{email}</span>.
         </p>
         <p className="mt-3 text-[15px] text-muted">
           There is nothing more you need to do, and no account has been created.
@@ -352,8 +352,8 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
         {!busy && <Arrow />}
       </Button>
       <p className="mt-3 text-center text-[13px] leading-relaxed text-subtle">
-        Joining the list does not create an account. We will only use your
-        email to tell you when we open.
+        Requesting access does not create an account. We only use your email
+        about your request.
       </p>
     </form>
   );

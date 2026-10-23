@@ -94,6 +94,11 @@ export default function QueuePage() {
 
   return (
     <AppLayout title="Review queue">
+      <p className="mb-5 max-w-3xl text-[15px] text-muted">
+        Every pool you have been given access to, and what is open to you in each.
+        Cases arrive as projects run, so what is available changes. Pay for this work
+        is on the terms agreed with you in writing.
+      </p>
       {pools.loading && (
         <div role="status" aria-live="polite">
           <span className="sr-only">Loading your pools</span>

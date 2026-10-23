@@ -10,107 +10,125 @@
  * and we do not have those yet.
  */
 
+export type FaqCategory =
+  | "Joining"
+  | "The work"
+  | "Review and quality"
+  | "Pay"
+  | "Practicalities";
+
 export interface Faq {
   q: string;
   a: string;
-  category: "Joining" | "The work" | "Pay" | "Practicalities";
+  category: FaqCategory;
   /** Shown on the landing page as well as on /faqs. */
   featured?: boolean;
 }
 
+/**
+ * Every answer here is either something the platform does, a term of the
+ * reviewer agreement (app/agreement/page.tsx), or a statement that a policy
+ * has not been published. Where a policy is still being set, the answer says
+ * so rather than describing one.
+ */
 export const FAQS: Faq[] = [
   {
     category: "Joining",
     featured: true,
+    q: "Who is eligible to apply?",
+    a: "Licensed clinicians who currently practise in a clinical specialty and are comfortable reading and assessing written cases. Request access with your name, specialty and the country you practise in. Every request is reviewed by our team, and an invitation is sent only where there is work that fits your practice, so requesting access does not guarantee an invitation.",
+  },
+  {
+    category: "Joining",
     q: "Can I sign up directly?",
-    a: "Not yet. Membership is by invitation for now. You can request access by telling us who you are, and we will email you when Senebiclabs opens to clinicians. Nothing is created until then.",
+    a: "Not yet. Membership is by invitation. Requesting access puts you on our list; it does not create an account. If we invite you, the invitation email is what creates your account.",
   },
   {
     category: "Joining",
-    q: "How do I get an invitation?",
-    a: "For now, invitations go to a small group of clinicians we work with directly. Request access from the top of any page and you will be on the list: we will email you when we open to clinicians.",
+    q: "How are credentials checked?",
+    a: "We review each request by hand before any invitation is sent, and we will contact you if we need more information about your qualifications or practice. We do not currently ask you to upload documents through the platform.",
   },
   {
     category: "Joining",
-    featured: true,
-    q: "When will Senebiclabs open to clinicians?",
-    a: "We have not set a date yet. Everyone who requests access is on the list, and we will email the list when we open.",
+    q: "What happens when I receive an invitation?",
+    a: "The invitation is for one named address, is good once, and expires after seven days. Opening it lets you continue with Google or with the invited address, and either creates your account. You will then be asked to read and accept the reviewer agreement, which sets out the terms of the work.",
   },
   {
     category: "Joining",
     q: "What do you do with the details I send?",
-    a: "We keep your request so that we can email you when we open, and we only use your address for that. The confirmation email has a link that removes your address and deletes your request, whenever you want.",
-  },
-  {
-    category: "Joining",
-    q: "What happens when I open my invitation?",
-    a: "It takes you to a sign-in page where you continue with Google or with the address the invitation was sent to. Either one creates your account and takes you straight in. Nothing else is needed.",
+    a: "We keep your request so that our team can review it, and we use your address only to contact you about it. The confirmation email has a link that removes your address and deletes your request whenever you want.",
   },
   {
     category: "Joining",
     q: "Can I invite a colleague?",
-    a: "Some members can. Once you are established on the platform we may enable invitations on your account, which lets you invite colleagues directly. Every invitation is for one named address and is good once.",
+    a: "Some members can. Once you are established on the platform we may enable invitations on your account. Every invitation is for one named address and is good once.",
   },
   {
     category: "The work",
     featured: true,
-    q: "Do I need experience with AI?",
-    a: "No. The judgment we need is clinical, not technical. If you can assess whether an answer is right for a patient, you can do this work.",
+    q: "What types of assignments are available?",
+    a: "Work comes in projects, and each project has one purpose: evaluating answers a medical AI system gave, labelling clinical data, or writing reference answers. Some written work also has a review stage, where a second clinician approves, edits or sends back a colleague's answer. Which of these you see depends on the projects you are given access to; not every clinician does every kind.",
   },
   {
     category: "The work",
-    q: "What does a review actually involve?",
-    a: "You read a case and the answer a model gave, judge it against the guidelines you already work to, confirm or correct it, and flag anything clinically unsafe. The rubric for that body of work sits beside the case while you read it.",
+    featured: true,
+    q: "Does joining guarantee assignments?",
+    a: "No. Work depends on the projects we have running and on whether they match your specialty, so there may be periods with nothing available to you. Your dashboard shows what is open to you at any time.",
+  },
+  {
+    category: "The work",
+    q: "Do I need experience with AI?",
+    a: "No. The judgment we need is clinical, not technical. Each project's rubric explains what to assess, and it sits beside every case while you work.",
   },
   {
     category: "The work",
     q: "What if a case is outside my area?",
-    a: "If you cannot judge a case, flag it rather than guess. We would rather have an honest flag than an answer you are not sure of. It stops being offered to you, and the flag is recorded as work on your work record.",
+    a: "Flag it rather than guess. A flagged case stops being offered to you, and the flag is recorded as work on your work record. We would rather have an honest flag than an answer you are not sure of.",
   },
   {
-    category: "The work",
-    q: "Does anyone check my work?",
-    a: "Several clinicians see each case. Where you disagree with each other the case is adjudicated rather than settled by majority. For written work, one clinician writes and a different one approves, and nobody approves their own writing.",
-  },
-  {
-    category: "The work",
+    category: "Review and quality",
     featured: true,
-    q: "Which specialties do you work with?",
-    a: "A range, and it changes as new work arrives. Invitations follow the work, so a specialty that is quiet now may open later.",
+    q: "How are submissions reviewed?",
+    a: "More than one clinician reads each item, and their readings are compared. On projects that use adjudication, items where clinicians disagree go to a senior clinician to resolve rather than being settled by majority. Written answers are read by a second clinician, who approves, edits or sends them back; nobody is ever given their own answer to review.",
+  },
+  {
+    category: "Review and quality",
+    q: "What happens if my written answer is sent back?",
+    a: "The reviewer gives a reason, and the answer comes back to be rewritten. Sending work back is recorded as a pass for the reviewer exactly as approving it is. There is no formal dispute process published yet; if you disagree with a decision, write to support@senebiclabs.com.",
+  },
+  {
+    category: "Review and quality",
+    featured: true,
+    q: "How is clinical information handled?",
+    a: "Case material is confidential and stays inside the platform. It may contain de-identified patient information, and you agree not to copy, retain, discuss or try to re-identify it. You see only the projects you have been given access to, and your identity is never disclosed to the organisations whose systems are being evaluated.",
   },
   {
     category: "Pay",
     featured: true,
-    q: "How does pay work?",
-    a: "Work is paid, and the terms that apply to you are set out in the agreement you accept when you join. Every pass you make is recorded: a case judged, a case flagged, an answer written, a colleague's answer reviewed. We are still building the part of the platform that shows rates and statements, so until that exists we agree the terms with you directly rather than quoting a figure here.",
+    q: "How is compensation determined?",
+    a: "Work is paid. Your rate and payment schedule are agreed with you in writing before you begin, and they are not published on the site or in the platform. Every pass you make is recorded, including cases you flag and written work you send back, and each is paid on the terms agreed with you.",
   },
   {
     category: "Pay",
-    q: "Am I paid for work that is sent back?",
-    a: "Yes. You are paid for the pass you make, not for the outcome you reach. Sending written work back to be rewritten pays the same as approving it, so there is nothing to gain by waving something through.",
+    q: "When and how are contributors paid?",
+    a: "On the schedule and by the method agreed with you in writing. The platform does not yet show rates, balances or statements; your work record lists every pass you have made, by kind, pool and date, so you can check it against what you are paid.",
   },
   {
     category: "Practicalities",
-    featured: true,
     q: "How much time does it take?",
-    a: "As much or as little as you want. There are no minimum hours and no shifts. Your place is saved between sessions, so you can stop mid-case and come back.",
+    a: "As much or as little as suits you. There are no shifts, minimum hours or targets, and your answers are saved as you go, so you can stop mid-case and come back.",
   },
   {
     category: "Practicalities",
-    featured: true,
     q: "Where do I need to be?",
-    a: "Anywhere with a reliable connection. The work is fully remote and you choose your own hours.",
-  },
-  {
-    category: "Practicalities",
-    q: "What happens to the cases I read?",
-    a: "Case material stays inside the platform. You see only the pools you have been given access to, nothing is downloadable, and you are asked not to discuss or retain what you read.",
+    a: "The work is remote and done in a web browser, so anywhere with a reliable connection. Tell us the country you practise in when you request access.",
   },
 ];
 
-export const FAQ_CATEGORIES: Faq["category"][] = [
+export const FAQ_CATEGORIES: FaqCategory[] = [
   "Joining",
   "The work",
+  "Review and quality",
   "Pay",
   "Practicalities",
 ];
@@ -146,21 +164,21 @@ export const WORK_TASKS: WorkTask[] = [
     tab: "Evaluate",
     title: "Assess the AI's answer",
     why: "A model's answer is only as good as the clinician who checks it. What you decide is what the model is measured and corrected against.",
-    how: "Read the case and the answer the model gave, with the rubric beside you. Say whether it holds up, set the correct answer where it does not, flag anything that could harm a patient, and rate it on the axes that pool uses. A short written reason goes with each judgement.",
+    how: "Read the case and the answer the model gave, with the project's rubric beside you. Say whether it holds up, identify errors, omissions and anything that could harm a patient, and rate it on the measures the project uses. Some projects also ask for a short written correction.",
     mock: "judge",
   },
   {
     tab: "Label",
     title: "Label clinical data",
     why: "Before a model can learn from medical data, someone qualified has to say what it actually shows.",
-    how: "Read the case and record what it shows: the category it belongs to, the findings present, and whether a claim holds up against the evidence. Where a statement is wrong, highlight the exact words and write the correction.",
+    how: "Read the case and record what it shows, using the categories the project defines: the class it belongs to, the findings present, or the exact words in a passage that a label applies to.",
     mock: "label",
   },
   {
     tab: "Create",
     title: "Write the correct answer",
     why: "Where the model's answer will not do, the correct one has to come from a clinician who practises in that area.",
-    how: "Write it against the guidelines you already work to: structured fields where the work needs structure, prose where it needs prose. Nothing you write leaves on your say-so alone. A second clinician reads it and approves, edits, or sends it back, and you will be asked to do that reading for others.",
+    how: "Write it against the guidelines you already work to, in the fields the project asks for. On projects with a review stage, a second clinician reads your answer and approves, edits or sends it back, and you may be asked to review colleagues' answers in the same way.",
     mock: "write",
   },
 ];
@@ -223,42 +241,103 @@ export const WHY_SENEBICLABS: WhyJoin[] = [
   {
     title: "You are invited to the pools that match your practice",
     lead: "Every pool is invite-only, and you see only the pools you have been invited to.",
-    detail: "Seeing only your own pools is enforced by the platform on every request, not left to a policy. Which pools you are invited to is a judgement we make about your practice when we invite you, and we hold ourselves to it. Each pool carries the rubric written for it by the clinical leads, which sits beside the case while you read. Where the rubric and your own standard of care disagree, you flag the case rather than resolve it yourself.",
+    detail: "Seeing only your own pools is enforced by the platform on every request, not left to a policy. Which pools you are given is a judgement we make about your practice. Each pool carries the rubric written for that project, which sits beside the case while you read. Where the rubric and your own standard of care disagree, you flag the case rather than resolve it yourself.",
   },
   {
     title: "Your judgment is the reference",
-    lead: "What you decide becomes the standard a medical AI system is measured and corrected against.",
-    detail: "Several clinicians see each case, and where you disagree with each other it goes to adjudication rather than being settled by majority. Your reading is recorded as a clinician's judgment, not as one vote among many.",
+    lead: "What clinicians decide becomes the standard a medical AI system is measured and corrected against.",
+    detail: "More than one clinician reads each item. On projects that use adjudication, items where clinicians disagree go to a senior clinician rather than being settled by majority. Your identity is never disclosed to the organisation whose system is being evaluated.",
   },
 ];
 
 /**
- * How someone gets from reading a page to reviewing a case, as it is today:
- * request access, wait for us to open, get verified, work. Shared so the
- * landing page and About us tell the same four steps.
+ * How someone gets from reading a page to reviewing a case, as it is today.
+ * Shared so the landing page and About us tell the same steps.
+ *
+ * There is no in-platform credential check and calibration is switched off,
+ * so neither is a step here. Add them back when they exist.
  */
 export const JOIN_STEPS = [
   {
     title: "Request access",
-    body: "Tell us your name, your specialty and the country you practise in. It takes a minute.",
+    body: "Tell us your name, your specialty and the country you practise in. It takes a minute and does not create an account.",
   },
   {
-    title: "Hear from us",
-    body: "You are on the list. When Senebiclabs opens to clinicians, we email you.",
+    title: "We review your request",
+    body: "Our team reads every request. Where there is work that fits your practice, we email you an invitation. Not every request leads to one.",
   },
   {
-    title: "Get verified",
-    body: "We check the licence you give us against the register that issued it, and agree with you which pools suit your practice.",
+    title: "Accept your invitation and the agreement",
+    body: "The invitation creates your account. You then read and accept the reviewer agreement, which sets out the work, confidentiality and how you are paid.",
   },
   {
-    title: "Work and get paid",
-    body: "Work through cases remotely, on your own schedule, under the terms you accepted when you joined.",
+    title: "Work on the projects you are given",
+    body: "Open cases from your dashboard when work is available, with the project's rubric beside each one. Work at your own pace; your answers are saved as you go.",
+  },
+  {
+    title: "Your work is checked and recorded",
+    body: "Other clinicians read the same items, and written answers are reviewed by a colleague. Every pass you make appears on your work record and is paid on the terms agreed with you.",
   },
 ];
 
+/** What we ask of a clinician. No geography is listed because none is enforced. */
 export const ELIGIBILITY = [
-  "An active clinical licence in good standing",
-  "A clinical specialty you practise in",
+  "A current clinical licence",
+  "Active practice in a clinical specialty",
   "Comfort reading and assessing written cases",
-  "A reliable internet connection",
+  "A computer and a reliable internet connection",
+];
+
+/**
+ * What we expect of contributors and what we commit to in return. Every
+ * line is a term of the agreement or behaviour the platform enforces.
+ */
+export const STANDARDS = [
+  {
+    title: "Accuracy over speed",
+    body: "There are no targets. Judge each case against the project's rubric and the standard of care you practise to, and take the time it needs.",
+  },
+  {
+    title: "Flag rather than guess",
+    body: "If a case is outside your area, unclear, or the rubric conflicts with your clinical judgment, flag it. A flag is recorded as work.",
+  },
+  {
+    title: "Safety first",
+    body: "Call out anything in an answer that could harm a patient, even when the rest of it is right.",
+  },
+  {
+    title: "Consistency",
+    body: "Apply the same rubric the same way across cases, so your readings can be compared with other clinicians'.",
+  },
+];
+
+export const TRUST = [
+  {
+    title: "Confidential case material",
+    body: "Cases stay inside the platform and may contain de-identified patient information. You agree not to copy, retain, discuss or try to re-identify anything you read.",
+  },
+  {
+    title: "Access by project",
+    body: "You see only the projects you have been given access to. The platform enforces that on every request, and access can be withdrawn.",
+  },
+  {
+    title: "Independent and anonymous",
+    body: "You work independently of the organisations whose systems are evaluated, and your identity is never disclosed to them.",
+  },
+];
+
+/** How pay works, stated only as far as the agreement goes. */
+export const PAY_POINTS = [
+  {
+    title: "Agreed before you start",
+    body: "Your rate and payment schedule are agreed with you in writing before you begin. They are not published on the site or in the platform.",
+  },
+  {
+    title: "Every pass counts",
+    body: "Each case you judge, label or write is recorded, and so is each case you flag and each answer you review, including ones you send back.",
+  },
+  {
+    title: "A record you can check",
+    body: "Your work record lists every pass by kind, project and date. The platform does not yet show rates, balances or statements.",
+  },
 ];

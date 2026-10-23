@@ -25,7 +25,7 @@ export const metadata: Metadata = {
  *   why we built it     the problem and what we do about it
  *   how we think        the decisions that shape the platform
  *   what we promise     what a clinician can hold us to
- *   how to join         the same four steps as the landing page
+ *   how to join         the same steps as the landing page
  *   questions           the featured FAQs
  *   the close           request access
  *
@@ -40,7 +40,7 @@ const PRINCIPLES = [
   },
   {
     title: "Disagreement is signal",
-    body: "Several clinicians see each case. Where they disagree, the case is adjudicated rather than settled by whichever answer got more votes. A split between two experienced clinicians usually means the case is genuinely hard, and that is worth recording rather than averaging away.",
+    body: "More than one clinician reads each case. On projects that use adjudication, cases where they disagree go to a senior clinician rather than being settled by whichever answer got more votes. A split between two experienced clinicians usually means the case is genuinely hard, and that is worth recording rather than averaging away.",
   },
   {
     title: "Written work is reviewed, not merged",
@@ -48,7 +48,7 @@ const PRINCIPLES = [
   },
   {
     title: "Confidential by construction",
-    body: "Case material stays inside the platform. A clinician sees only the pools they have been given, access can be withdrawn, and nothing is downloadable. The system enforces it rather than a policy asking for it.",
+    body: "Case material stays inside the platform. A clinician sees only the pools they have been given, access can be withdrawn, and there is nothing to download. The system enforces it rather than a policy asking for it.",
   },
 ];
 
@@ -135,7 +135,7 @@ export default function AboutUs() {
       </Section>
 
       <Section>
-        <SectionHead eyebrow="How to join" title="Four steps to your first case" />
+        <SectionHead eyebrow="How to join" title="From request to your first case" />
         <ol className="mx-auto mt-14 max-w-[720px] space-y-10">
           {JOIN_STEPS.map((step, i) => (
             <li key={step.title} className="text-center">
@@ -168,8 +168,8 @@ export default function AboutUs() {
 
       <Section>
         <SectionHead
-          title="Put your clinical knowledge to paid work"
-          intro="Senebiclabs is invite-only for now. Request access and we will email you when we open to clinicians."
+          title="Put your clinical expertise to work"
+          intro="Membership is by invitation. Request access and our team will review it; we email you if we have work that fits your practice."
         />
         <div className="mt-10 flex justify-center">
           <RequestAccessButton />

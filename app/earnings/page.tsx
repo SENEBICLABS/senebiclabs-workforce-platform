@@ -209,9 +209,10 @@ function WorkRecordBody() {
         <div className="flex gap-3 border-t border-hairline-soft pt-5 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
           <Info size={17} aria-hidden="true" className="mt-0.5 shrink-0 text-accent-ink" />
           <p className="text-[15px] leading-relaxed text-muted">
-            During the pilot, payment is arranged with you directly, outside the
-            platform. This page is the record of the work, not a statement of what
-            you are owed, and it shows no amounts because the platform holds none.
+            This is the record of your work: every pass you have made, by kind, pool
+            and date. Payment is arranged with you directly, on the terms agreed in
+            writing. The platform holds no rates or amounts, so this page shows no
+            balance, and it does not yet show the outcome of each review.
           </p>
         </div>
       </Card>

@@ -8,6 +8,8 @@ interface AppState {
   /** null while loading, or if the session could not be resolved. */
   me: Me | null;
   meLoading: boolean;
+  /** Re-reads the account, after something on it has changed. */
+  reloadMe: () => void;
   /** Local preference. Not persisted — there is no endpoint behind it yet. */
   available: boolean;
   setAvailable: (next: boolean) => void;
@@ -20,7 +22,7 @@ interface AppState {
 const Ctx = createContext<AppState | null>(null);
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
-  const { data: me, loading: meLoading } = useAsync(() => api.me(), []);
+  const { data: me, loading: meLoading, reload: reloadMe } = useAsync(() => api.me(), []);
   const [available, setAvailable] = useState(true);
   const [reviewedThisSession, setReviewed] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
@@ -29,6 +31,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     () => ({
       me,
       meLoading,
+      reloadMe,
       available,
       setAvailable,
       reviewedThisSession,
@@ -39,7 +42,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         window.setTimeout(() => setToast(null), 4000);
       },
     }),
-    [me, meLoading, available, reviewedThisSession, toast]
+    [me, meLoading, reloadMe, available, reviewedThisSession, toast]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

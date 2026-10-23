@@ -209,7 +209,8 @@ function Join() {
 
             <p className="mt-4 text-center text-[13px] leading-relaxed text-subtle">
               Either way your account is created on this address. Google just
-              gives you a password-free way back in next time.
+              gives you a password-free way back in next time. Once you are in,
+              you will be asked to read and accept the reviewer agreement.
             </p>
           </>
       </Card>
