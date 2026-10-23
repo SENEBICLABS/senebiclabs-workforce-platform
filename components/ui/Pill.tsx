@@ -4,11 +4,11 @@ import type { PoolStatus, Purpose } from "@/lib/api";
 type Tone = "accent" | "success" | "info" | "warning" | "neutral";
 
 const TONE: Record<Tone, string> = {
-  accent: "bg-accent-soft text-accent ring-accent/25",
+  accent: "bg-accent-soft text-accent-ink ring-accent/25",
   success: "bg-success-soft text-success ring-success/25",
   info: "bg-info-soft text-info ring-info/25",
   warning: "bg-warning-soft text-warning ring-warning/25",
-  neutral: "bg-surface-raised text-muted ring-hairline",
+  neutral: "bg-canvas text-muted ring-hairline-strong",
 };
 
 /** The dot a status pill leads with, so state reads before the word does. */

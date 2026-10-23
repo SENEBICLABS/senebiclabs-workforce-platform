@@ -121,7 +121,7 @@ function SignIn() {
                 setSent(false);
                 setDevLink("");
               }}
-              className="focusable mt-4 w-full rounded-btn text-[15px] font-semibold text-accent underline-offset-2 hover:underline"
+              className="focusable mt-4 w-full rounded-btn text-[15px] font-semibold text-accent-ink underline-offset-2 hover:underline"
             >
               Use a different email
             </button>
@@ -189,7 +189,7 @@ export default function LoginPage() {
       fallback={
         <AuthShell>
           <Card className="p-7 sm:p-8">
-            <div className="h-64 animate-pulse-soft rounded-btn bg-surface-raised" />
+            <div className="h-64 animate-pulse-soft rounded-btn bg-track" />
           </Card>
         </AuthShell>
       }

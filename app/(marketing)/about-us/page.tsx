@@ -71,8 +71,8 @@ export default function AboutUs() {
   return (
     <>
       <Hero>
-        <p className="text-label uppercase text-muted">About us</p>
-        <h1 className="mx-auto mt-5 max-w-[880px] text-[42px] leading-[1.04] text-ink sm:text-[60px]">
+        <p className="font-display text-[12px] font-extrabold uppercase tracking-[0.3em] text-accent-ink">About us</p>
+        <h1 className="mx-auto mt-5 max-w-[880px] text-[38px] font-extrabold leading-[1.08] text-ink sm:text-[54px]">
           Someone has to decide what a correct answer looks like
         </h1>
         <p className={`${MEASURE.intro} mt-5 text-[19px] leading-relaxed text-muted`}>
@@ -139,10 +139,10 @@ export default function AboutUs() {
         <ol className="mx-auto mt-14 max-w-[720px] space-y-10">
           {JOIN_STEPS.map((step, i) => (
             <li key={step.title} className="text-center">
-              <p aria-hidden="true" className="tnum text-label text-accent">
+              <p aria-hidden="true" className="tnum font-display text-[34px] font-extrabold leading-none text-accent">
                 {String(i + 1).padStart(2, "0")}
               </p>
-              <h3 className="mt-3 text-[19px] leading-snug text-ink">{step.title}</h3>
+              <h3 className="mt-3 text-[19px] font-bold leading-snug text-ink">{step.title}</h3>
               <p className={`${MEASURE.intro} mt-2 text-body leading-relaxed text-muted`}>
                 {step.body}
               </p>
@@ -159,7 +159,7 @@ export default function AboutUs() {
         <p className="mt-10 text-center text-body text-muted">
           <Link
             href="/faqs"
-            className="focusable rounded-btn font-semibold text-accent underline-offset-2 hover:underline"
+            className="focusable rounded-btn font-semibold text-accent-ink underline-offset-2 hover:underline"
           >
             Read all the questions
           </Link>

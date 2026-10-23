@@ -12,7 +12,7 @@ export function Skeleton({ className = "" }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={`animate-pulse-soft rounded-card border border-hairline-soft bg-surface ${className}`}
+      className={`animate-pulse-soft rounded-card bg-track ${className}`}
     />
   );
 }

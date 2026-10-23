@@ -28,7 +28,7 @@ function choicesFor(field: Field, poolClasses: string[]): string[] {
  * on a plain radio; the ring shows where focus is.
  */
 const OPTION =
-  "flex cursor-pointer items-center gap-3 rounded-btn border px-4 py-3 transition-[background-color,border-color] duration-150 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent";
+  "flex cursor-pointer items-center gap-3 rounded-btn border px-4 py-3 transition-[background-color,border-color] duration-150 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus";
 
 function optionState(selected: boolean, border: string) {
   return selected
@@ -172,7 +172,7 @@ export function ReviewField({
                     exact
                       ? "bg-accent text-on-fill"
                       : on
-                        ? "bg-accent-soft text-accent"
+                        ? "bg-accent-soft text-accent-ink"
                         : "text-muted hover:bg-accent-soft/60 hover:text-ink"
                   }`}
                 >
@@ -390,7 +390,7 @@ function SpanPicker({
                 type="button"
                 onClick={() => onChange(value.filter((_, j) => j !== i))}
                 aria-label={`Remove ${span.label} tag`}
-                className="focusable shrink-0 rounded-btn px-2 text-[15px] font-semibold text-accent hover:underline"
+                className="focusable shrink-0 rounded-btn px-2 text-[15px] font-semibold text-accent-ink hover:underline"
               >
                 Remove
               </button>

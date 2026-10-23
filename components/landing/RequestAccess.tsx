@@ -154,7 +154,7 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
     if (!SITE_KEY || !window.turnstile || !box.current || widgetId.current) return;
     widgetId.current = window.turnstile.render(box.current, {
       sitekey: SITE_KEY,
-      theme: "dark",
+      theme: "light",
       action: "request-access",
       callback: (t: string) => {
         setToken(t);
@@ -274,7 +274,7 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
   return (
     <form
       onSubmit={submit}
-      className="rounded-card border border-hairline bg-surface/80 p-6 text-left shadow-pop backdrop-blur-sm sm:p-8"
+      className="rounded-card border border-hairline bg-surface p-6 text-left shadow-pop sm:p-8"
     >
       {SITE_KEY && (
         <Script

@@ -92,7 +92,7 @@ export default function AgreementPage() {
         </Card>
 
         <label
-          className={`mt-5 flex cursor-pointer items-start gap-3 rounded-card border p-4 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
+          className={`mt-5 flex cursor-pointer items-start gap-3 rounded-card border p-4 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus ${
             accepted
               ? "border-accent bg-accent-soft"
               : error

@@ -1,33 +1,33 @@
 import type { Metadata } from "next";
-import { DM_Sans, Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans, Montserrat } from "next/font/google";
 import { AppStateProvider } from "@/components/AppState";
 import "./globals.css";
 
 /**
- * Three faces, each with one job.
- *
- * All are variable fonts, so no weight array is passed: the whole axis ships in
- * one file and any weight the design asks for is real rather than synthesised.
+ * Three faces, each with one job: a heavy geometric display face for headings
+ * and a plain humanist sans for reading.
  */
 
-/** Headings. Set tight and bold. */
-const geist = Geist({
-  variable: "--font-geist",
+/** Headings and eyebrows. */
+const display = Montserrat({
+  variable: "--font-display-face",
   subsets: ["latin"],
   display: "swap",
 });
 
-/** Eyebrows and anything that wants to read as a label rather than a sentence. */
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+/** Body. Every sentence on the platform. */
+const body = IBM_Plex_Sans({
+  variable: "--font-body-face",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
-/** Body. Softer and rounder than the headings, which is the point of the pair. */
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+/** Case ids and key caps: anything that is a code rather than a word. */
+const mono = IBM_Plex_Mono({
+  variable: "--font-mono-face",
   subsets: ["latin"],
+  weight: ["400", "500"],
   display: "swap",
 });
 
@@ -44,7 +44,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geist.variable} ${geistMono.variable} ${dmSans.variable} h-full antialiased`}
+      className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
         <AppStateProvider>{children}</AppStateProvider>

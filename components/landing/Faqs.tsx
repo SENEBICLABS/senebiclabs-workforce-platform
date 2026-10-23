@@ -11,13 +11,13 @@ function Item({ q, a }: { q: string; a: string }) {
     // No box and no rule. The plus sign carries the affordance and the spacing
     // does the separating, so an open question is the only thing that changes
     // shape when you click.
-    <details className="group py-1">
+    <details className="group rounded-card border border-hairline bg-white px-5 py-1 shadow-card open:border-accent/50">
       <summary className="focusable cursor-pointer list-none py-3 text-body font-semibold text-ink marker:hidden">
         <span className="flex items-center justify-between gap-4">
           {q}
           <span
             aria-hidden="true"
-            className="shrink-0 text-accent transition-transform duration-150 group-open:rotate-45"
+            className="shrink-0 text-accent-ink transition-transform duration-150 group-open:rotate-45"
           >
             +
           </span>
@@ -48,7 +48,7 @@ export function Faqs({ featuredOnly = false }: { featuredOnly?: boolean }) {
 
         return (
           <section key={category}>
-            <h2 className="text-label uppercase text-muted">{category}</h2>
+            <h2 className="font-display text-[12px] font-extrabold uppercase tracking-[0.3em] text-accent-ink">{category}</h2>
             <div className="mt-4 space-y-3">
               {items.map((f) => (
                 <Item key={f.q} q={f.q} a={f.a} />

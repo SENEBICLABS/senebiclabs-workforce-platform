@@ -79,7 +79,7 @@ export default function VerifyPage() {
       <Suspense
         fallback={
           <Card className="p-8">
-            <div className="mx-auto h-10 w-10 animate-pulse-soft rounded-full bg-surface-raised" />
+            <div className="mx-auto h-10 w-10 animate-pulse-soft rounded-full bg-track" />
           </Card>
         }
       >

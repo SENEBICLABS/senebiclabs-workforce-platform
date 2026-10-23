@@ -19,8 +19,8 @@ export default function FaqsPage() {
   return (
     <>
       <Hero>
-        <p className="text-label uppercase text-muted">FAQs</p>
-        <h1 className="mx-auto mt-5 max-w-[880px] text-[42px] leading-[1.04] text-ink sm:text-[60px]">
+        <p className="font-display text-[12px] font-extrabold uppercase tracking-[0.3em] text-accent-ink">FAQs</p>
+        <h1 className="mx-auto mt-5 max-w-[880px] text-[38px] font-extrabold leading-[1.08] text-ink sm:text-[54px]">
           Questions clinicians ask
         </h1>
         <p className={`${MEASURE.intro} mt-5 text-[19px] leading-relaxed text-muted`}>
@@ -44,7 +44,7 @@ export default function FaqsPage() {
           <RequestAccessButton />
           <Link
             href="/about-us"
-            className="focusable rounded-btn text-body font-semibold text-accent underline-offset-2 hover:underline"
+            className="focusable rounded-btn text-body font-semibold text-accent-ink underline-offset-2 hover:underline"
           >
             Read more about what we do
           </Link>

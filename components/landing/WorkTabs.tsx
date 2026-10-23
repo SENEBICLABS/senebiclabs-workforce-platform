@@ -88,12 +88,12 @@ export function WorkTabs({ tasks }: { tasks: WorkTask[] }) {
             <div className="max-w-[560px]">
               <h3 className="text-[24px] leading-tight text-ink sm:text-[30px]">{task.title}</h3>
 
-              <p className="mt-6 font-mono text-[12px] uppercase tracking-[0.12em] text-accent">
+              <p className="mt-6 font-mono text-[12px] uppercase tracking-[0.12em] text-accent-ink">
                 Why
               </p>
               <p className="mt-2 text-body leading-relaxed text-muted">{task.why}</p>
 
-              <p className="mt-5 font-mono text-[12px] uppercase tracking-[0.12em] text-accent">
+              <p className="mt-5 font-mono text-[12px] uppercase tracking-[0.12em] text-accent-ink">
                 How
               </p>
               <p className="mt-2 text-body leading-relaxed text-muted">{task.how}</p>

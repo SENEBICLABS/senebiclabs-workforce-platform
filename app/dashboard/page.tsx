@@ -41,7 +41,7 @@ function StatTile({
     <Card className="p-5">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[14px] font-medium text-muted">{label}</p>
-        <Icon size={17} aria-hidden="true" className="shrink-0 text-accent" />
+        <Icon size={17} aria-hidden="true" className="shrink-0 text-accent-ink" />
       </div>
       <p className="tnum mt-3 text-[32px] font-bold leading-none tracking-[-0.03em] text-ink">
         {value}
@@ -180,7 +180,7 @@ export default function DashboardPage() {
             (pools.data?.length ?? 0) > 0 ? (
               <Link
                 href="/queue"
-                className="focusable rounded-btn text-[14px] font-semibold text-accent underline-offset-4 hover:underline"
+                className="focusable rounded-btn text-[14px] font-semibold text-accent-ink underline-offset-4 hover:underline"
               >
                 Open review queue
               </Link>

@@ -39,7 +39,7 @@ function Frame({ label, children }: { label: string; children: React.ReactNode }
   return (
     <div
       aria-hidden="true"
-      className="select-none rounded-card border border-hairline bg-canvas-top p-3.5 shadow-[0_12px_32px_rgba(0,0,0,0.35)]"
+      className="select-none rounded-card border border-hairline bg-canvas-top p-3.5 shadow-pop"
     >
       <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted">{label}</p>
       <div className="mt-3 space-y-1.5">
@@ -67,7 +67,7 @@ function Choice({ label, chosen = false }: { label: string; chosen?: boolean }) 
     <div className="flex items-center gap-2.5">
       <span
         className={`grid h-3.5 w-3.5 shrink-0 place-items-center rounded-full border ${
-          chosen ? "border-accent" : "border-white/25"
+          chosen ? "border-accent" : "border-hairline-strong"
         }`}
       >
         {chosen && <span className="h-1.5 w-1.5 rounded-full bg-accent" />}

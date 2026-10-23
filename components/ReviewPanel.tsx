@@ -130,7 +130,7 @@ export function ReviewPanel({
         otherwise swallow taps meant for these buttons. Only below md, since
         that bar exists nowhere else.
       */}
-      <div className="sticky bottom-16 z-10 -mx-4 border-t border-hairline bg-canvas-top/90 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:bottom-0 lg:-mx-8 lg:px-8">
+      <div className="sticky bottom-16 z-10 -mx-4 border-t border-hairline bg-surface/95 px-4 py-3 shadow-[0_-6px_16px_-10px_rgb(16_24_40/0.18)] backdrop-blur-md sm:-mx-6 sm:px-6 md:bottom-0 lg:-mx-8 lg:px-8">
         <div className="flex flex-wrap items-center justify-end gap-2">
           {mode === "idle" && (
             <>

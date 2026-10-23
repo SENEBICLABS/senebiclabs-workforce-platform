@@ -115,7 +115,7 @@ function ByPool({ record }: { record: WorkRecord }) {
               </span>
             </span>
           </div>
-          <div aria-hidden="true" className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-surface-raised">
+          <div aria-hidden="true" className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-track">
             <div
               className="h-full rounded-full bg-accent"
               style={{ width: `${(pool.total / most) * 100}%` }}
@@ -143,7 +143,7 @@ function Recent({ record }: { record: WorkRecord }) {
               key={pass.id}
               className="flex items-center gap-3 border-b border-hairline-soft px-5 py-3.5 last:border-b-0 sm:px-6"
             >
-              <Icon size={16} aria-hidden="true" className="shrink-0 text-accent" />
+              <Icon size={16} aria-hidden="true" className="shrink-0 text-accent-ink" />
               <div className="min-w-0 flex-1 sm:flex sm:items-baseline sm:gap-4">
                 <span className="block shrink-0 text-[15px] text-ink sm:w-44">
                   {KIND_LABEL[pass.kind]}
@@ -207,7 +207,7 @@ function WorkRecordBody() {
           </p>
         </div>
         <div className="flex gap-3 border-t border-hairline-soft pt-5 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
-          <Info size={17} aria-hidden="true" className="mt-0.5 shrink-0 text-accent" />
+          <Info size={17} aria-hidden="true" className="mt-0.5 shrink-0 text-accent-ink" />
           <p className="text-[15px] leading-relaxed text-muted">
             During the pilot, payment is arranged with you directly, outside the
             platform. This page is the record of the work, not a statement of what

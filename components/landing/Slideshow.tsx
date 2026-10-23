@@ -134,7 +134,7 @@ export function Slideshow({ items }: { items: WhyJoin[] }) {
                 it: at full width the detail ran to about 170 characters a line
                 and left half the panel empty. */}
             <div className="mx-auto max-w-[820px] rounded-card border border-hairline bg-linear-to-br from-accent-soft/40 via-transparent to-transparent p-7 sm:p-10 lg:p-12">
-              <p aria-hidden="true" className="tnum text-label text-accent">
+              <p aria-hidden="true" className="tnum font-display text-[34px] font-extrabold leading-none text-accent">
                 {String(i + 1).padStart(2, "0")}
               </p>
               <h3 className="mt-5 text-[24px] leading-tight text-ink sm:text-[28px]">
@@ -169,7 +169,7 @@ export function Slideshow({ items }: { items: WhyJoin[] }) {
               aria-label={`Go to ${item.title}`}
               aria-current={i === current ? "true" : undefined}
               className={`focusable h-1.5 rounded-full transition-all ${
-                i === current ? "w-7 bg-ink" : "w-1.5 bg-white/25 hover:bg-white/45"
+                i === current ? "w-7 bg-ink" : "w-1.5 bg-hairline-strong hover:bg-subtle"
               }`}
             />
           ))}

@@ -11,7 +11,7 @@ export function RequestAccessButton({ className = "" }: { className?: string }) 
   return (
     <Link
       href="/request-access"
-      className={buttonClass({ variant: "light", size: "lg", className: `group px-6 ${className}` })}
+      className={buttonClass({ size: "lg", className: `group h-14 px-9 text-[17px] ${className}` })}
     >
       Request access
       <Arrow />

@@ -9,7 +9,7 @@ function Lockup() {
       href="/"
       className="focusable inline-flex items-center gap-2.5 rounded-btn text-[17px] font-semibold tracking-[0.04em] text-ink"
     >
-      <span className="grid h-9 w-9 place-items-center rounded-btn bg-accent-soft text-accent ring-1 ring-inset ring-accent/30">
+      <span className="grid h-9 w-9 place-items-center rounded-btn bg-accent-soft text-accent-ink ring-1 ring-inset ring-accent/30">
         <BrandMark size={18} />
       </span>
       Senebiclabs
@@ -121,7 +121,7 @@ export function GoogleButton({
   return (
     <a
       href={href}
-      className="focusable flex h-12 w-full items-center justify-center gap-2.5 rounded-btn border border-hairline-strong bg-surface-raised text-[15px] font-semibold text-ink transition-colors hover:border-accent/60 hover:bg-accent-soft active:translate-y-px"
+      className="focusable flex h-12 w-full items-center justify-center gap-2.5 rounded-full border border-hairline-strong bg-surface font-display text-[15px] font-bold text-ink transition-colors hover:border-accent/60 hover:bg-accent-soft active:translate-y-px"
     >
       <GoogleMark />
       {label}

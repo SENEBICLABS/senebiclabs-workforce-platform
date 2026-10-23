@@ -109,7 +109,7 @@ function Join() {
     return (
       <AuthShell>
         <Card className="p-7 sm:p-8">
-          <div className="h-64 animate-pulse-soft rounded-btn bg-surface-raised" />
+          <div className="h-64 animate-pulse-soft rounded-btn bg-track" />
         </Card>
       </AuthShell>
     );
@@ -164,7 +164,7 @@ function Join() {
             </p>
 
             <div className="mt-5 flex items-center gap-3 rounded-btn border border-hairline-soft bg-canvas-top px-4 py-3">
-              <Mail size={17} aria-hidden="true" className="shrink-0 text-accent" />
+              <Mail size={17} aria-hidden="true" className="shrink-0 text-accent-ink" />
               <div className="min-w-0">
                 <p className="text-[13px] text-subtle">This invitation is for</p>
                 <p className="truncate text-[15px] font-semibold text-ink">
@@ -223,7 +223,7 @@ export default function JoinPage() {
       fallback={
         <AuthShell>
           <Card className="p-7 sm:p-8">
-            <div className="h-64 animate-pulse-soft rounded-btn bg-surface-raised" />
+            <div className="h-64 animate-pulse-soft rounded-btn bg-track" />
           </Card>
         </AuthShell>
       }
