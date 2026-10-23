@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Target } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/Button";
-import { Card, SectionHeading } from "@/components/ui/Card";
+import { Card, IconBadge, SectionHeading } from "@/components/ui/Card";
 import { Pill, PurposeBadge } from "@/components/ui/Pill";
 import {
   EmptyState,
@@ -27,7 +27,7 @@ function CalibrationCard({ pool }: { pool: CalibrationPool }) {
   const passed = pool.status === "passed";
 
   return (
-    <Card className="flex flex-col p-5">
+    <Card className="flex flex-col p-5 sm:p-6">
       <div className="mb-4 flex items-start justify-between gap-3">
         <PurposeBadge purpose={pool.purpose} />
         {passed && (
@@ -38,12 +38,12 @@ function CalibrationCard({ pool }: { pool: CalibrationPool }) {
         )}
       </div>
 
-      <h3 className="text-section text-ink">{pool.name}</h3>
+      <h3 className="text-[18px] font-bold leading-snug tracking-[-0.015em] text-ink">{pool.name}</h3>
       {pool.description && (
-        <p className="mt-1.5 flex-1 text-body text-muted">{pool.description}</p>
+        <p className="mt-2 flex-1 text-[15px] leading-relaxed text-muted">{pool.description}</p>
       )}
 
-      <div className="mt-4 flex items-center justify-between gap-3 border-t border-hairline pt-4">
+      <div className="mt-5 flex items-center justify-between gap-3 border-t border-hairline-soft pt-4">
         {passed ? (
           <>
             <span className="text-[15px] text-muted">
@@ -100,6 +100,7 @@ function CalibrationNotRequired() {
   return (
     <AppLayout title="Calibration">
       <EmptyState
+        icon={Target}
         title="Calibration is not required"
         body="Your invitation already gives you access to the pools open to you. Head to your dashboard to start reviewing."
         action={<Button onClick={() => router.push("/dashboard")}>Go to dashboard</Button>}
@@ -116,13 +117,18 @@ function Calibrations() {
 
   return (
     <AppLayout title="Calibration">
-      <Card className="mb-6 p-5">
-        <h2 className="text-section text-ink">How calibration works</h2>
-        <p className="mt-1.5 max-w-2xl text-body text-muted">
-          Each calibration is a short set of cases with known answers, written by
-          the clinical leads for that pool. Pass it and you are eligible to
-          review that pool — there is nothing else to unlock.
-        </p>
+      <Card className="mb-8 flex gap-4 p-5 sm:p-6">
+        <IconBadge>
+          <Target size={17} />
+        </IconBadge>
+        <div>
+          <h2 className="text-section text-ink">How calibration works</h2>
+          <p className="mt-1.5 max-w-2xl text-[15px] text-muted">
+            Each calibration is a short set of cases with known answers, written by
+            the clinical leads for that pool. Pass it and you are eligible to
+            review that pool — there is nothing else to unlock.
+          </p>
+        </div>
       </Card>
 
       {calibrations.loading && <LoadingBlock label="Loading calibrations" />}

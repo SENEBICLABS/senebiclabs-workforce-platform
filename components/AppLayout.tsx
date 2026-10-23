@@ -3,9 +3,19 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronDown, LayoutDashboard, ListChecks, NotebookText, Target, User } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronDown,
+  LayoutDashboard,
+  ListChecks,
+  LogOut,
+  NotebookText,
+  Target,
+  User,
+} from "lucide-react";
 import { useAppState } from "./AppState";
 import { Switch } from "./ui/Switch";
+import { BrandMark } from "./landing/BrandMark";
 import { api, SIGNED_OUT_EVENT } from "@/lib/api";
 
 const CALIBRATION_ENABLED =
@@ -31,37 +41,69 @@ function initialsOf(name: string | undefined, email: string | undefined) {
   return (parts[0]?.[0] ?? "").concat(parts[1]?.[0] ?? "").toUpperCase() || "—";
 }
 
+function isActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function Avatar({ size = "md" }: { size?: "sm" | "md" }) {
+  const { me } = useAppState();
+  return (
+    <span
+      aria-hidden="true"
+      className={`flex shrink-0 items-center justify-center rounded-full bg-linear-to-br from-accent-hover to-accent font-bold text-on-fill ring-2 ring-accent/20 ${
+        size === "sm" ? "h-8 w-8 text-[13px]" : "h-9 w-9 text-[14px]"
+      }`}
+    >
+      {initialsOf(me?.name, me?.email)}
+    </span>
+  );
+}
+
 function Sidebar() {
   const pathname = usePathname();
-  const { me, reviewedThisSession } = useAppState();
+  const { me, available, reviewedThisSession } = useAppState();
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-rail md:flex">
-      <div className="px-5 py-5">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-hairline-soft bg-rail md:flex">
+      <div className="flex h-16 items-center px-5">
         <Link
           href="/dashboard"
-          className="focusable rounded-btn text-[19px] font-bold tracking-tight text-white"
+          className="focusable flex items-center gap-2.5 rounded-btn text-[17px] font-semibold tracking-[0.04em] text-ink"
         >
+          <span className="grid h-8 w-8 place-items-center rounded-btn bg-accent-soft text-accent ring-1 ring-inset ring-accent/25">
+            <BrandMark size={17} />
+          </span>
           Senebiclabs
         </Link>
       </div>
 
-      <nav className="flex-1 px-2" aria-label="Main">
-        <ul className="space-y-0.5">
+      <nav className="flex-1 px-3 pt-4" aria-label="Main">
+        <p className="mb-2 px-3 text-label uppercase text-subtle">Workspace</p>
+        <ul className="space-y-1">
           {NAV.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href || pathname.startsWith(`${href}/`);
+            const active = isActive(pathname, href);
             return (
               <li key={href}>
                 <Link
                   href={href}
                   aria-current={active ? "page" : undefined}
-                  className={`focusable flex items-center gap-3 rounded-btn border-l-2 px-3 py-2 text-body transition-colors duration-150 ${
+                  className={`focusable group relative flex items-center gap-3 rounded-btn px-3 py-2.5 text-[15px] transition-colors duration-150 ${
                     active
-                      ? "border-accent bg-rail-hover font-semibold text-white"
-                      : "border-transparent text-rail-text hover:bg-rail-hover hover:text-accent"
+                      ? "bg-accent-soft font-semibold text-ink"
+                      : "text-rail-text hover:bg-rail-hover hover:text-ink"
                   }`}
                 >
-                  <Icon size={17} aria-hidden="true" className="shrink-0" />
+                  {active && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-accent"
+                    />
+                  )}
+                  <Icon
+                    size={18}
+                    aria-hidden="true"
+                    className={`shrink-0 ${active ? "text-accent" : "text-subtle group-hover:text-muted"}`}
+                  />
                   {label}
                 </Link>
               </li>
@@ -70,23 +112,25 @@ function Sidebar() {
         </ul>
       </nav>
 
-      <div className="border-t border-white/10 p-4">
+      <div className="m-3 rounded-card border border-hairline-soft bg-surface p-3">
         <div className="flex items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-[14px] font-bold text-on-fill"
-          >
-            {initialsOf(me?.name, me?.email)}
-          </span>
+          <Avatar />
           <div className="min-w-0">
-            <p className="truncate text-[15px] font-semibold text-white">
+            <p className="truncate text-[14px] font-semibold text-ink">
               {me?.name ?? me?.email ?? "Signing in…"}
             </p>
-            <p className="tnum truncate text-[14px] text-rail-text">
+            <p className="tnum truncate text-[13px] text-subtle">
               {reviewedThisSession} reviewed this session
             </p>
           </div>
         </div>
+        <p className="mt-3 flex items-center gap-2 border-t border-hairline-soft pt-3 text-[13px] text-muted">
+          <span
+            aria-hidden="true"
+            className={`h-2 w-2 rounded-full ${available ? "bg-accent shadow-[0_0_0_3px_rgb(79_191_164/0.2)]" : "bg-subtle"}`}
+          />
+          {available ? "Available for reviews" : "Not available"}
+        </p>
       </div>
     </aside>
   );
@@ -98,21 +142,24 @@ function MobileTabBar() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-30 flex border-t border-hairline bg-surface md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 flex h-16 border-t border-hairline bg-canvas-top/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
     >
       {NAV.map(({ href, label, icon: Icon }) => {
-        const active = pathname === href || pathname.startsWith(`${href}/`);
+        const active = isActive(pathname, href);
         return (
           <Link
             key={href}
             href={href}
             aria-current={active ? "page" : undefined}
-            className={`focusable flex flex-1 flex-col items-center gap-1 py-2.5 text-[12px] font-semibold transition-colors ${
-              active ? "text-accent" : "text-muted"
+            className={`focusable relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors ${
+              active ? "text-accent" : "text-subtle hover:text-muted"
             }`}
           >
-            <Icon size={19} aria-hidden="true" />
-            {label.split(" ")[0]}
+            {active && (
+              <span aria-hidden="true" className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-accent" />
+            )}
+            <Icon size={20} aria-hidden="true" />
+            <span className="truncate">{label.split(" ")[0]}</span>
           </Link>
         );
       })}
@@ -125,6 +172,13 @@ function TopBar({ title }: { title: string }) {
   const { me, available, setAvailable } = useAppState();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
+
   const signOut = async () => {
     try {
       await api.signOut();
@@ -134,20 +188,31 @@ function TopBar({ title }: { title: string }) {
   };
 
   return (
-    <header className="sticky top-0 z-20 h-16 border-b border-hairline bg-surface">
-      <div className="mx-auto flex h-full max-w-[1280px] items-center justify-between gap-4 px-5 lg:px-8">
-        <h1 className="truncate text-title text-ink">{title}</h1>
+    <header className="sticky top-0 z-20 h-16 border-b border-hairline-soft bg-canvas/85 backdrop-blur-md">
+      <div className="mx-auto flex h-full max-w-[1280px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <div className="flex min-w-0 items-center gap-3">
+          <Link
+            href="/dashboard"
+            aria-label="Senebiclabs dashboard"
+            className="focusable grid h-8 w-8 shrink-0 place-items-center rounded-btn bg-accent-soft text-accent ring-1 ring-inset ring-accent/25 md:hidden"
+          >
+            <BrandMark size={16} />
+          </Link>
+          <h1 className="truncate text-[20px] font-bold tracking-[-0.02em] text-ink sm:text-title">
+            {title}
+          </h1>
+        </div>
 
-        <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-          <div className="hidden items-center gap-2.5 sm:flex">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <div className="hidden items-center gap-2.5 rounded-full border border-hairline bg-surface py-1.5 pl-3.5 pr-1.5 sm:flex">
+            <span className="text-[14px] font-medium text-muted">
+              {available ? "Available for reviews" : "Not available"}
+            </span>
             <Switch
               checked={available}
               onChange={setAvailable}
               label="Available for reviews"
             />
-            <span className="text-[15px] font-semibold text-muted">
-              {available ? "Available for reviews" : "Not available"}
-            </span>
           </div>
 
           <div className="relative">
@@ -157,15 +222,14 @@ function TopBar({ title }: { title: string }) {
               aria-expanded={menuOpen}
               aria-haspopup="menu"
               aria-label="Account menu"
-              className="focusable flex items-center gap-1.5 rounded-btn p-1 transition-colors hover:bg-accent-soft"
+              className="focusable flex items-center gap-1.5 rounded-full p-1 pr-2 transition-colors hover:bg-accent-soft"
             >
-              <span
+              <Avatar size="sm" />
+              <ChevronDown
+                size={14}
                 aria-hidden="true"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-[14px] font-bold text-on-fill"
-              >
-                {initialsOf(me?.name, me?.email)}
-              </span>
-              <ChevronDown size={14} aria-hidden="true" className="text-muted" />
+                className={`text-muted transition-transform duration-150 ${menuOpen ? "rotate-180" : ""}`}
+              />
             </button>
 
             {menuOpen && (
@@ -177,19 +241,22 @@ function TopBar({ title }: { title: string }) {
                 />
                 <div
                   role="menu"
-                  className="absolute right-0 z-20 mt-2 w-60 rounded-card border border-hairline bg-surface py-1 shadow-[0_8px_28px_rgba(16,49,46,0.12)]"
+                  className="animate-rise absolute right-0 z-20 mt-2 w-64 overflow-hidden rounded-card bg-surface-raised py-1 shadow-pop"
                 >
                   {me && (
-                    <div className="border-b border-hairline px-4 py-3">
-                      <p className="truncate text-[15px] font-semibold text-ink">
-                        {me.name}
-                      </p>
-                      <p className="mt-0.5 truncate text-[14px] text-muted">
-                        {me.email}
-                      </p>
+                    <div className="flex items-center gap-3 border-b border-hairline-soft px-4 py-3">
+                      <Avatar />
+                      <div className="min-w-0">
+                        <p className="truncate text-[15px] font-semibold text-ink">
+                          {me.name}
+                        </p>
+                        <p className="mt-0.5 truncate text-[13px] text-subtle">
+                          {me.email}
+                        </p>
+                      </div>
                     </div>
                   )}
-                  <div className="flex items-center justify-between px-4 py-3 sm:hidden">
+                  <div className="flex items-center justify-between border-b border-hairline-soft px-4 py-3 sm:hidden">
                     <span className="text-[15px] text-ink">
                       {available ? "Available" : "Not available"}
                     </span>
@@ -199,21 +266,25 @@ function TopBar({ title }: { title: string }) {
                       label="Available for reviews"
                     />
                   </div>
-                  <Link
-                    href="/account"
-                    role="menuitem"
-                    onClick={() => setMenuOpen(false)}
-                    className="focusable block px-4 py-2 text-[15px] text-ink transition-colors hover:bg-accent-soft"
-                  >
-                    Account
-                  </Link>
-                  <button
-                    role="menuitem"
-                    onClick={signOut}
-                    className="focusable w-full px-4 py-2 text-left text-[15px] text-ink transition-colors hover:bg-accent-soft"
-                  >
-                    Sign out
-                  </button>
+                  <div className="p-1">
+                    <Link
+                      href="/account"
+                      role="menuitem"
+                      onClick={() => setMenuOpen(false)}
+                      className="focusable flex items-center gap-2.5 rounded-btn px-3 py-2 text-[15px] text-strong transition-colors hover:bg-accent-soft hover:text-ink"
+                    >
+                      <User size={16} aria-hidden="true" className="text-subtle" />
+                      Account
+                    </Link>
+                    <button
+                      role="menuitem"
+                      onClick={signOut}
+                      className="focusable flex w-full items-center gap-2.5 rounded-btn px-3 py-2 text-left text-[15px] text-strong transition-colors hover:bg-accent-soft hover:text-ink"
+                    >
+                      <LogOut size={16} aria-hidden="true" className="text-subtle" />
+                      Sign out
+                    </button>
+                  </div>
                 </div>
               </>
             )}
@@ -232,8 +303,9 @@ function Toast() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-btn border border-hairline bg-surface px-4 py-2.5 text-[15px] font-semibold text-ink shadow-[0_8px_28px_rgba(0,0,0,0.5)] md:bottom-6 md:left-auto md:right-6 md:translate-x-0"
+      className="animate-rise fixed bottom-20 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2.5 whitespace-nowrap rounded-full bg-surface-raised py-2.5 pl-3 pr-4 text-[15px] font-semibold text-ink shadow-pop md:bottom-6 md:left-auto md:right-6 md:translate-x-0"
     >
+      <CheckCircle2 size={18} aria-hidden="true" className="text-accent" />
       {toast}
     </div>
   );
@@ -279,9 +351,9 @@ export function AppLayout({
     <div className="min-h-screen bg-canvas">
       <SessionWatch />
       <Sidebar />
-      <div className="md:pl-60">
+      <div className="md:pl-64">
         <TopBar title={title} />
-        <main className="mx-auto max-w-[1280px] px-5 pb-24 pt-6 md:pb-10 lg:px-8">
+        <main className="mx-auto max-w-[1280px] px-4 pb-28 pt-6 sm:px-6 md:pb-12 md:pt-8 lg:px-8">
           {children}
         </main>
       </div>

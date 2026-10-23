@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { ArrowRight, PauseCircle } from "lucide-react";
 import { Card } from "./ui/Card";
 import { Button } from "./ui/Button";
 import { PurposeBadge, StatusPill } from "./ui/Pill";
@@ -31,24 +32,30 @@ export function PoolCard({ pool }: { pool: Pool }) {
   return (
     <Card
       interactive={available && workable}
-      className={`relative flex flex-col p-5 ${closed ? "opacity-60" : ""}`}
+      className={`relative flex flex-col p-5 sm:p-6 ${closed ? "opacity-60" : ""}`}
     >
-      <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="mb-5 flex items-start justify-between gap-3">
         <PurposeBadge purpose={pool.purpose} />
         <StatusPill status={status} />
       </div>
 
-      <h3 className="text-section text-ink">{pool.name}</h3>
+      <h3 className="text-[18px] font-bold leading-snug tracking-[-0.015em] text-ink">
+        {pool.name}
+      </h3>
       {pool.description && (
-        <p className="mt-1.5 text-body text-muted">{pool.description}</p>
+        <p className="mt-2 line-clamp-3 text-[15px] leading-relaxed text-muted">
+          {pool.description}
+        </p>
       )}
 
-      <div className="mt-auto pt-4">
-        <div className="flex items-center justify-between gap-3 border-t border-hairline pt-4">
-          <span className="min-w-0 text-[15px] text-muted">
-            <span className="tnum block truncate text-ink">{poolLine(pool)}</span>
+      <div className="mt-auto pt-5">
+        <div className="flex items-end justify-between gap-3 border-t border-hairline-soft pt-4">
+          <span className="min-w-0">
+            <span className="tnum block truncate text-[15px] font-semibold text-ink">
+              {poolLine(pool)}
+            </span>
             {pool.completed_by_you > 0 && (
-              <span className="tnum mt-0.5 block text-[14px]">
+              <span className="tnum mt-0.5 block text-[13px] text-subtle">
                 {pool.completed_by_you.toLocaleString()} reviewed by you
               </span>
             )}
@@ -56,18 +63,24 @@ export function PoolCard({ pool }: { pool: Pool }) {
           {workable && (
             <Button
               size="sm"
-              className="shrink-0"
+              className="group shrink-0"
               disabled={!available}
               onClick={() => router.push(`/workspace?pool=${pool.id}`)}
             >
               {pool.completed_by_you > 0 ? "Resume reviewing" : "Start reviewing"}
+              <ArrowRight
+                size={15}
+                aria-hidden="true"
+                className="transition-transform duration-150 group-hover:translate-x-0.5"
+              />
             </Button>
           )}
         </div>
       </div>
 
       {available || !workable ? null : (
-        <div className="absolute inset-0 flex items-center justify-center rounded-card bg-surface/85 px-4 text-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-card bg-surface/85 px-6 text-center backdrop-blur-[2px]">
+          <PauseCircle size={22} aria-hidden="true" className="text-subtle" />
           <p className="text-[15px] font-semibold text-muted">
             Turn on availability to start reviewing.
           </p>

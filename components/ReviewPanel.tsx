@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Check, PenLine, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
+import { Label, Textarea } from "@/components/ui/Field";
 import { Pill } from "@/components/ui/Pill";
 import type { Field } from "@/lib/api";
 
@@ -45,16 +47,16 @@ export function ReviewPanel({
 
   return (
     <div className="space-y-5">
-      <Card className="p-5">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <Card className="p-5 sm:p-6">
+        <div className="mb-5 flex flex-wrap items-start justify-between gap-3 border-b border-hairline-soft pb-5">
           <div>
             <h2 className="text-section text-ink">Review this answer</h2>
-            <p className="mt-1 text-body text-muted">
+            <p className="mt-1 text-[15px] text-muted">
               Approve it as written, edit it and approve, or send it back.
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Pill tone="warning">Awaiting review</Pill>
+            <Pill tone="warning" dot>Awaiting review</Pill>
             {revision > 0 && (
               <Pill tone="neutral">Revision {revision + 1}</Pill>
             )}
@@ -63,13 +65,13 @@ export function ReviewPanel({
 
         {/* Non-written answers, for context — not editable in a review pass. */}
         {fields.filter((f) => f.type !== "text").length > 0 && (
-          <dl className="mb-5 grid grid-cols-1 gap-3 rounded-card bg-canvas p-4 sm:grid-cols-2">
+          <dl className="mb-5 grid grid-cols-1 gap-4 rounded-btn border border-hairline-soft bg-canvas-top p-4 sm:grid-cols-2">
             {fields
               .filter((f) => f.type !== "text")
               .map((f) => (
                 <div key={f.name}>
-                  <dt className="text-label uppercase text-muted">{f.title}</dt>
-                  <dd className="mt-0.5 text-body text-ink">
+                  <dt className="text-label uppercase text-subtle">{f.title}</dt>
+                  <dd className="mt-1 text-[15px] font-semibold text-ink">
                     {String(authored[f.name] ?? "—")}
                   </dd>
                 </div>
@@ -77,30 +79,25 @@ export function ReviewPanel({
           </dl>
         )}
 
-        <div className="space-y-4">
+        <div className="space-y-5">
           {written.map((f) => (
             <div key={f.name}>
-              <label
-                htmlFor={`review-${f.name}`}
-                className="mb-1.5 block text-label uppercase text-muted"
-              >
-                {f.title}
-              </label>
+              <Label htmlFor={`review-${f.name}`}>{f.title}</Label>
 
               {mode === "editing" ? (
-                <textarea
+                <Textarea
                   id={`review-${f.name}`}
                   rows={8}
                   value={draft[f.name] ?? ""}
                   onChange={(e) =>
                     setDraft((d) => ({ ...d, [f.name]: e.target.value }))
                   }
-                  className="focusable w-full resize-y rounded-card border border-accent bg-surface px-3 py-2.5 text-body leading-relaxed text-ink"
+                  autoFocus={f === written[0]}
                 />
               ) : (
-                <div className="whitespace-pre-wrap rounded-card border border-hairline bg-surface px-4 py-3 text-body leading-relaxed text-ink">
+                <div className="whitespace-pre-wrap rounded-btn border border-hairline-soft border-l-2 border-l-accent/60 bg-canvas-top px-4 py-3.5 text-[16px] leading-[1.7] text-ink">
                   {String(authored[f.name] ?? "") || (
-                    <span className="text-muted">(left blank)</span>
+                    <span className="text-subtle">(left blank)</span>
                   )}
                 </div>
               )}
@@ -109,28 +106,22 @@ export function ReviewPanel({
         </div>
 
         {mode === "rejecting" && (
-          <div className="mt-5">
-            <label
-              htmlFor="reject-reason"
-              className="mb-1.5 block text-label uppercase text-muted"
-            >
-              Why is this going back?
-            </label>
-            <textarea
+          <div className="animate-rise mt-5 rounded-btn border border-warning/30 bg-warning-soft/30 p-4">
+            <Label htmlFor="reject-reason">Why is this going back?</Label>
+            <Textarea
               id="reject-reason"
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="What needs to change, and why."
-              className="focusable w-full resize-y rounded-card border border-hairline bg-surface px-3 py-2.5 text-body text-ink placeholder:text-placeholder"
             />
           </div>
         )}
 
         {error && (
-          <p role="alert" className="mt-4 text-[15px] text-danger">
+          <Alert tone="danger" role="alert" className="mt-4">
             {error}
-          </p>
+          </Alert>
         )}
       </Card>
 
@@ -139,7 +130,7 @@ export function ReviewPanel({
         otherwise swallow taps meant for these buttons. Only below md, since
         that bar exists nowhere else.
       */}
-      <div className="sticky bottom-16 z-10 -mx-5 border-t border-hairline bg-surface/95 px-5 py-3 backdrop-blur md:bottom-0 lg:-mx-8 lg:px-8">
+      <div className="sticky bottom-16 z-10 -mx-4 border-t border-hairline bg-canvas-top/90 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:bottom-0 lg:-mx-8 lg:px-8">
         <div className="flex flex-wrap items-center justify-end gap-2">
           {mode === "idle" && (
             <>

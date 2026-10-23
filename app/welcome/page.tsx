@@ -3,7 +3,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { ArrowRight, Sparkles } from "lucide-react";
+import { OnboardingShell } from "@/components/auth/AuthShell";
+import { Card, IconBadge } from "@/components/ui/Card";
 
 const POINTS = [
   {
@@ -28,34 +30,29 @@ export default function WelcomePage() {
   }, []);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-canvas px-5 py-12">
-      <div className="w-full max-w-[560px]">
-        <div className="mb-6 flex items-center gap-2" aria-label="Step 3 of 3">
-          <span className="h-1 flex-1 rounded-full bg-accent" />
-          <span className="h-1 flex-1 rounded-full bg-accent" />
-          <span className="h-1 flex-1 rounded-full bg-accent" />
-          <span className="ml-2 text-label uppercase text-muted">
-            Step 3 of 3
-          </span>
-        </div>
-
-        <h1 className="text-title text-ink">Welcome to Senebiclabs</h1>
-        <p className="mt-1.5 text-body text-muted">
+    <OnboardingShell step={3} width="sm">
+        <IconBadge size="lg">
+          <Sparkles size={22} strokeWidth={1.75} />
+        </IconBadge>
+        <h1 className="mt-5 text-[28px] font-bold leading-tight tracking-[-0.03em] text-ink sm:text-[32px]">
+          Welcome to Senebiclabs
+        </h1>
+        <p className="mt-2 text-body text-muted">
           You are set up and eligible to begin reviewing.
         </p>
 
-        <Card className="mt-6 divide-y divide-hairline">
+        <Card className="mt-8 divide-y divide-hairline-soft">
           {POINTS.map((point, i) => (
-            <div key={point.title} className="flex gap-4 p-5">
+            <div key={point.title} className="flex gap-4 p-5 sm:p-6">
               <span
                 aria-hidden="true"
-                className="tnum flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-[15px] font-bold text-accent"
+                className="tnum flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-soft font-mono text-[13px] font-semibold text-accent ring-1 ring-inset ring-accent/25"
               >
-                {i + 1}
+                {String(i + 1).padStart(2, "0")}
               </span>
               <div>
-                <h2 className="text-body font-semibold text-ink">{point.title}</h2>
-                <p className="mt-1 text-body text-muted">{point.body}</p>
+                <h2 className="text-[16px] font-semibold text-ink">{point.title}</h2>
+                <p className="mt-1 text-[15px] leading-relaxed text-muted">{point.body}</p>
               </div>
             </div>
           ))}
@@ -63,10 +60,15 @@ export default function WelcomePage() {
 
         <Button
           size="lg"
-          className="mt-6 w-full"
+          className="group mt-8 w-full"
           onClick={() => router.push("/dashboard")}
         >
           Go to your dashboard
+          <ArrowRight
+            size={16}
+            aria-hidden="true"
+            className="transition-transform duration-150 group-hover:translate-x-0.5"
+          />
         </Button>
 
         {/* The public site has no sign-in button, by design: membership is by
@@ -74,11 +76,10 @@ export default function WelcomePage() {
             an account. So this is the one moment to tell a new member how to
             get back. Any signed-in page redirects to sign-in when a session
             has lapsed, which is what makes the bookmark enough. */}
-        <p className="mt-4 text-center text-[15px] text-muted">
+        <p className="mt-4 text-center text-[14px] text-subtle">
           Bookmark your dashboard to come back. If you are signed out, it will
           take you straight to sign in.
         </p>
-      </div>
-    </div>
+    </OnboardingShell>
   );
 }

@@ -3,7 +3,10 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Card } from "@/components/ui/Card";
+import { Link as LinkIcon } from "lucide-react";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { buttonClass } from "@/components/ui/button-class";
+import { Card, IconBadge } from "@/components/ui/Card";
 import { ApiError, api } from "@/lib/api";
 
 function Verify() {
@@ -40,26 +43,28 @@ function Verify() {
   }, [searchParams, router]);
 
   return (
-    <Card className="p-8 text-center">
+    <Card elevated className="p-8 text-center">
       {verifying ? (
         <>
           <span
             aria-hidden="true"
-            className="mx-auto block h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent"
+            className="mx-auto block h-10 w-10 animate-spin rounded-full border-[3px] border-accent/20 border-t-accent"
           />
-          <h1 className="mt-5 text-section text-ink">Signing you in</h1>
-          <p className="mt-1 text-body text-muted" role="status">
+          <h1 className="mt-6 text-title text-ink">Signing you in</h1>
+          <p className="mt-2 text-[15px] text-muted" role="status">
             One moment while we confirm your email.
           </p>
         </>
       ) : (
         <>
-          <h1 className="text-section text-ink">That link did not work</h1>
-          <p className="mt-2 text-body text-muted">{error}</p>
-          <Link
-            href="/"
-            className="focusable mt-5 inline-flex h-9 items-center justify-center rounded-btn bg-accent px-4 text-[15px] font-semibold text-on-fill transition-colors hover:bg-accent-hover"
-          >
+          <div className="flex justify-center">
+            <IconBadge size="lg" tone="danger">
+              <LinkIcon size={22} strokeWidth={1.75} />
+            </IconBadge>
+          </div>
+          <h1 className="mt-5 text-title text-ink">That link did not work</h1>
+          <p className="mt-2 text-[15px] leading-relaxed text-muted">{error}</p>
+          <Link href="/" className={buttonClass({ className: "mt-6" })}>
             Request a new link
           </Link>
         </>
@@ -70,18 +75,16 @@ function Verify() {
 
 export default function VerifyPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-canvas px-5 py-12">
-      <div className="w-full max-w-[420px]">
-        <Suspense
-          fallback={
-            <Card className="p-8">
-              <div className="mx-auto h-8 w-8 animate-pulse-soft rounded-full bg-hairline" />
-            </Card>
-          }
-        >
-          <Verify />
-        </Suspense>
-      </div>
-    </div>
+    <AuthShell>
+      <Suspense
+        fallback={
+          <Card className="p-8">
+            <div className="mx-auto h-10 w-10 animate-pulse-soft rounded-full bg-surface-raised" />
+          </Card>
+        }
+      >
+        <Verify />
+      </Suspense>
+    </AuthShell>
   );
 }

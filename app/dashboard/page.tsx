@@ -1,11 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  ArrowRight,
+  CalendarDays,
+  CheckCheck,
+  Flag,
+  PlayCircle,
+  Timer,
+  type LucideIcon,
+} from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PoolCard } from "@/components/PoolCard";
 import { useAppState } from "@/components/AppState";
 import { Button } from "@/components/ui/Button";
-import { Card, SectionHeading } from "@/components/ui/Card";
+import { Card, IconBadge, SectionHeading } from "@/components/ui/Card";
 import {
   EmptyState,
   ErrorState,
@@ -19,19 +29,24 @@ function StatTile({
   label,
   value,
   note,
+  icon: Icon,
 }: {
   label: string;
   value: string;
   /** One line saying what the number is, where the label alone could mislead. */
   note?: string;
+  icon: LucideIcon;
 }) {
   return (
     <Card className="p-5">
-      <p className="text-label uppercase text-muted">{label}</p>
-      <p className="tnum mt-2 text-[28px] font-bold leading-none text-ink">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[14px] font-medium text-muted">{label}</p>
+        <Icon size={17} aria-hidden="true" className="shrink-0 text-accent" />
+      </div>
+      <p className="tnum mt-3 text-[32px] font-bold leading-none tracking-[-0.03em] text-ink">
         {value}
       </p>
-      {note && <p className="mt-2 text-[14px] leading-snug text-muted">{note}</p>}
+      {note && <p className="mt-3 text-[13px] leading-snug text-subtle">{note}</p>}
     </Card>
   );
 }
@@ -41,7 +56,7 @@ const CALIBRATION_ENABLED =
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { reviewedThisSession } = useAppState();
+  const { me, reviewedThisSession } = useAppState();
 
   const pools = useAsync(() => api.pools(), []);
   const stats = useAsync(() => api.stats(), []);
@@ -56,6 +71,15 @@ export default function DashboardPage() {
 
   return (
     <AppLayout title="Dashboard">
+      <div className="mb-6 sm:mb-8">
+        <h2 className="text-[26px] font-bold leading-tight tracking-[-0.03em] text-ink sm:text-[30px]">
+          {me?.name ? `Welcome back, ${me.name}` : "Welcome back"}
+        </h2>
+        <p className="mt-1.5 text-body text-muted">
+          Your pools and your recent work, in one place.
+        </p>
+      </div>
+
       {/*
         Stats. Only figures with a real source are rendered.
 
@@ -67,27 +91,31 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.loading ? (
           <>
-            <Skeleton className="h-[104px]" />
-            <Skeleton className="h-[104px]" />
-            <Skeleton className="h-[104px]" />
-            <Skeleton className="h-[104px]" />
+            <Skeleton className="h-[120px]" />
+            <Skeleton className="h-[120px]" />
+            <Skeleton className="h-[120px]" />
+            <Skeleton className="h-[120px]" />
           </>
         ) : stats.data ? (
           <>
             <StatTile
               label="Reviewed this session"
+              icon={Timer}
               value={reviewedThisSession.toLocaleString()}
             />
             <StatTile
               label="Reviewed this week"
+              icon={CalendarDays}
               value={stats.data.reviewed_this_week.toLocaleString()}
             />
             <StatTile
               label="Reviewed in total"
+              icon={CheckCheck}
               value={stats.data.reviewed_total.toLocaleString()}
             />
             <StatTile
               label="Flagged in total"
+              icon={Flag}
               value={stats.data.flagged_total.toLocaleString()}
               note={
                 stats.data.flagged_total > 0
@@ -101,22 +129,35 @@ export default function DashboardPage() {
 
       {/* Continue where you left off */}
       {resume && (
-        <div className="mt-8">
+        <div className="mt-10">
           <SectionHeading>Continue where you left off</SectionHeading>
-          <Card className="p-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0">
-                <h3 className="text-section text-ink">{resume.name}</h3>
-                <p className="tnum mt-1 text-body text-muted">
-                  {poolLine(resume)} · you have reviewed{" "}
-                  {resume.completed_by_you.toLocaleString()}{" "}
-                  {resume.completed_by_you === 1 ? "case" : "cases"} here
-                </p>
+          <Card className="relative overflow-hidden bg-linear-to-br from-accent-soft via-surface to-surface p-5 ring-1 ring-inset ring-accent/30 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex min-w-0 items-start gap-4">
+                <IconBadge>
+                  <PlayCircle size={18} />
+                </IconBadge>
+                <div className="min-w-0">
+                  <h3 className="text-[18px] font-bold leading-snug tracking-[-0.015em] text-ink">
+                    {resume.name}
+                  </h3>
+                  <p className="tnum mt-1 text-[15px] text-muted">
+                    {poolLine(resume)} · you have reviewed{" "}
+                    {resume.completed_by_you.toLocaleString()}{" "}
+                    {resume.completed_by_you === 1 ? "case" : "cases"} here
+                  </p>
+                </div>
               </div>
               <Button
+                className="group"
                 onClick={() => router.push(`/workspace?pool=${resume.id}`)}
               >
                 Resume reviewing
+                <ArrowRight
+                  size={16}
+                  aria-hidden="true"
+                  className="transition-transform duration-150 group-hover:translate-x-0.5"
+                />
               </Button>
             </div>
 
@@ -132,8 +173,22 @@ export default function DashboardPage() {
       )}
 
       {/* Pools */}
-      <div className="mt-8">
-        <SectionHeading>Your pools</SectionHeading>
+      <div className="mt-10">
+        <SectionHeading
+          description="Every pool open to you, and what is waiting in each."
+          action={
+            (pools.data?.length ?? 0) > 0 ? (
+              <Link
+                href="/queue"
+                className="focusable rounded-btn text-[14px] font-semibold text-accent underline-offset-4 hover:underline"
+              >
+                Open review queue
+              </Link>
+            ) : undefined
+          }
+        >
+          Your pools
+        </SectionHeading>
 
         {pools.loading && <LoadingBlock label="Loading your pools" />}
 

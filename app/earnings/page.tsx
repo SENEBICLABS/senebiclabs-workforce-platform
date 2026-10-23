@@ -1,7 +1,17 @@
 "use client";
 
+import {
+  CheckCheck,
+  Flag,
+  Gavel,
+  Info,
+  NotebookText,
+  PenLine,
+  Scale,
+  type LucideIcon,
+} from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
-import { Card, SectionHeading } from "@/components/ui/Card";
+import { Card, IconBadge, SectionHeading } from "@/components/ui/Card";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/States";
 import { api, type PassKind, type WorkRecord } from "@/lib/api";
 import { useAsync } from "@/lib/use-async";
@@ -54,34 +64,64 @@ const when = (iso: string) =>
     year: "numeric",
   });
 
+const KIND_ICON: Record<PassKind, LucideIcon> = {
+  judgement: Scale,
+  flag: Flag,
+  authoring: PenLine,
+  review: CheckCheck,
+  adjudication: Gavel,
+};
+
 function Tally({ record }: { record: WorkRecord }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      {ORDER.filter((k) => record.by_kind[k] > 0).map((kind) => (
-        <Card key={kind} className="p-5">
-          <p className="tnum text-title text-ink">{record.by_kind[kind].toLocaleString()}</p>
-          <p className="mt-1 text-body font-semibold text-ink">{KIND_LABEL[kind]}</p>
-          <p className="mt-1.5 text-[15px] leading-relaxed text-muted">
-            {KIND_NOTE[kind]}
-          </p>
-        </Card>
-      ))}
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {ORDER.filter((k) => record.by_kind[k] > 0).map((kind) => {
+        const Icon = KIND_ICON[kind];
+        return (
+          <Card key={kind} className="flex flex-col p-5">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[14px] font-semibold text-strong">{KIND_LABEL[kind]}</p>
+              <IconBadge>
+                <Icon size={16} />
+              </IconBadge>
+            </div>
+            <p className="tnum mt-2 text-[32px] font-bold leading-none tracking-[-0.03em] text-ink">
+              {record.by_kind[kind].toLocaleString()}
+            </p>
+            <p className="mt-3 text-[14px] leading-relaxed text-muted">
+              {KIND_NOTE[kind]}
+            </p>
+          </Card>
+        );
+      })}
     </div>
   );
 }
 
 function ByPool({ record }: { record: WorkRecord }) {
+  // Bars are drawn against the busiest pool, so the longest is full width.
+  // They compare pools with each other and claim nothing about a total.
+  const most = Math.max(1, ...record.by_pool.map((p) => p.total));
   return (
     <Card className="overflow-hidden">
       {record.by_pool.map((pool) => (
-        <div key={pool.pool_id} className="border-b border-hairline px-5 py-4 last:border-b-0">
+        <div key={pool.pool_id} className="border-b border-hairline-soft px-5 py-4 last:border-b-0 sm:px-6">
           <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <span className="text-body font-semibold text-ink">{pool.pool}</span>
-            <span className="tnum text-body text-ink">
-              {pool.total.toLocaleString()} {pool.total === 1 ? "pass" : "passes"}
+            <span className="text-[15px] font-semibold text-ink">{pool.pool}</span>
+            <span className="tnum text-[15px] font-semibold text-ink">
+              {pool.total.toLocaleString()}{" "}
+              <span className="font-normal text-subtle">
+                {pool.total === 1 ? "pass" : "passes"}
+              </span>
             </span>
           </div>
-          <p className="mt-1 text-[15px] text-muted">
+          <div aria-hidden="true" className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-surface-raised">
+            <div
+              className="h-full rounded-full bg-accent"
+              style={{ width: `${(pool.total / most) * 100}%` }}
+            />
+          </div>
+          <p className="mt-2 text-[14px] text-muted">
             {ORDER.filter((k) => pool.kinds[k] > 0)
               .map((k) => counted(k, pool.kinds[k]))
               .join(" · ")}
@@ -95,18 +135,26 @@ function ByPool({ record }: { record: WorkRecord }) {
 function Recent({ record }: { record: WorkRecord }) {
   return (
     <Card className="overflow-hidden">
-      {record.recent.map((pass) => (
-        <div
-          key={pass.id}
-          className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-hairline px-5 py-3.5 last:border-b-0"
-        >
-          <span className="text-body text-ink">{KIND_LABEL[pass.kind]}</span>
-          <span className="min-w-0 flex-1 truncate text-[15px] text-muted">
-            {pass.pool}
-          </span>
-          <span className="tnum text-[15px] text-muted">{when(pass.at)}</span>
-        </div>
-      ))}
+      <ul>
+        {record.recent.map((pass) => {
+          const Icon = KIND_ICON[pass.kind];
+          return (
+            <li
+              key={pass.id}
+              className="flex items-center gap-3 border-b border-hairline-soft px-5 py-3.5 last:border-b-0 sm:px-6"
+            >
+              <Icon size={16} aria-hidden="true" className="shrink-0 text-accent" />
+              <div className="min-w-0 flex-1 sm:flex sm:items-baseline sm:gap-4">
+                <span className="block shrink-0 text-[15px] text-ink sm:w-44">
+                  {KIND_LABEL[pass.kind]}
+                </span>
+                <span className="block truncate text-[14px] text-muted">{pass.pool}</span>
+              </div>
+              <span className="tnum shrink-0 text-[14px] text-subtle">{when(pass.at)}</span>
+            </li>
+          );
+        })}
+      </ul>
     </Card>
   );
 }
@@ -117,8 +165,12 @@ function WorkRecordBody() {
   if (record.loading) {
     return (
       <div className="space-y-5">
-        <Skeleton className="h-28" />
-        <Skeleton className="h-40" />
+        <Skeleton className="h-32" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+        </div>
         <Skeleton className="h-64" />
       </div>
     );
@@ -138,6 +190,7 @@ function WorkRecordBody() {
   if (data.total === 0) {
     return (
       <EmptyState
+        icon={NotebookText}
         title="No passes recorded yet"
         body="Every case you judge, flag, write or review is recorded here, with the date it happened."
       />
@@ -145,18 +198,23 @@ function WorkRecordBody() {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <p className="text-body text-ink">
-          {data.total.toLocaleString()} {data.total === 1 ? "pass" : "passes"}{" "}
-          recorded.
-        </p>
-        <p className="mt-1.5 text-body text-muted">
-          During the pilot, payment is arranged with you directly, outside the
-          platform. This page is the record of the work, not a statement of what
-          you are owed, and it shows no amounts because the platform holds none.
-        </p>
-      </div>
+    <div className="space-y-10">
+      <Card className="flex flex-col gap-5 bg-linear-to-br from-accent-soft/70 via-surface to-surface p-5 sm:flex-row sm:items-center sm:p-6">
+        <div className="shrink-0 sm:w-48">
+          <p className="text-[14px] font-medium text-muted">Passes recorded</p>
+          <p className="tnum mt-1 text-[44px] font-bold leading-none tracking-[-0.04em] text-ink">
+            {data.total.toLocaleString()}
+          </p>
+        </div>
+        <div className="flex gap-3 border-t border-hairline-soft pt-5 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
+          <Info size={17} aria-hidden="true" className="mt-0.5 shrink-0 text-accent" />
+          <p className="text-[15px] leading-relaxed text-muted">
+            During the pilot, payment is arranged with you directly, outside the
+            platform. This page is the record of the work, not a statement of what
+            you are owed, and it shows no amounts because the platform holds none.
+          </p>
+        </div>
+      </Card>
 
       <Tally record={data} />
 
@@ -173,7 +231,7 @@ function WorkRecordBody() {
         </SectionHeading>
         <Recent record={data} />
         {data.recent.length < data.total && (
-          <p className="mt-2 text-[15px] text-muted">
+          <p className="mt-3 text-[14px] text-subtle">
             Showing the most recent {data.recent_limit.toLocaleString()}. Ask us
             if you need the full record.
           </p>

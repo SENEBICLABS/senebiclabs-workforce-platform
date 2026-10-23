@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Script from "next/script";
+import { CheckCircle2 } from "lucide-react";
+import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { IconBadge } from "@/components/ui/Card";
+import { FieldHint, Input, Label } from "@/components/ui/Field";
 import { Arrow } from "./Arrow";
 
 /**
@@ -239,8 +243,13 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
     return (
       // Announced when it replaces the form, so a screen reader hears the
       // outcome rather than silence after pressing the button.
-      <div role="status" className="text-center">
-        <h2 className="text-[24px] leading-tight text-ink">
+      <div role="status" className="animate-rise rounded-card border border-hairline bg-surface p-8 text-center shadow-pop">
+        <div className="flex justify-center">
+          <IconBadge size="lg">
+            <CheckCircle2 size={22} strokeWidth={1.75} />
+          </IconBadge>
+        </div>
+        <h2 className="mt-5 text-[24px] leading-tight text-ink">
           {done ? "You are on the list" : "You are already on the list"}
         </h2>
         <p className="mt-4 text-body leading-relaxed text-muted">
@@ -263,7 +272,10 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="text-left">
+    <form
+      onSubmit={submit}
+      className="rounded-card border border-hairline bg-surface/80 p-6 text-left shadow-pop backdrop-blur-sm sm:p-8"
+    >
       {SITE_KEY && (
         <Script
           src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
@@ -280,14 +292,10 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
       <div className="space-y-5">
         {FIELDS.map((f) => (
           <div key={f.name}>
-            <label
-              htmlFor={`ra-${f.name}`}
-              className="mb-1.5 flex items-baseline justify-between text-label uppercase text-muted"
-            >
-              <span>{f.label}</span>
-              {f.optional && <span className="normal-case tracking-normal">Optional</span>}
-            </label>
-            <input
+            <Label htmlFor={`ra-${f.name}`} optional={f.optional}>
+              {f.label}
+            </Label>
+            <Input
               id={`ra-${f.name}`}
               name={f.name}
               type={f.type}
@@ -301,13 +309,8 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
                 setValues({ ...values, [f.name]: e.target.value });
                 setError("");
               }}
-              className="focusable h-11 w-full rounded-card border border-hairline bg-surface px-3 text-body text-ink placeholder:text-placeholder"
             />
-            {f.hint && (
-              <p id={`ra-${f.name}-hint`} className="mt-1.5 text-[14px] text-muted">
-                {f.hint}
-              </p>
-            )}
+            {f.hint && <FieldHint id={`ra-${f.name}-hint`}>{f.hint}</FieldHint>}
           </div>
         ))}
       </div>
@@ -332,22 +335,23 @@ export function RequestAccessForm({ siteKey }: { siteKey?: string }) {
       {SITE_KEY && <div ref={box} className="mt-7 flex min-h-[65px] justify-center" />}
 
       {(checkError || error) && (
-        <p role="alert" className="mt-5 text-[15px] text-danger">
+        <Alert tone="danger" role="alert" className="mt-5">
           {checkError || error}
-        </p>
+        </Alert>
       )}
 
       <Button
         type="submit"
         variant="light"
         loading={busy}
-        className="group mt-6 h-11 w-full"
+        size="lg"
+        className="group mt-6 w-full"
       >
         Request access
         {/* Hidden while sending, so the spinner is not flanked by an arrow. */}
         {!busy && <Arrow />}
       </Button>
-      <p className="mt-3 text-center text-[14px] text-muted">
+      <p className="mt-3 text-center text-[13px] leading-relaxed text-subtle">
         Joining the list does not create an account. We will only use your
         email to tell you when we open.
       </p>

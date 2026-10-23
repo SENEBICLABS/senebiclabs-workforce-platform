@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/AppLayout";
 import { useAppState } from "@/components/AppState";
 import { Button } from "@/components/ui/Button";
+import { SearchX } from "lucide-react";
+import { Alert } from "@/components/ui/Alert";
 import { Card } from "@/components/ui/Card";
+import { Select } from "@/components/ui/Field";
 import { PurposeBadge, StatusPill } from "@/components/ui/Pill";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/States";
 import {
@@ -13,6 +16,7 @@ import {
   poolIsWorkable,
   poolLine,
   poolStatus,
+  type Pool,
   type PoolStatus,
   type Purpose,
 } from "@/lib/api";
@@ -31,11 +35,24 @@ const SORT_LABEL: Record<SortKey, string> = {
   name: "Name (A–Z)",
 };
 
-const SELECT =
-  "focusable h-9 rounded-btn border border-hairline bg-surface px-3 text-[15px] text-ink transition-colors hover:bg-accent-soft";
 
 const CALIBRATION_ENABLED =
   process.env.NEXT_PUBLIC_CALIBRATION_ENABLED === "true";
+
+function StartButton({ pool, available }: { pool: Pool; available: boolean }) {
+  const router = useRouter();
+  return (
+    <Button
+      size="sm"
+      variant="secondary"
+      className="shrink-0"
+      disabled={!available}
+      onClick={() => router.push(`/workspace?pool=${pool.id}`)}
+    >
+      {pool.completed_by_you > 0 ? "Resume reviewing" : "Start reviewing"}
+    </Button>
+  );
+}
 
 export default function QueuePage() {
   const router = useRouter();
@@ -80,8 +97,8 @@ export default function QueuePage() {
       {pools.loading && (
         <div role="status" aria-live="polite">
           <span className="sr-only">Loading your pools</span>
-          <Skeleton className="h-11 w-full max-w-md" />
-          <Skeleton className="mt-4 h-72 w-full" />
+          <Skeleton className="h-10 w-full max-w-md" />
+          <Skeleton className="mt-4 h-80 w-full" />
         </div>
       )}
 
@@ -107,13 +124,14 @@ export default function QueuePage() {
 
       {!pools.loading && !pools.error && total > 0 && (
         <>
-          <div className="mb-4 flex flex-wrap items-center gap-2">
+          <div className="mb-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
             <label className="sr-only" htmlFor="purpose-filter">
               Filter by purpose
             </label>
-            <select
+            <Select
               id="purpose-filter"
-              className={SELECT}
+              controlSize="sm"
+              wrapperClassName="sm:w-44"
               value={purpose}
               onChange={(e) => setPurpose(e.target.value as PurposeFilter)}
             >
@@ -121,14 +139,15 @@ export default function QueuePage() {
               <option value="evaluate">Evaluate</option>
               <option value="label">Label</option>
               <option value="create">Create</option>
-            </select>
+            </Select>
 
             <label className="sr-only" htmlFor="status-filter">
               Filter by status
             </label>
-            <select
+            <Select
               id="status-filter"
-              className={SELECT}
+              controlSize="sm"
+              wrapperClassName="sm:w-48"
               value={status}
               onChange={(e) => setStatus(e.target.value as StatusFilter)}
             >
@@ -137,14 +156,15 @@ export default function QueuePage() {
               <option value="up_to_date">Up to date</option>
               <option value="none_available">Nothing available</option>
               <option value="closed">Closed</option>
-            </select>
+            </Select>
 
             <label className="sr-only" htmlFor="sort-order">
               Sort by
             </label>
-            <select
+            <Select
               id="sort-order"
-              className={`${SELECT} ml-auto`}
+              controlSize="sm"
+              wrapperClassName="col-span-2 sm:ml-auto sm:w-64"
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
             >
@@ -153,52 +173,58 @@ export default function QueuePage() {
                   Sort: {SORT_LABEL[key]}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {rows.length === 0 ? (
             <EmptyState
+              icon={SearchX}
               title="No pools match these filters"
               body="Nothing in your queue fits that combination. Clear the filters to see everything open to you."
               action={<Button onClick={clearFilters}>Clear filters</Button>}
             />
           ) : (
-            <Card className="overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] border-collapse text-left">
-                  <caption className="sr-only">Pools you are eligible for</caption>
-                  <thead>
-                    <tr className="border-b border-hairline bg-canvas">
-                      <th scope="col" className="px-5 py-3 text-label uppercase text-muted">
-                        Pool
-                      </th>
-                      <th scope="col" className="px-4 py-3 text-label uppercase text-muted">
-                        Purpose
-                      </th>
-                      <th scope="col" className="px-4 py-3 text-right text-label uppercase text-muted">
-                        Reviewed by me
-                      </th>
-                      <th scope="col" className="px-4 py-3 text-label uppercase text-muted">
-                        Status
-                      </th>
-                      <th scope="col" className="px-5 py-3">
-                        <span className="sr-only">Action</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((pool) => {
-                      return (
+            <>
+              {/* A table where there is room for one. Below md it becomes a
+                  list of rows that stack, with the same facts in the same
+                  order, rather than a table to scroll sideways. */}
+              <Card className="hidden overflow-hidden md:block">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[760px] border-collapse text-left">
+                    <caption className="sr-only">Pools you are eligible for</caption>
+                    <thead>
+                      <tr className="border-b border-hairline bg-canvas-top">
+                        <th scope="col" className="px-6 py-3 text-label uppercase text-subtle">
+                          Pool
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-label uppercase text-subtle">
+                          Purpose
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-right text-label uppercase text-subtle">
+                          Reviewed by me
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-label uppercase text-subtle">
+                          Status
+                        </th>
+                        <th scope="col" className="px-6 py-3">
+                          <span className="sr-only">Action</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((pool) => (
                         <tr
                           key={pool.id}
-                          className="border-b border-hairline transition-colors last:border-b-0 hover:bg-accent-soft"
+                          className={`border-b border-hairline-soft transition-colors last:border-b-0 hover:bg-accent-soft/50 ${
+                            pool.closed ? "opacity-60" : ""
+                          }`}
                         >
-                          <th scope="row" className="max-w-[320px] px-5 py-4 font-normal">
-                            <span className="block text-body font-semibold text-ink">
+                          <th scope="row" className="max-w-[360px] px-6 py-4 font-normal">
+                            <span className="block text-[15px] font-semibold text-ink">
                               {pool.name}
                             </span>
                             {pool.description && (
-                              <span className="mt-0.5 block text-[14px] text-muted">
+                              <span className="mt-0.5 line-clamp-2 block text-[14px] text-muted">
                                 {pool.description}
                               </span>
                             )}
@@ -206,44 +232,63 @@ export default function QueuePage() {
                           <td className="px-4 py-4">
                             <PurposeBadge purpose={pool.purpose} />
                           </td>
-                          <td className="tnum px-4 py-4 text-right text-body text-ink">
+                          <td className="tnum px-4 py-4 text-right text-[15px] font-semibold text-ink">
                             {pool.completed_by_you.toLocaleString()}
                           </td>
                           <td className="px-4 py-4">
-                            <span className="block text-body text-ink">
+                            <StatusPill status={poolStatus(pool)} />
+                            <span className="tnum mt-1.5 block text-[14px] text-muted">
                               {poolLine(pool)}
                             </span>
-                            <StatusPill status={poolStatus(pool)} />
                           </td>
-                          <td className="px-5 py-4 text-right">
+                          <td className="px-6 py-4 text-right">
                             {poolIsWorkable(pool) && (
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                disabled={!available}
-                                onClick={() =>
-                                  router.push(`/workspace?pool=${pool.id}`)
-                                }
-                              >
-                                {pool.completed_by_you > 0
-                                  ? "Resume reviewing"
-                                  : "Start reviewing"}
-                              </Button>
+                              <StartButton pool={pool} available={available} />
                             )}
                           </td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+
+              <ul className="space-y-3 md:hidden" aria-label="Pools you are eligible for">
+                {rows.map((pool) => (
+                  <li key={pool.id}>
+                    <Card className={`p-4 ${pool.closed ? "opacity-60" : ""}`}>
+                      <div className="flex items-center justify-between gap-3">
+                        <PurposeBadge purpose={pool.purpose} />
+                        <StatusPill status={poolStatus(pool)} />
+                      </div>
+                      <p className="mt-3 text-[16px] font-semibold leading-snug text-ink">
+                        {pool.name}
+                      </p>
+                      {pool.description && (
+                        <p className="mt-1 line-clamp-2 text-[14px] text-muted">
+                          {pool.description}
+                        </p>
+                      )}
+                      <div className="mt-4 flex items-center justify-between gap-3 border-t border-hairline-soft pt-3">
+                        <span className="tnum min-w-0 text-[14px] text-muted">
+                          <span className="block truncate text-ink">{poolLine(pool)}</span>
+                          {pool.completed_by_you.toLocaleString()} reviewed by me
+                        </span>
+                        {poolIsWorkable(pool) && (
+                          <StartButton pool={pool} available={available} />
+                        )}
+                      </div>
+                    </Card>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
 
           {!available && rows.length > 0 && (
-            <p className="mt-4 text-[15px] text-muted">
+            <Alert tone="info" className="mt-4">
               Turn on availability to start reviewing.
-            </p>
+            </Alert>
           )}
 
           {filtersActive && rows.length > 0 && (

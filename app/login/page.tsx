@@ -2,8 +2,12 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { MailCheck, MailX } from "lucide-react";
+import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { buttonClass } from "@/components/ui/button-class";
+import { Card, IconBadge } from "@/components/ui/Card";
+import { FieldError, Input, Label } from "@/components/ui/Field";
 import {
   AuthShell,
   GoogleButton,
@@ -69,18 +73,17 @@ function SignIn() {
   if (blocked) {
     return (
       <AuthShell footer="Already a member? Sign in with the address your invite was sent to.">
-        <Card className="p-6 text-center">
-          <div
-            aria-hidden="true"
-            className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-[20px]"
-          >
-            ✉︎
+        <Card elevated className="p-7 text-center sm:p-8">
+          <div className="flex justify-center">
+            <IconBadge size="lg">
+              <MailX size={22} strokeWidth={1.75} />
+            </IconBadge>
           </div>
-          <h1 className="text-section text-ink">You need an invite to join</h1>
-          <p className="mt-2 text-body text-muted">{ERRORS.no_invite}</p>
+          <h1 className="mt-5 text-title text-ink">You need an invite to join</h1>
+          <p className="mt-2 text-[15px] leading-relaxed text-muted">{ERRORS.no_invite}</p>
           <a
             href="/login"
-            className="focusable mt-5 inline-flex h-10 items-center justify-center rounded-btn border border-hairline bg-surface px-4 text-[15px] font-semibold text-ink transition-colors hover:bg-accent-soft"
+            className={buttonClass({ variant: "secondary", className: "mt-6" })}
           >
             Back to sign in
           </a>
@@ -91,11 +94,16 @@ function SignIn() {
 
   return (
     <AuthShell footer="Senebiclabs is invite-only. Accounts are created from an invitation.">
-      <Card className="p-6">
+      <Card elevated className="p-7 sm:p-8">
         {sent ? (
-          <>
-            <h1 className="text-section text-ink">Check your email</h1>
-            <p className="mt-2 text-body text-muted">
+          <div className="text-center">
+            <div className="flex justify-center">
+              <IconBadge size="lg">
+                <MailCheck size={22} strokeWidth={1.75} />
+              </IconBadge>
+            </div>
+            <h1 className="mt-5 text-title text-ink">Check your email</h1>
+            <p className="mt-2 text-[15px] leading-relaxed text-muted">
               We sent a sign-in link to{" "}
               <span className="font-semibold text-ink">{email}</span>. It works
               once and expires in {expiresIn} minutes.
@@ -117,37 +125,29 @@ function SignIn() {
             >
               Use a different email
             </button>
-          </>
+          </div>
         ) : (
           <>
-            <h1 className="text-section text-ink">Sign in</h1>
-            <p className="mt-1 text-body text-muted">
+            <h1 className="text-title text-ink">Sign in</h1>
+            <p className="mt-1.5 text-[15px] text-muted">
               Welcome back. Use whichever you joined with.
             </p>
 
             {notice && (
-              <div
-                role="alert"
-                className="mt-4 rounded-card border border-warning bg-warning-soft px-4 py-3"
-              >
-                <p className="text-[15px] text-ink">{notice}</p>
-              </div>
+              <Alert tone="warning" role="alert" className="mt-5">
+                {notice}
+              </Alert>
             )}
 
-            <div className="mt-5">
+            <div className="mt-6">
               <GoogleButton href="/api/auth/google" />
             </div>
 
             <OrDivider />
 
             <form onSubmit={submit}>
-              <label
-                htmlFor="email"
-                className="mb-1.5 block text-label uppercase text-muted"
-              >
-                Email address
-              </label>
-              <input
+              <Label htmlFor="email">Email address</Label>
+              <Input
                 id="email"
                 type="email"
                 required
@@ -155,16 +155,9 @@ function SignIn() {
                 placeholder="you@hospital.org"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                aria-invalid={Boolean(error)}
-                className={`focusable h-11 w-full rounded-card border bg-surface px-3 text-body text-ink placeholder:text-placeholder ${
-                  error ? "border-danger" : "border-hairline"
-                }`}
+                invalid={Boolean(error)}
               />
-              {error && (
-                <p role="alert" className="mt-2 text-[15px] text-danger">
-                  {error}
-                </p>
-              )}
+              {error && <FieldError>{error}</FieldError>}
               {/* This one genuinely does send mail, unlike the invitation page
                   where the link in hand already proved the address. The label
                   says so rather than borrowing "Continue with email" and
@@ -173,11 +166,12 @@ function SignIn() {
                 type="submit"
                 variant="secondary"
                 loading={loading}
-                className="mt-4 h-11 w-full"
+                size="lg"
+                className="mt-4 w-full"
               >
                 Send me a sign-in link
               </Button>
-              <p className="mt-2 text-center text-[14px] text-muted">
+              <p className="mt-3 text-center text-[13px] leading-relaxed text-subtle">
                 We will email a link that signs you in. No password to
                 remember, and nothing to set up.
               </p>
@@ -194,8 +188,8 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <AuthShell>
-          <Card className="p-6">
-            <div className="h-40 animate-pulse-soft rounded-card bg-hairline" />
+          <Card className="p-7 sm:p-8">
+            <div className="h-64 animate-pulse-soft rounded-btn bg-surface-raised" />
           </Card>
         </AuthShell>
       }
