@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Check, FileText } from "lucide-react";
+import { useAppState } from "@/components/AppState";
 import { OnboardingShell } from "@/components/auth/AuthShell";
 import { Card, IconBadge } from "@/components/ui/Card";
 import { FieldError } from "@/components/ui/Field";
@@ -38,6 +39,7 @@ const CLAUSES = [
 
 export default function AgreementPage() {
   const router = useRouter();
+  const { reloadMe } = useAppState();
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -53,6 +55,9 @@ export default function AgreementPage() {
 
     try {
       await api.acceptAgreement();
+      // The account is read once for the whole app; read it again so the
+      // "accept the agreement" prompt does not follow them to the next page.
+      reloadMe();
       router.push("/welcome");
     } catch (err) {
       setError(
@@ -64,7 +69,7 @@ export default function AgreementPage() {
   };
 
   return (
-    <OnboardingShell step={2}>
+    <OnboardingShell>
         <IconBadge size="lg">
           <FileText size={22} strokeWidth={1.75} />
         </IconBadge>
@@ -72,8 +77,9 @@ export default function AgreementPage() {
           Reviewer agreement
         </h1>
         <p className="mt-2 text-body text-muted">
-          Read this through before you begin. It covers what the work is, how
-          you are paid, and how case material must be handled.
+          Please read this before you begin reviewing. It covers what the work is,
+          the standard it is held to, how case material must be handled, and how you
+          are paid.
         </p>
 
         <Card className="mt-8 overflow-hidden">
@@ -125,8 +131,8 @@ export default function AgreementPage() {
         {error && <FieldError>{error}</FieldError>}
 
         <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row">
-          <Button size="lg" variant="secondary" onClick={() => router.push("/")}>
-            Back to sign in
+          <Button size="lg" variant="secondary" onClick={() => router.push("/dashboard")}>
+            Not now
           </Button>
           <Button size="lg" loading={loading} onClick={handleAccept} className="sm:ml-auto">
             Accept and continue

@@ -5,20 +5,25 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { OnboardingShell } from "@/components/auth/AuthShell";
+import { AgreementNotice } from "@/components/AgreementNotice";
 import { Card, IconBadge } from "@/components/ui/Card";
 
 const POINTS = [
   {
-    title: "How the work runs",
-    body: "You review cases one at a time. Each pool carries its own rubric, shown beside every case, and your place is saved between sessions.",
+    title: "Where your work appears",
+    body: "Your dashboard lists the pools you have been given access to and what is waiting in each. Work depends on the projects running, so there may be times when nothing is open to you.",
   },
   {
-    title: "How you are paid",
-    body: "Your rate and payment schedule are the ones agreed with you in writing before you started. The platform does not show rates or statements yet, so ask us rather than looking for a figure here.",
+    title: "How the work runs",
+    body: "You review cases one at a time. Each pool carries its own rubric, shown beside every case, and your answers are saved as you go.",
   },
   {
     title: "When something is unclear",
-    body: "If you cannot judge a case, flag it rather than guess. We would rather have an honest flag than an answer you are not sure of. It stops being offered to you, and the flag is recorded as work on your work record.",
+    body: "If you cannot judge a case, flag it rather than guess. It stops being offered to you, and the flag is recorded as work on your work record.",
+  },
+  {
+    title: "How you are paid",
+    body: "Your rate and payment schedule are the ones agreed with you in writing. The platform does not show rates or statements yet; your work record lists every pass you make.",
   },
 ];
 
@@ -30,7 +35,7 @@ export default function WelcomePage() {
   }, []);
 
   return (
-    <OnboardingShell step={3} width="sm">
+    <OnboardingShell width="sm">
         <IconBadge size="lg">
           <Sparkles size={22} strokeWidth={1.75} />
         </IconBadge>
@@ -38,8 +43,10 @@ export default function WelcomePage() {
           Welcome to Senebiclabs
         </h1>
         <p className="mt-2 text-body text-muted">
-          You are set up and eligible to begin reviewing.
+          Your account is set up. Here is what happens from here.
         </p>
+
+        <AgreementNotice className="mt-8" />
 
         <Card className="mt-8 divide-y divide-hairline-soft">
           {POINTS.map((point, i) => (

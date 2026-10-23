@@ -7,7 +7,7 @@ import { RequestAccessButton } from "@/components/landing/RequestAccessButton";
 export const metadata: Metadata = {
   title: "FAQs | Senebiclabs",
   description:
-    "Questions clinicians ask about Senebiclabs: joining, when we open, what a review involves, how pay works and how much time it takes.",
+    "Questions clinicians ask about Senebiclabs: who can join, what the work involves, how it is reviewed, how pay works and how case material is handled.",
 };
 
 /**
@@ -24,8 +24,8 @@ export default function FaqsPage() {
           Questions clinicians ask
         </h1>
         <p className={`${MEASURE.intro} mt-5 text-[19px] leading-relaxed text-muted`}>
-          Joining, when we open, what a review involves, how pay works, and how
-          much of your time it takes.
+          Who can join, what the work involves, how it is reviewed, how pay works,
+          and how case material is handled.
         </p>
       </Hero>
 
@@ -37,8 +37,8 @@ export default function FaqsPage() {
 
       <Section>
         <SectionHead
-          title="Put your clinical knowledge to paid work"
-          intro="Senebiclabs is invite-only for now. Request access and we will email you when we open to clinicians."
+          title="Put your clinical expertise to work"
+          intro="Membership is by invitation. Request access and our team will review it; we email you if we have work that fits your practice."
         />
         <div className="mt-10 flex flex-col items-center gap-6">
           <RequestAccessButton />

@@ -22,7 +22,7 @@ export const metadata: Metadata = {
  *
  *   the promise        every judgment has a licence behind it
  *   who reviews        who they are, and what we require
- *   how we vet         the four steps before anyone sees a real case
+ *   how we vet         what happens before anyone sees a real case
  *   (profiles)         only once real clinicians have agreed to be named
  *   how quality holds  what happens after someone is in
  *   the close          request access
@@ -55,27 +55,23 @@ const VETTING = [
     body: "A clinician tells us their name, specialty and the country they practise in. Nothing is created at this point.",
   },
   {
-    title: "Licence check",
-    body: "We check the licence against the register it was issued by. A licence that is not active, or not in the specialty claimed, does not go further.",
-  },
-  {
-    title: "Calibration",
-    body: "A short set of cases with known answers, written by the clinical leads for that body of work. It confirms a reviewer reads cases the way the rubric expects before any real case reaches them.",
+    title: "Review by our team",
+    body: "We read every request and look at the practice and specialty a clinician describes. Where we need more information about their qualifications, we ask for it before going further.",
   },
   {
     title: "Invitation",
-    body: "Only then is an invitation sent, to one named address, good once. That invitation is what creates an account. Nobody registers themselves.",
+    body: "Where there is work that fits their practice, an invitation is sent to one named address, good once. That invitation is what creates an account; nobody registers themselves. Not every request leads to one.",
   },
 ];
 
 const SAFEGUARDS = [
   {
     title: "More than one clinician per case",
-    body: "Cases are reviewed by several clinicians rather than one, so a single reading never becomes the answer on its own.",
+    body: "Each item is read by more than one clinician, so a single reading never becomes the answer on its own.",
   },
   {
-    title: "Disagreements are adjudicated",
-    body: "Where reviewers differ, the case goes to adjudication rather than to a majority vote. A split between experienced clinicians is treated as information, not noise.",
+    title: "Disagreements can go to a senior clinician",
+    body: "On projects that use adjudication, cases where reviewers differ go to a senior clinician rather than to a majority vote. A split between experienced clinicians is treated as information, not noise.",
   },
   {
     title: "Nobody approves their own writing",
@@ -133,7 +129,7 @@ export default function OurExperts() {
         <SectionHead
           eyebrow="Vetting"
           title="How we vet"
-          intro="Four things happen before anyone sees a real case."
+          intro="What happens before anyone sees a real case."
         />
         <ol className="mx-auto mt-14 max-w-[720px] space-y-10">
           {VETTING.map((v, i) => (
@@ -186,7 +182,7 @@ export default function OurExperts() {
       <Section>
         <SectionHead
           title="Review with clinicians who know the work"
-          intro="Senebiclabs is invite-only for now. Request access and we will email you when we open to clinicians."
+          intro="Membership is by invitation. Request access and our team will review it; we email you if we have work that fits your practice."
         />
         <div className="mt-10 flex flex-col items-center gap-6">
           <RequestAccessButton />

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, Wallet } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
@@ -73,15 +74,23 @@ export default function AccountPage() {
             <Row
               label="Agreement"
               value={
-                me.data.agreement_accepted ? (
-                  <Pill tone="success" dot>Accepted</Pill>
-                ) : (
-                  <Pill tone="warning" dot>Not accepted</Pill>
-                )
+                <span className="flex items-center gap-3">
+                  {me.data.agreement_accepted ? (
+                    <Pill tone="success" dot>Accepted</Pill>
+                  ) : (
+                    <Pill tone="warning" dot>Not accepted</Pill>
+                  )}
+                  <Link
+                    href="/agreement"
+                    className="focusable rounded-btn text-[14px] font-semibold text-accent-ink underline-offset-4 hover:underline"
+                  >
+                    {me.data.agreement_accepted ? "Read it" : "Read and accept"}
+                  </Link>
+                </span>
               }
             />
             <Row
-              label="Pools you are eligible for"
+              label="Pools you have access to"
               value={String(me.data.eligible_pool_ids.length)}
             />
           </Card>
