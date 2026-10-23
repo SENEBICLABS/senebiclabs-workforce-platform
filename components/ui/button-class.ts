@@ -12,20 +12,20 @@ export type Size = "sm" | "md" | "lg";
 
 export const VARIANT: Record<Variant, string> = {
   primary:
-    "bg-accent text-on-fill shadow-[inset_0_1px_0_rgb(255_255_255/0.25)] hover:bg-accent-hover disabled:hover:bg-accent",
-  // The public site's call to action: the text's own white, filled, so the one
-  // thing to press reads as the brightest thing on a black page.
+    "bg-accent text-on-fill shadow-[0_6px_16px_-6px_rgb(41_205_156/0.7)] hover:bg-accent-hover disabled:hover:bg-accent",
+  // The black pill, for the secondary call to action. On a black band the
+  // tokens invert and it becomes a white pill.
   light: "bg-ink text-canvas hover:bg-strong disabled:hover:bg-ink",
   secondary:
     "bg-surface-raised text-ink border border-hairline-strong hover:border-accent/60 hover:bg-accent-soft disabled:hover:bg-surface-raised disabled:hover:border-hairline-strong",
   ghost: "bg-transparent text-muted hover:bg-accent-soft hover:text-ink",
-  danger: "bg-danger text-[#3B0A0A] hover:brightness-110",
+  danger: "bg-danger text-white hover:brightness-110",
 };
 
 export const SIZE: Record<Size, string> = {
-  sm: "h-8 px-3 text-[14px]",
-  md: "h-10 px-4 text-[15px]",
-  lg: "h-12 px-6 text-[15px]",
+  sm: "h-8 px-4 text-[14px]",
+  md: "h-10 px-5 text-[15px]",
+  lg: "h-12 px-7 text-[16px]",
 };
 
 /** Only a real button can be disabled, so these stay off the shared recipe. */
@@ -36,5 +36,5 @@ export function buttonClass({
   size = "md",
   className = "",
 }: { variant?: Variant; size?: Size; className?: string } = {}) {
-  return `focusable inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-btn font-semibold transition-[background-color,border-color,color,filter,transform] duration-150 active:translate-y-px disabled:active:translate-y-0 ${VARIANT[variant]} ${SIZE[size]} ${className}`.trim();
+  return `focusable inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full font-display font-bold transition-[background-color,border-color,color,filter,transform] duration-150 active:translate-y-px disabled:active:translate-y-0 ${VARIANT[variant]} ${SIZE[size]} ${className}`.trim();
 }

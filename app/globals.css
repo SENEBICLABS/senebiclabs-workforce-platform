@@ -3,126 +3,110 @@
 @theme {
   /* ---- Palette ----------------------------------------------------
    *
-   * A dark theme with teal in it, rather than a teal-coloured dark theme.
+   * Light: a white or barely-grey ground, white cards with a cool hairline, near-black type, and one bright mint that
+   * carries every call to action. Black is the second accent rather than the
+   * ground: a pill for the secondary action, a band across a public page.
    *
-   * Tinting the ground itself was tried and reverted. It works, but it costs
-   * more than it looks: chroma cannot exceed the brightest channel, so a
-   * ground only reads teal once it has come up in lightness, and every
-   * surface coming up costs text margin. That version put white at 62% on
-   * 5.60 and the accent on 5.28, against 7.30 and 8.63 here. The background
-   * stays dark and the teal arrives in the things ON it instead.
-   *
-   *   canvas       #000000   the page
-   *   canvas-top   #060606   barely-raised
-   *   surface      #0D0D0D   raised
-   *
-   * The steps between them are tiny, 1.04 and 1.08, so a fill alone cannot
-   * separate anything. The hairline does that, and the hairline is now teal
-   * rather than white: every card edge, every divider and every input border
-   * carries the colour. That is a great deal of teal on a page without a
-   * single tinted surface.
+   *   canvas          #F5F7FA   the application's page
+   *   canvas-top      #F9FAFC   table heads, recessed panels
+   *   surface         #FFFFFF   cards, inputs
+   *   surface-raised  #FFFFFF   menus and dialogs, lifted by shadow instead
    */
-  --color-surface: #0C0E0E;
-  --color-canvas: #000000;
-  --color-canvas-top: #070909;
-  /* One step above a card: menus, dialogs, the selected row of a segmented
-   * control. Still neutral, so the teal stays in the edges and the accents. */
-  --color-surface-raised: #141817;
+  --color-canvas: #F5F7FA;
+  --color-canvas-top: #F9FAFC;
+  --color-surface: #FFFFFF;
+  --color-surface-raised: #FFFFFF;
+  /* A neutral step for tracks and empty meters, where white would vanish. */
+  --color-track: #E8EDF3;
 
   /* ---- Text --------------------------------------------------------
    *
-   * Hierarchy is back, without grey. Flattening everything to white took the
-   * dullness out but took the order with it: a heading, a hint and a
-   * timestamp all asked for the same attention. The secondary steps are
-   * tinted with the accent instead of dimmed, which is the same move the
-   * placeholder already made, so they read as quieter rather than as greyed
-   * out.
-   *
-   *   ink      #FFFFFF   headings, values, anything that is the answer
-   *   strong   #E6F0ED   lead paragraphs, a step below a heading
-   *   muted    #A3BDB6   body copy that supports, hints, descriptions  9.7:1
-   *   subtle   #739089   captions, timestamps, disabled                5.4:1
+   *   ink      #1A1B1F   headings, values                    17:1 on white
+   *   strong   #32343A   labels, lead copy                   12:1
+   *   muted    #536170   body copy that supports              6.4:1
+   *   subtle   #646E7D   captions, timestamps, hints          5.1:1, 4.8:1 on canvas
    */
-  --color-ink: #FFFFFF;
-  --color-strong: #E6F0ED;
-  --color-muted: #A3BDB6;
-  --color-subtle: #739089;
-  /* The one thing that must not be white: an empty field would look filled.
-     Tinted with the accent rather than dimmed. */
-  --color-placeholder: rgb(79 191 164 / 0.5);
-  /* Edges carry the teal. Three strengths: the card edge, the quieter line
-   * between rows inside a card, and the firmer edge of a control you type in. */
-  --color-hairline: rgb(79 191 164 / 0.22);
-  --color-hairline-soft: rgb(79 191 164 / 0.12);
-  --color-hairline-strong: rgb(79 191 164 / 0.38);
-  /* A human teal, not an electric one: brightest channel at 191, chroma at
-   * 112, leaning green rather than cyan. 8.6:1 against a card. */
-  --color-accent: #4FBFA4;
-  /* Brighter on hover, not darker. On a dark ground, up is forward. */
-  --color-accent-hover: #6ADABD;
-  /* Recessed rather than raised, so accent text on it keeps 6:1. */
-  --color-accent-soft: #0E2B26;
-  /* Fills are light, so the type on them is dark. White on the accent
-   * measures 2.6; this measures 7.5. */
-  --color-on-fill: #03211C;
-  /* Semantics invert too: the colour is light and the chip is dark. */
-  --color-warning: #FBBF24;
-  --color-warning-soft: #2E230A;
-  --color-danger: #FCA5A5;
-  --color-danger-soft: #331414;
-  --color-info: #93C5FD;
-  --color-info-soft: #13233F;
-  --color-success: #6EE7B7;
-  --color-success-soft: #0B2E22;
+  --color-ink: #1A1B1F;
+  --color-strong: #32343A;
+  --color-muted: #536170;
+  --color-subtle: #646E7D;
+  --color-placeholder: #97A1AE;
 
-  /* Sidebar, on the same ramp: barely-raised at rest, raised on hover. */
-  --color-rail: #050707;
-  --color-rail-hover: #0E1312;
-  --color-rail-text: #A3BDB6;
+  --color-hairline: #E4EBF3;
+  --color-hairline-soft: #EEF2F7;
+  --color-hairline-strong: #D2DAE4;
+
+  /* ---- Brand -------------------------------------------------------
+   *
+   * The mint is bright enough that it cannot carry text: white on it measures
+   * 2.0:1 and so does it on white. So it is split by job.
+   *
+   *   accent        #29CD9C   fills: buttons, selected states, bars, dots
+   *   accent-hover  #22BC8E
+   *   accent-ink    #087F5B   the same green as text and icons, 5.0:1
+   *   accent-soft   #E6F9F2   tinted backgrounds
+   *   on-fill       #06291D   text on a mint fill, 7.4:1. White would read as
+   *                           brighter, but measures 2.0:1.
+   */
+  --color-accent: #29CD9C;
+  --color-accent-hover: #22BC8E;
+  --color-accent-ink: #087F5B;
+  --color-accent-soft: #E6F9F2;
+  --color-on-fill: #06291D;
+
+  /* Focus and information are blue: a mint ring on white would be 2:1, and
+   * a focus indicator needs 3. */
+  --color-focus: #0050BD;
+
+  --color-warning: #8A5300;
+  --color-warning-soft: #FFF4DB;
+  --color-danger: #C2272D;
+  --color-danger-soft: #FDECEC;
+  --color-info: #0050BD;
+  --color-info-soft: #EAF1FB;
+  --color-success: #087F5B;
+  --color-success-soft: #E6F9F2;
+
+  /* Sidebar: white, on the page's grey. */
+  --color-rail: #FFFFFF;
+  --color-rail-hover: #F3F6F9;
+  --color-rail-text: #536170;
 
   /* ---- Type ------------------------------------------------------- */
-  /* Body. Every sentence on the platform. */
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  /* Headings, applied by element in the base layer below rather than by class,
-   * so nothing has to remember to opt in. */
-  --font-display: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
-  /* Eyebrows and labels. */
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-sans: var(--font-body-face), ui-sans-serif, system-ui, sans-serif;
+  /* Headings, applied by element in the base layer below. */
+  --font-display: var(--font-display-face), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, SFMono-Regular, monospace;
 
-  /* Headings are bold and set tight. Body is back to 400: the softness is
-   * carried by weight and opacity together, and a 500 body fights a bold
-   * heading for the same attention. */
   --text-title: 24px;
   --text-title--line-height: 1.2;
-  --text-title--font-weight: 700;
-  --text-title--letter-spacing: -0.02em;
+  --text-title--font-weight: 800;
+  --text-title--letter-spacing: -0.01em;
 
-  --text-section: 16px;
+  --text-section: 17px;
   --text-section--line-height: 1.3;
   --text-section--font-weight: 700;
-  --text-section--letter-spacing: -0.01em;
+  --text-section--letter-spacing: -0.005em;
 
   --text-body: 16px;
   --text-body--line-height: 1.6;
   --text-body--font-weight: 400;
 
-  /* Eyebrows. Mono, uppercase and widely tracked, which is what separates them
-   * from body text now that neither carries a colour of its own. */
-  --text-label: 11.5px;
+  /* Eyebrows and chips: the display face, bold, uppercase and tracked. */
+  --text-label: 11px;
   --text-label--line-height: 1.4;
-  --text-label--font-weight: 500;
+  --text-label--font-weight: 700;
   --text-label--letter-spacing: 0.1em;
 
   /* ---- Geometry --------------------------------------------------- */
+  /* Controls and panels. Buttons are full pills, set on the button itself. */
   --radius-btn: 8px;
-  --radius-card: 12px;
+  --radius-card: 14px;
 
-  /* ---- Depth ------------------------------------------------------
-   * On black a shadow cannot darken anything, so elevation is a faint top
-   * highlight plus a shadow that only shows where it falls on the canvas. */
-  --shadow-card: inset 0 1px 0 0 rgb(255 255 255 / 0.03), 0 1px 2px 0 rgb(0 0 0 / 0.5);
-  --shadow-pop: 0 0 0 1px rgb(79 191 164 / 0.22), 0 24px 48px -12px rgb(0 0 0 / 0.8);
-  --shadow-glow: 0 0 0 1px rgb(79 191 164 / 0.35), 0 8px 28px -6px rgb(79 191 164 / 0.22);
+  /* ---- Depth ------------------------------------------------------ */
+  --shadow-card: 0 1px 2px 0 rgb(16 24 40 / 0.04), 0 1px 3px 0 rgb(16 24 40 / 0.04);
+  --shadow-pop: 0 12px 32px -8px rgb(16 24 40 / 0.16), 0 4px 8px -4px rgb(16 24 40 / 0.06);
+  --shadow-glow: 0 10px 28px -10px rgb(16 24 40 / 0.18), 0 0 0 1px rgb(41 205 156 / 0.45);
 
   /* ---- Motion ----------------------------------------------------- */
   --animate-pulse-soft: pulse-soft 1.6s ease-in-out infinite;
@@ -141,52 +125,65 @@
 
 html {
   scroll-behavior: smooth;
-  /* Tells the browser the page is dark, so native controls, form widgets and
-   * the default scrollbar render dark instead of staying light on top of it. */
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 /**
  * Headings take the display face by element, so nothing has to remember a
- * class. Set tight: Geist is drawn for it, and the negative tracking is what
- * makes a bold heading read as deliberate rather than merely large.
+ * class. Montserrat is wide, so it is set heavy and only lightly tightened.
  */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   font-weight: 700;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.01em;
 }
 
-/* The hero sizes are large enough that the tracking wants to go further. */
 h1 {
-  letter-spacing: -0.035em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
-/** Eyebrows are mono wherever the label size is used. */
+/** Eyebrows and chips are the display face wherever the label size is used. */
 .text-label {
-  font-family: var(--font-mono);
+  font-family: var(--font-display);
 }
 
 /**
- * The public pages carry a teal wash down from the top of the page into the
- * black, which is the other half of putting teal on a dark ground without
- * tinting the ground. The colour is in the light falling on the page rather
- * than in the paint, so the background is still black where there is nothing
- * on it. At 9% it composites to #07110F at the very top, which is felt more
- * than seen, and the text over it is pure white.
- *
- * It is on a utility rather than on body so the signed-in application stays
- * flat: a ground that shifts behind a case a clinician is reading for an hour
- * is a distraction, and the workspace has no use for it.
+ * The public pages' ground: white, with two soft mint glows behind the hero.
+ * Painted rather than drawn as elements, so there is nothing to position and nothing to animate.
+ * The signed-in application stays on the flat grey canvas.
  */
 .ground-blend {
-  background-color: var(--color-canvas);
-  background-image: linear-gradient(
-    to bottom,
-    rgb(79 191 164 / 0.09) 0%,
-    rgb(79 191 164 / 0.03) 38%,
-    transparent 70%
-  );
+  background-color: #FFFFFF;
+  background-image:
+    radial-gradient(420px 320px at 88% 120px, rgb(41 205 156 / 0.22), transparent 70%),
+    radial-gradient(360px 280px at 8% 360px, rgb(41 205 156 / 0.14), transparent 70%);
+  background-repeat: no-repeat;
+}
+
+/**
+ * A black band, to break one section of a public page out of the white. It
+ * re-points the same tokens, so every component inside
+ * renders correctly on black without a dark variant of its own.
+ */
+.theme-dark {
+  --color-canvas: #000000;
+  --color-canvas-top: #0B0C0E;
+  --color-surface: #111316;
+  --color-surface-raised: #181B1F;
+  --color-track: #2A2E34;
+  --color-ink: #FFFFFF;
+  --color-strong: #E8EAED;
+  --color-muted: #B4BAC2;
+  --color-subtle: #9AA1AB;
+  --color-hairline: rgb(255 255 255 / 0.12);
+  --color-hairline-soft: rgb(255 255 255 / 0.07);
+  --color-hairline-strong: rgb(255 255 255 / 0.2);
+  --color-accent-ink: #29CD9C;
+  --color-accent-soft: #0B3327;
+  --color-focus: #7FB2FF;
+  background-color: #000000;
+  color: var(--color-ink);
 }
 
 body {
@@ -206,14 +203,13 @@ body {
 
 /* Keyboard focus only — never on mouse click */
 .focusable:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
 
-/* Text selection in the brand's colour rather than the browser's blue. */
 ::selection {
-  background: rgb(79 191 164 / 0.35);
-  color: #FFFFFF;
+  background: rgb(41 205 156 / 0.3);
+  color: var(--color-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -228,10 +224,8 @@ body {
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-hairline);
+  background: #CBD4DF;
   border-radius: 999px;
   border: 3px solid var(--color-canvas);
 }
-/* The thumb is drawn in the teal hairline; hovering firms it up rather than
-   turning it white. On dark the direction reverses: up is forward. */
-::-webkit-scrollbar-thumb:hover { background: rgb(79 191 164 / 0.55); }
+::-webkit-scrollbar-thumb:hover { background: #AAB6C4; }

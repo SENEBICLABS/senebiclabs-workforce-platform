@@ -64,13 +64,13 @@ function Sidebar() {
   const { me, available, reviewedThisSession } = useAppState();
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-hairline-soft bg-rail md:flex">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-hairline bg-rail md:flex">
       <div className="flex h-16 items-center px-5">
         <Link
           href="/dashboard"
           className="focusable flex items-center gap-2.5 rounded-btn text-[17px] font-semibold tracking-[0.04em] text-ink"
         >
-          <span className="grid h-8 w-8 place-items-center rounded-btn bg-accent-soft text-accent ring-1 ring-inset ring-accent/25">
+          <span className="grid h-8 w-8 place-items-center rounded-btn bg-accent-soft text-accent-ink ring-1 ring-inset ring-accent/25">
             <BrandMark size={17} />
           </span>
           Senebiclabs
@@ -102,7 +102,7 @@ function Sidebar() {
                   <Icon
                     size={18}
                     aria-hidden="true"
-                    className={`shrink-0 ${active ? "text-accent" : "text-subtle group-hover:text-muted"}`}
+                    className={`shrink-0 ${active ? "text-accent-ink" : "text-subtle group-hover:text-muted"}`}
                   />
                   {label}
                 </Link>
@@ -142,7 +142,7 @@ function MobileTabBar() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-30 flex h-16 border-t border-hairline bg-canvas-top/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 flex h-16 border-t border-hairline bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
     >
       {NAV.map(({ href, label, icon: Icon }) => {
         const active = isActive(pathname, href);
@@ -152,7 +152,7 @@ function MobileTabBar() {
             href={href}
             aria-current={active ? "page" : undefined}
             className={`focusable relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors ${
-              active ? "text-accent" : "text-subtle hover:text-muted"
+              active ? "text-accent-ink" : "text-subtle hover:text-muted"
             }`}
           >
             {active && (
@@ -188,13 +188,13 @@ function TopBar({ title }: { title: string }) {
   };
 
   return (
-    <header className="sticky top-0 z-20 h-16 border-b border-hairline-soft bg-canvas/85 backdrop-blur-md">
+    <header className="sticky top-0 z-20 h-16 border-b border-hairline bg-surface/95 backdrop-blur-md">
       <div className="mx-auto flex h-full max-w-[1280px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/dashboard"
             aria-label="Senebiclabs dashboard"
-            className="focusable grid h-8 w-8 shrink-0 place-items-center rounded-btn bg-accent-soft text-accent ring-1 ring-inset ring-accent/25 md:hidden"
+            className="focusable grid h-8 w-8 shrink-0 place-items-center rounded-btn bg-accent-soft text-accent-ink ring-1 ring-inset ring-accent/25 md:hidden"
           >
             <BrandMark size={16} />
           </Link>
@@ -305,7 +305,7 @@ function Toast() {
       aria-live="polite"
       className="animate-rise fixed bottom-20 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2.5 whitespace-nowrap rounded-full bg-surface-raised py-2.5 pl-3 pr-4 text-[15px] font-semibold text-ink shadow-pop md:bottom-6 md:left-auto md:right-6 md:translate-x-0"
     >
-      <CheckCircle2 size={18} aria-hidden="true" className="text-accent" />
+      <CheckCircle2 size={18} aria-hidden="true" className="text-accent-ink" />
       {toast}
     </div>
   );

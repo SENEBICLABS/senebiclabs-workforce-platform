@@ -67,7 +67,7 @@ function Guidelines({ instructions }: { instructions: string | null }) {
       <aside className="hidden lg:block">
         <Card className="sticky top-24 overflow-hidden">
           <div className="flex items-center gap-2.5 border-b border-hairline-soft bg-canvas-top px-5 py-3.5">
-            <BookOpen size={16} aria-hidden="true" className="text-accent" />
+            <BookOpen size={16} aria-hidden="true" className="text-accent-ink" />
             <h2 className="text-[14px] font-semibold text-ink">Review guidelines</h2>
           </div>
           <div className="max-h-[calc(100vh-12rem)] overflow-y-auto px-5 py-4">{body}</div>
@@ -83,7 +83,7 @@ function Guidelines({ instructions }: { instructions: string | null }) {
             className="focusable flex w-full items-center justify-between px-5 py-3.5 text-left"
           >
             <span className="flex items-center gap-2.5 text-[14px] font-semibold text-ink">
-              <BookOpen size={16} aria-hidden="true" className="text-accent" />
+              <BookOpen size={16} aria-hidden="true" className="text-accent-ink" />
               Review guidelines
             </span>
             <ChevronDown
@@ -109,7 +109,7 @@ function AnsweredMeter({ answered, total }: { answered: number; total: number })
       <span className="tnum text-[13px] font-medium text-muted">
         {answered} of {total} answered
       </span>
-      <span aria-hidden="true" className="h-1.5 w-20 overflow-hidden rounded-full bg-surface-raised">
+      <span aria-hidden="true" className="h-1.5 w-20 overflow-hidden rounded-full bg-track">
         <span
           className="block h-full rounded-full bg-accent transition-[width] duration-300"
           style={{ width: `${share}%` }}
@@ -484,7 +484,7 @@ function Workspace() {
                   key={`${block.label}-${i}`}
                   className="border-b border-hairline-soft px-5 py-5 last:border-b-0 sm:px-6"
                 >
-                  <h2 className="mb-2.5 flex items-center gap-2 text-label uppercase text-accent">
+                  <h2 className="mb-2.5 flex items-center gap-2 text-label uppercase text-accent-ink">
                     <span aria-hidden="true" className="h-1 w-1 rounded-full bg-accent" />
                     {block.label}
                   </h2>
@@ -604,7 +604,7 @@ function Workspace() {
         applies only below md, which is the only place that bar exists.
       */}
       {task.phase !== "review" && (
-      <div className="sticky bottom-16 z-10 -mx-4 mt-6 border-t border-hairline bg-canvas-top/90 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 md:bottom-0 lg:-mx-8 lg:px-8">
+      <div className="sticky bottom-16 z-10 -mx-4 mt-6 border-t border-hairline bg-surface/95 px-4 py-3 shadow-[0_-6px_16px_-10px_rgb(16_24_40/0.18)] backdrop-blur-md sm:-mx-6 sm:px-6 md:bottom-0 lg:-mx-8 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {confirmFlag ? (
             <p role="status" className="flex items-start gap-2 text-[14px] text-strong">

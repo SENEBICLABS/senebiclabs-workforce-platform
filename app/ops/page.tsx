@@ -52,7 +52,7 @@ function Section({ title, count, action, children }: { title: string; count?: nu
         <h2 className="flex items-center gap-2 text-section text-ink">
           {title}
           {count !== undefined && count > 0 && (
-            <span className="tnum rounded-full bg-accent-soft px-2 py-0.5 text-[12px] font-semibold text-accent ring-1 ring-inset ring-accent/25">
+            <span className="tnum rounded-full bg-accent-soft px-2 py-0.5 text-[12px] font-semibold text-accent-ink ring-1 ring-inset ring-accent/25">
               {count}
             </span>
           )}
@@ -69,8 +69,8 @@ function Toggle({ on, onClick, busy, labels = ["On", "Off"] }: { on: boolean; on
     <button onClick={onClick} disabled={busy}
       className={`focusable inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[13px] font-semibold ring-1 ring-inset transition-colors disabled:opacity-40 ${
         on
-          ? "bg-accent-soft text-accent ring-accent/35 hover:bg-accent-soft/70"
-          : "bg-surface-raised text-muted ring-hairline hover:text-ink"
+          ? "bg-accent-soft text-accent-ink ring-accent/35 hover:bg-accent-soft/70"
+          : "bg-canvas text-muted ring-hairline-strong hover:text-ink"
       }`}>
       <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${on ? "bg-accent" : "bg-subtle"}`} />
       {on ? labels[0] : labels[1]}
@@ -166,7 +166,7 @@ function AccessPicker({ pool, onClose, onSaved }: { pool: Pool; onClose: () => v
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]" onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
@@ -328,7 +328,7 @@ export default function OpsConsole() {
     <div className="mx-auto max-w-[1280px] px-4 py-6 sm:px-6 lg:px-8">
       <header className="flex items-center justify-between gap-4 border-b border-hairline-soft pb-5">
         <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-btn bg-accent-soft text-accent ring-1 ring-inset ring-accent/30">
+          <span className="grid h-10 w-10 place-items-center rounded-btn bg-accent-soft text-accent-ink ring-1 ring-inset ring-accent/30">
             <BrandMark size={19} />
           </span>
           <div>
@@ -543,7 +543,7 @@ export default function OpsConsole() {
                     // table's CHECK both hold that line — and it opens without a
                     // referrer or opener handle.
                     <a href={r.linkedin_url} target="_blank" rel="noopener noreferrer nofollow"
-                      className="focusable rounded-btn text-accent underline-offset-4 hover:underline">
+                      className="focusable rounded-btn text-accent-ink underline-offset-4 hover:underline">
                       {linkedinPath(r.linkedin_url)}
                     </a>
                   ) : (

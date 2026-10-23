@@ -49,9 +49,9 @@ export function PoolCard({ pool }: { pool: Pool }) {
       )}
 
       <div className="mt-auto pt-5">
-        <div className="flex items-end justify-between gap-3 border-t border-hairline-soft pt-4">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-t border-hairline-soft pt-4">
           <span className="min-w-0">
-            <span className="tnum block truncate text-[15px] font-semibold text-ink">
+            <span className="tnum block text-[15px] font-semibold text-ink">
               {poolLine(pool)}
             </span>
             {pool.completed_by_you > 0 && (

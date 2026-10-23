@@ -80,8 +80,8 @@ export function IconBadge({
   size?: "md" | "lg";
 }) {
   const tones = {
-    accent: "bg-accent-soft text-accent ring-accent/25",
-    neutral: "bg-surface-raised text-muted ring-hairline",
+    accent: "bg-accent-soft text-accent-ink ring-accent/25",
+    neutral: "bg-canvas text-muted ring-hairline-strong",
     warning: "bg-warning-soft text-warning ring-warning/25",
     danger: "bg-danger-soft text-danger ring-danger/25",
   };

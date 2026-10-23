@@ -60,7 +60,7 @@ export function InviteColleague() {
           </Alert>
           <button
             onClick={() => setSentTo(null)}
-            className="focusable mt-3 rounded-btn text-[15px] font-semibold text-accent underline-offset-4 hover:underline"
+            className="focusable mt-3 rounded-btn text-[15px] font-semibold text-accent-ink underline-offset-4 hover:underline"
           >
             Invite someone else
           </button>

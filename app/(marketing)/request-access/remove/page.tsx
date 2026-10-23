@@ -48,8 +48,8 @@ export default async function RemoveAddressPage({
   return (
     <section>
       <div className="mx-auto w-full max-w-[1040px] px-5 pb-24 pt-32 text-center sm:pb-32 sm:pt-40 lg:px-8">
-        <p className="text-label uppercase text-muted">Request access</p>
-        <h1 className="mx-auto mt-5 max-w-[880px] text-[42px] leading-[1.04] text-ink sm:text-[60px]">
+        <p className="font-display text-[12px] font-extrabold uppercase tracking-[0.3em] text-accent-ink">Request access</p>
+        <h1 className="mx-auto mt-5 max-w-[880px] text-[38px] font-extrabold leading-[1.08] text-ink sm:text-[54px]">
           {title}
         </h1>
         <p className="mx-auto mt-5 max-w-[560px] text-[19px] leading-relaxed text-muted">{body}</p>

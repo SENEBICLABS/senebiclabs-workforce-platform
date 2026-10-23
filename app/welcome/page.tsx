@@ -46,7 +46,7 @@ export default function WelcomePage() {
             <div key={point.title} className="flex gap-4 p-5 sm:p-6">
               <span
                 aria-hidden="true"
-                className="tnum flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-soft font-mono text-[13px] font-semibold text-accent ring-1 ring-inset ring-accent/25"
+                className="tnum flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-soft font-mono text-[13px] font-semibold text-accent-ink ring-1 ring-inset ring-accent/25"
               >
                 {String(i + 1).padStart(2, "0")}
               </span>

@@ -30,11 +30,19 @@ export const MEASURE = {
   display: "mx-auto max-w-[880px]",
 };
 
+/**
+ * The eyebrow over a heading: mint, heavy and very widely tracked, so a
+ * section announces itself before its heading is read.
+ */
+export const EYEBROW =
+  "font-display text-[12px] font-extrabold uppercase tracking-[0.3em] text-accent-ink";
+
 export function Section({
   children,
   className = "",
   tight = false,
   wide = false,
+  dark = false,
 }: {
   children: React.ReactNode;
   className?: string;
@@ -42,9 +50,11 @@ export function Section({
   tight?: boolean;
   /** For a section built around a panel, which wants the window, not a column. */
   wide?: boolean;
+  /** A full-width black band. At most one per page. */
+  dark?: boolean;
 }) {
   return (
-    <section className={className}>
+    <section className={`${dark ? "theme-dark" : ""} ${className}`}>
       <div className={`${wide ? SHELL_WIDE : SHELL} ${tight ? "py-14 sm:py-16" : "py-20 sm:py-28"}`}>
         {children}
       </div>
@@ -82,12 +92,12 @@ export function SectionHead({
 }) {
   const Heading = display ? "h1" : "h2";
   const size = display
-    ? "text-[42px] leading-[1.04] sm:text-[60px]"
-    : "text-[30px] leading-[1.1] sm:text-[38px]";
+    ? "text-[38px] font-extrabold leading-[1.08] sm:text-[54px]"
+    : "text-[28px] font-extrabold leading-[1.15] sm:text-[36px]";
 
   return (
     <div className="text-center">
-      {eyebrow && <p className="text-label uppercase text-muted">{eyebrow}</p>}
+      {eyebrow && <p className={EYEBROW}>{eyebrow}</p>}
       <Heading
         className={`${MEASURE.display} ${eyebrow ? "mt-5" : ""} ${size} text-ink`}
       >
@@ -120,10 +130,10 @@ export function GridItem({
 }) {
   return (
     <div className="text-center">
-      <p aria-hidden="true" className="tnum text-label text-accent">
+      <p aria-hidden="true" className="tnum font-display text-[34px] font-extrabold leading-none text-accent">
         {String(index).padStart(2, "0")}
       </p>
-      <h3 className="mt-4 text-[19px] leading-snug text-ink">{title}</h3>
+      <h3 className="mt-4 text-[19px] font-bold leading-snug text-ink">{title}</h3>
       <p className="mt-2 text-body leading-relaxed text-muted">{children}</p>
     </div>
   );

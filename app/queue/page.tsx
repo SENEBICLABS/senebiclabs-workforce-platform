@@ -296,7 +296,7 @@ export default function QueuePage() {
               Showing {rows.length} of {total} pools.{" "}
               <button
                 onClick={clearFilters}
-                className="focusable rounded-btn font-semibold text-accent underline-offset-2 hover:underline"
+                className="focusable rounded-btn font-semibold text-accent-ink underline-offset-2 hover:underline"
               >
                 Clear filters
               </button>

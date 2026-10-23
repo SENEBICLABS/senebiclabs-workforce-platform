@@ -13,7 +13,7 @@ export function SiteFooter() {
     <footer className="border-t border-hairline">
       <div className="mx-auto max-w-[1100px] px-5 py-10 text-center lg:px-8">
         <p className="inline-flex items-center gap-2.5 text-[16px] font-semibold tracking-[0.04em] text-ink">
-          <span className="text-accent">
+          <span className="text-accent-ink">
             <BrandMark size={18} />
           </span>
           Senebiclabs
@@ -34,7 +34,7 @@ export function SiteFooter() {
             <Link
               key={item.href}
               href={item.href}
-              className="focusable rounded-btn text-[15px] text-muted transition-colors hover:text-accent"
+              className="focusable rounded-btn text-[15px] text-muted transition-colors hover:text-accent-ink"
             >
               {item.label}
             </Link>

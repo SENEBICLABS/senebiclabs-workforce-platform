@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  Hero,
   MEASURE,
   Section,
   SectionHead,
@@ -41,32 +40,47 @@ export const metadata: Metadata = {
 export default function Landing() {
   return (
     <>
-      <Hero>
-        <p className="text-label uppercase text-muted">For licensed clinicians</p>
-        <h1 className="mx-auto mt-5 max-w-[880px] text-[42px] leading-[1.04] text-ink sm:text-[60px]">
-          Your clinical expertise can shape the future of medical AI.
-        </h1>
-        <div className={`${MEASURE.intro} mt-7 space-y-4 text-[19px] leading-relaxed text-muted`}>
-          <p className="text-strong">
-            Join medical experts around the world shaping the future of medical AI.
-          </p>
-          <p>
-            Use your expertise to help build, evaluate, and improve the AI systems
-            that will shape the future of healthcare.
-          </p>
-        </div>
+      {/* Two columns: the promise on the left, the one thing to do on the
+          right. Stacks, promise first, on a phone. */}
+      <section>
+        <div className="mx-auto grid w-full max-w-[1280px] items-center gap-12 px-5 pb-20 pt-32 sm:pt-40 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-16 lg:px-10 lg:pb-28">
+          <div>
+            <p className="font-display text-[12px] font-extrabold uppercase tracking-[0.3em] text-accent-ink">
+              For licensed clinicians
+            </p>
+            <h1 className="mt-5 max-w-[640px] text-[40px] font-extrabold leading-[1.06] text-ink sm:text-[56px]">
+              Your clinical expertise can shape the future of medical AI.
+            </h1>
+            <div className="mt-6 max-w-[560px] space-y-3 text-[18px] leading-relaxed text-muted">
+              <p className="font-medium text-strong">
+                Join medical experts around the world shaping the future of medical AI.
+              </p>
+              <p>
+                Use your expertise to help build, evaluate, and improve the AI systems
+                that will shape the future of healthcare.
+              </p>
+            </div>
+          </div>
 
-        <div className="mt-10 flex flex-col items-center gap-5">
-          <RequestAccessButton />
-          <p className="font-mono text-[12px] uppercase tracking-[0.12em] text-muted">
-            Fully remote · Invite-only · No AI experience needed
-          </p>
+          <div className="flex flex-col items-start gap-5 lg:items-center">
+            <RequestAccessButton className="w-full sm:w-auto" />
+            <ul className="flex flex-wrap gap-2">
+              {["Fully remote", "Invite-only", "No AI experience needed"].map((t) => (
+                <li
+                  key={t}
+                  className="rounded-full border border-hairline-strong bg-white px-3.5 py-1.5 text-[14px] font-medium text-strong"
+                >
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-      </Hero>
+      </section>
 
       {/* Why it matters. The problem first, so the work that follows reads as
           the answer to it rather than as a list of tasks. */}
-      <Section>
+      <Section dark>
         <SectionHead
           eyebrow="Why clinicians"
           title="Medical AI is already answering people's health questions"
@@ -131,10 +145,10 @@ export default function Landing() {
         <ol className="mx-auto mt-14 max-w-[720px] space-y-10">
           {JOIN_STEPS.map((step, i) => (
             <li key={step.title} className="text-center">
-              <p aria-hidden="true" className="tnum text-label text-accent">
+              <p aria-hidden="true" className="tnum font-display text-[34px] font-extrabold leading-none text-accent">
                 {String(i + 1).padStart(2, "0")}
               </p>
-              <h3 className="mt-3 text-[19px] leading-snug text-ink">{step.title}</h3>
+              <h3 className="mt-3 text-[19px] font-bold leading-snug text-ink">{step.title}</h3>
               <p className={`${MEASURE.intro} mt-2 text-body leading-relaxed text-muted`}>
                 {step.body}
               </p>
@@ -151,7 +165,7 @@ export default function Landing() {
         <p className="mt-10 text-center text-body text-muted">
           <Link
             href="/faqs"
-            className="focusable rounded-btn font-semibold text-accent underline-offset-2 hover:underline"
+            className="focusable rounded-btn font-semibold text-accent-ink underline-offset-2 hover:underline"
           >
             Read all the questions
           </Link>

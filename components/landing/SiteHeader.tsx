@@ -61,26 +61,26 @@ export function SiteHeader() {
 
   return (
     <header
-      className={`fixed inset-x-5 top-3 z-50 mx-auto max-w-[1480px] rounded-[14px] backdrop-blur-[16px] transition-[background-color,border-color,box-shadow] duration-200 md:inset-x-10 md:top-5 ${
+      className={`fixed inset-x-0 top-0 z-50 border-b bg-white/95 backdrop-blur-md transition-[border-color,box-shadow] duration-200 ${
         scrolled
-          ? "border border-white/[0.06] bg-black/[0.72] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.04)]"
-          : "border border-transparent bg-black/30"
+          ? "border-hairline shadow-[0_4px_16px_-8px_rgb(16_24_40/0.15)]"
+          : "border-transparent"
       }`}
     >
-      <div className="grid h-[58px] grid-cols-[1fr_auto_1fr] items-center px-4 md:h-[68px] md:px-6">
+      <div className="mx-auto grid h-16 max-w-[1280px] grid-cols-[1fr_auto_1fr] items-center px-5 md:h-[72px] lg:px-10">
         <Link
           href="/"
-          className="focusable flex items-center gap-2.5 justify-self-start rounded-btn text-[16px] font-medium tracking-[0.06em] text-ink"
+          className="focusable flex items-center gap-2.5 justify-self-start rounded-btn font-display text-[19px] font-bold tracking-[-0.01em] text-ink"
         >
-          <span className="grid h-[22px] w-[22px] place-items-center">
-            <BrandMark />
+          <span className="grid h-[26px] w-[26px] place-items-center text-accent">
+            <BrandMark size={24} />
           </span>
           Senebiclabs
         </Link>
 
         <nav
           aria-label="Main"
-          className="hidden items-center justify-center gap-9 text-[16px] md:flex"
+          className="hidden items-center justify-center gap-10 text-[15px] font-medium md:flex"
         >
           {NAV.map((item) => (
             <Link
@@ -88,7 +88,7 @@ export function SiteHeader() {
               href={item.href}
               aria-current={pathname === item.href ? "page" : undefined}
               className={`focusable rounded-btn transition-colors ${
-                pathname === item.href ? "text-accent" : "text-muted hover:text-accent"
+                pathname === item.href ? "text-ink" : "text-strong hover:text-accent-ink"
               }`}
             >
               {item.label}
@@ -106,7 +106,7 @@ export function SiteHeader() {
           <Link
             href="/request-access"
             aria-current={pathname === "/request-access" ? "page" : undefined}
-            className="focusable group hidden items-center gap-1.5 rounded-full bg-ink px-[18px] py-2 font-mono text-[12px] uppercase tracking-[0.12em] text-canvas transition-colors hover:bg-strong md:inline-flex"
+            className="focusable group hidden items-center gap-1.5 rounded-full bg-ink px-5 py-2.5 font-display text-[14px] font-bold text-white transition-colors hover:bg-strong md:inline-flex"
           >
             Request access
             <Arrow />
@@ -117,7 +117,7 @@ export function SiteHeader() {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
-            className="focusable flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hairline bg-transparent text-ink transition-colors hover:border-accent hover:bg-accent-soft md:hidden"
+            className="focusable flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-hairline-strong bg-white text-ink transition-colors hover:border-accent hover:bg-accent-soft md:hidden"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
               {menuOpen ? (
@@ -133,7 +133,7 @@ export function SiteHeader() {
       {menuOpen && (
         <nav
           aria-label="Main"
-          className="flex flex-col border-t border-hairline px-4 pb-4 pt-2 md:hidden"
+          className="flex flex-col border-t border-hairline bg-white px-5 pb-5 pt-2 md:hidden"
         >
           {NAV.map((item) => (
             <Link
@@ -152,7 +152,7 @@ export function SiteHeader() {
             href="/request-access"
             aria-current={pathname === "/request-access" ? "page" : undefined}
             onClick={() => setMenuOpen(false)}
-            className="focusable group mt-4 inline-flex items-center gap-1.5 self-start rounded-full bg-ink px-[18px] py-2 font-mono text-[12px] uppercase tracking-[0.12em] text-canvas transition-colors hover:bg-strong"
+            className="focusable group mt-4 inline-flex items-center gap-1.5 self-start rounded-full bg-ink px-5 py-2.5 font-display text-[14px] font-bold text-white transition-colors hover:bg-strong"
           >
             Request access
             <Arrow />

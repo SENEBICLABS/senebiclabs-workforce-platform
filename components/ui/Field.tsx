@@ -11,7 +11,7 @@ import { ChevronDown } from "lucide-react";
  */
 
 const BASE =
-  "w-full rounded-btn border bg-canvas-top text-ink transition-[border-color,box-shadow] duration-150 placeholder:text-placeholder outline-none focus-visible:border-accent focus-visible:ring-4 focus-visible:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-50";
+  "w-full rounded-btn border bg-surface text-ink transition-[border-color,box-shadow] duration-150 placeholder:text-placeholder outline-none focus-visible:border-focus focus-visible:ring-4 focus-visible:ring-focus/15 disabled:cursor-not-allowed disabled:opacity-50";
 
 /** The control's class, for the few places that render a raw element. */
 export function controlClass(invalid?: boolean, className = "") {
