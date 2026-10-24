@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
 import { supabaseAdmin } from "@/lib/supabase";
 import { availabilityFor, type PoolFacts } from "@/lib/availability";
+import { poolFacts, withPoolColumns, type PoolRow } from "@/lib/gate";
 import { closedPools } from "@/lib/pool-closure";
 import { normalizeConfig, type RawEvalConfig } from "@/lib/eval-config";
 
@@ -41,13 +42,13 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   return withAuth(req, async (_req, auth) => {
     const [{ data: rows, error }, closed] = await Promise.all([
-      supabaseAdmin
-        .from("pool_eligibility")
-        .select(
-          "pool_id, senior, pools!inner(id, name, ls_project_id, eval_config, maximum_annotations)"
-        )
-        .eq("clinician_id", auth.clinicianId)
-        .eq("eligible", true),
+      withPoolColumns((pools) =>
+        supabaseAdmin
+          .from("pool_eligibility")
+          .select(`pool_id, senior, pools!inner(${pools})`)
+          .eq("clinician_id", auth.clinicianId)
+          .eq("eligible", true)
+      ),
       closedPools(),
     ]);
 
@@ -60,7 +61,7 @@ export async function GET(req: NextRequest) {
     }
 
     const eligible = (rows ?? [])
-      .map((row) => row as unknown as { senior?: boolean; pools: Record<string, unknown> })
+      .map((row) => row as unknown as { senior?: boolean; pools: PoolRow })
       .filter((row) => Boolean(row.pools));
 
     if (eligible.length === 0) return NextResponse.json({ pools: [] });
@@ -68,16 +69,19 @@ export async function GET(req: NextRequest) {
     const listed = await Promise.all(
       eligible.map(async (row) => {
         const pool = row.pools;
-        const raw = (pool.eval_config ?? null) as RawEvalConfig | null;
-        const config = normalizeConfig(raw);
+        // On the native store the config and the ceiling are the project's own.
+        const own = poolFacts(pool);
+        const config = normalizeConfig(own.evalConfig as RawEvalConfig | null);
 
         const facts: PoolFacts = {
           id: String(pool.id),
           lsProjectId: Number(pool.ls_project_id),
-          maxAnnotations: (pool.maximum_annotations as number | null) ?? null,
-          evalConfig: (pool.eval_config as Record<string, unknown> | null) ?? null,
+          maxAnnotations: own.maxAnnotations,
+          evalConfig: own.evalConfig,
           senior: row.senior === true,
           closedAt: closed.get(String(pool.id)) ?? null,
+          native: own.native,
+          projectId: own.projectId,
         };
 
         // Fails soft, one pool at a time, and inside availabilityFor rather

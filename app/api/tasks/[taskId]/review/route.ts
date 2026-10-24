@@ -1,7 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
 import { recordPass } from "@/lib/completions";
-import { FORBIDDEN, POOL_CLOSED, requireEligiblePoolForTask } from "@/lib/gate";
+import {
+  FORBIDDEN,
+  POOL_CLOSED,
+  requireEligiblePoolForNativeTask,
+  requireEligiblePoolForTask,
+  type GatedPool,
+} from "@/lib/gate";
+import { approveReview, isNativeTaskId, TaskStoreError } from "@/lib/taskstore";
+import { notifyAnswersRecorded } from "@/lib/health";
 import {
   createAnnotation,
   deleteAnnotation,
@@ -85,20 +93,24 @@ export async function POST(
       );
     }
 
-    let lsTask;
+    const native = isNativeTaskId(taskId);
+    let pool: GatedPool | null;
     try {
-      lsTask = await getTask(taskId);
+      if (native) {
+        pool = (await requireEligiblePoolForNativeTask(auth.clinicianId, taskId))?.pool ?? null;
+      } else {
+        const lsTask = await getTask(taskId);
+        const projectId = Number((lsTask as unknown as { project?: number }).project);
+        pool = await requireEligiblePoolForTask(auth.clinicianId, taskId, projectId);
+      }
     } catch (err) {
       if (err instanceof LabelStudioError && err.status === 404) return FORBIDDEN();
-      console.error(`[review] LS unreachable resolving task ${taskId}`, err);
+      console.error(`[review] case store unreachable resolving task ${taskId}`, err);
       return NextResponse.json(
         { error: "We could not reach the case store. Try again in a moment." },
         { status: 502 }
       );
     }
-
-    const projectId = Number((lsTask as unknown as { project?: number }).project);
-    const pool = await requireEligiblePoolForTask(auth.clinicianId, taskId, projectId);
     if (!pool) return FORBIDDEN();
     if (pool.closedAt) return POOL_CLOSED();
 
@@ -179,6 +191,49 @@ export async function POST(
         return NextResponse.json({ error: err.message }, { status: 422 });
       }
       throw err;
+    }
+
+    // Native store: publishing, approving, recording the reviewer's pass and
+    // the event for HEALTH are one transaction, and the database re-checks
+    // that the reader is not the author.
+    if (native) {
+      let outcome;
+      try {
+        outcome = await approveReview({
+          reviewItemId: item.id,
+          reviewerId: auth.clinicianId,
+          action: action === "edit" ? "edited" : "approved",
+          finalData,
+          result,
+        });
+      } catch (err) {
+        console.error(
+          `[review] native store write failed for task ${taskId}`,
+          err instanceof TaskStoreError ? err.message : err
+        );
+        return NextResponse.json(
+          { error: "We could not publish this approval. Your decision is not lost — try again." },
+          { status: 500 }
+        );
+      }
+      if (outcome === "not_found") return FORBIDDEN();
+      if (outcome === "closed") return POOL_CLOSED();
+      if (outcome === "own_work") {
+        return NextResponse.json(
+          { error: "You wrote this one, so you cannot review it." },
+          { status: 403 }
+        );
+      }
+      if (outcome !== "approved") {
+        return NextResponse.json({ error: "This case was already reviewed." }, { status: 409 });
+      }
+      after(() => notifyAnswersRecorded());
+      return NextResponse.json({
+        reviewed: true,
+        action: action === "edit" ? "edited" : "approved",
+        state: "approved",
+        final: finalData,
+      });
     }
 
     // Publish first, then record — the same order as a single-phase submit, so

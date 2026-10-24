@@ -21,6 +21,7 @@ import { PurposeBadge } from "@/components/ui/Pill";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/States";
 import { ApiError, NO_CONTENT, api, type ReviewAction, type Task } from "@/lib/api";
 import { ReviewPanel } from "@/components/ReviewPanel";
+import { ImageViewer } from "@/components/ImageViewer";
 
 /** Answers survive a refresh. Only answers — never the session. */
 const draftKey = (taskId: number) => `senebiclabs:draft:${taskId}`;
@@ -283,6 +284,13 @@ function Workspace() {
     [task, answers]
   );
 
+  // What a highlight field marks up: the case's last text block, the one
+  // HEALTH binds highlights to (normally the model's output).
+  const spanSource = useMemo(() => {
+    const text = (task?.context ?? []).filter((b) => b.kind !== "image");
+    return text.length > 0 ? text[text.length - 1].value : "";
+  }, [task]);
+
   const submit = useCallback(async () => {
     if (!task || busy) return;
 
@@ -505,9 +513,17 @@ function Workspace() {
                     <span aria-hidden="true" className="h-1 w-1 rounded-full bg-accent" />
                     {block.label}
                   </h2>
-                  <p className="whitespace-pre-wrap text-[16px] leading-[1.7] text-ink">
-                    {block.value}
-                  </p>
+                  {block.kind === "image" && block.src ? (
+                    <ImageViewer
+                      key={block.src}
+                      src={block.src}
+                      label={`${block.label} for this case`}
+                    />
+                  ) : (
+                    <p className="whitespace-pre-wrap text-[16px] leading-[1.7] text-ink">
+                      {block.value}
+                    </p>
+                  )}
                 </section>
               ))}
             </Card>
@@ -599,6 +615,7 @@ function Workspace() {
                       missing.includes(field.name) ||
                       missing.includes(`${field.name}_finding`)
                     }
+                    spanSource={spanSource}
                   />
                   </div>
                 </li>

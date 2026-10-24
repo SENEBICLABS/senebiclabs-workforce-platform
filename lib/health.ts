@@ -50,6 +50,8 @@ const KEY_HEADER = process.env.HEALTH_KEY_HEADER || "X-Admin-Key";
  * request on a cold instance can wait this long.
  */
 const HELD_TIMEOUT_MS = 8_000;
+/** A nudge to score answers; the work is safe in the database either way. */
+const NUDGE_TIMEOUT_MS = 1_500;
 /** Longer: losing this call loses a clinician's judgement. */
 const WRITE_TIMEOUT_MS = 10_000;
 /**
@@ -73,7 +75,8 @@ export interface HeldCase {
   ls_task_id: number;
   /** HEALTH's own index for the item, which /adjudicate is addressed by. */
   idx: number;
-  project_id: number;
+  /** HEALTH's project id: a uuid. */
+  project_id: string;
   case_id: string;
   agreement: number | null;
   content: unknown;
@@ -131,7 +134,31 @@ async function call<T>(
   return (res.status === 204 ? undefined : await res.json()) as T;
 }
 
-const heldCache = new Map<number, { cases: HeldCase[]; known: boolean; at: number }>();
+const heldCache = new Map<string, { cases: HeldCase[]; known: boolean; at: number }>();
+
+/**
+ * Which project's held cases to ask for.
+ *
+ * A Label Studio pool is addressed by its Label Studio project id, a pool on
+ * the native task store by its HEALTH project: HEALTH answers both with the
+ * same cases in the same shape (`ls_task_id` carries whichever kind of task id
+ * the pool's store issues). A GatedPool satisfies this as it is.
+ */
+export interface HeldScope {
+  native: boolean;
+  lsProjectId: number;
+  projectId: string | null;
+}
+
+function heldKey(scope: HeldScope): string {
+  return scope.native ? `project:${scope.projectId}` : `ls:${scope.lsProjectId}`;
+}
+
+function heldPath(scope: HeldScope): string {
+  return scope.native
+    ? `/admin/held/project/${encodeURIComponent(String(scope.projectId))}`
+    : `/admin/held/${scope.lsProjectId}`;
+}
 
 /**
  * The held list, and whether it is worth believing.
@@ -157,17 +184,18 @@ export interface HeldSnapshot {
  * and "we could not ask" look the same to them, and only one of them is worth
  * interrupting their work for.
  */
-export async function heldCases(projectId: number): Promise<HeldCase[]> {
-  return (await heldSnapshot(projectId)).cases;
+export async function heldCases(scope: HeldScope): Promise<HeldCase[]> {
+  return (await heldSnapshot(scope)).cases;
 }
 
-export async function heldSnapshot(projectId: number): Promise<HeldSnapshot> {
+export async function heldSnapshot(scope: HeldScope): Promise<HeldSnapshot> {
   // Not configured is not the same as nothing held either. A deployment with no
   // HEALTH credentials cannot see disagreements at all, and must not conclude
   // from that silence that there are none.
   if (!healthConfigured()) return { cases: [], known: false };
 
-  const remembered = heldCache.get(projectId);
+  const key = heldKey(scope);
+  const remembered = heldCache.get(key);
   if (remembered && Date.now() - remembered.at < HELD_TTL_MS) {
     return { cases: remembered.cases, known: remembered.known };
   }
@@ -181,12 +209,12 @@ export async function heldSnapshot(projectId: number): Promise<HeldSnapshot> {
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       const body = await call<{ held?: HeldCase[] }>(
-        `/admin/held/${projectId}`,
+        heldPath(scope),
         { method: "GET" },
         HELD_TIMEOUT_MS
       );
       const cases = Array.isArray(body?.held) ? body.held : [];
-      heldCache.set(projectId, { cases, known: true, at: Date.now() });
+      heldCache.set(key, { cases, known: true, at: Date.now() });
       return { cases, known: true };
     } catch (err) {
       const timedOut = err instanceof HealthError && err.status === 504;
@@ -194,7 +222,7 @@ export async function heldSnapshot(projectId: number): Promise<HeldSnapshot> {
       const lastChance = attempt === 2 || timedOut;
 
       console.error(
-        `[health] could not read held cases for project ${projectId} ` +
+        `[health] could not read held cases for ${key} ` +
           `(attempt ${attempt}${lastChance ? ", giving up" : ", retrying"})` +
           `${cause ? ` cause=${cause}` : ""}`,
         err
@@ -208,8 +236,8 @@ export async function heldSnapshot(projectId: number): Promise<HeldSnapshot> {
 }
 
 /** Drops the cached list, so a case just settled stops being offered at once. */
-export function forgetHeld(projectId: number): void {
-  heldCache.delete(projectId);
+export function forgetHeld(scope: HeldScope): void {
+  heldCache.delete(heldKey(scope));
 }
 
 /**
@@ -220,7 +248,7 @@ export function forgetHeld(projectId: number): void {
  * work whose decision never reached anyone.
  */
 export async function adjudicate(decision: {
-  project_id: number;
+  project_id: string;
   idx: number;
   final_label: Record<string, unknown>;
   note: string;
@@ -237,4 +265,22 @@ export async function adjudicate(decision: {
     { method: "POST", body: JSON.stringify(decision) },
     WRITE_TIMEOUT_MS
   );
+}
+
+/**
+ * Tells HEALTH that answers are waiting to be scored on the native task store.
+ *
+ * A nudge, not a delivery: the answer and its event are already committed in
+ * the database, so if this call is lost nothing is lost with it. HEALTH also
+ * drains the queue on every results poll and after any rebuild. It is sent and
+ * not waited for, beyond the short budget below, because a clinician's next
+ * case must not wait on HEALTH scoring the last one.
+ */
+export async function notifyAnswersRecorded(): Promise<void> {
+  if (!healthConfigured()) return;
+  try {
+    await call<unknown>("/internal/process-answers", { method: "POST" }, NUDGE_TIMEOUT_MS);
+  } catch {
+    // Expected when HEALTH takes longer than the budget: the drain carries on there.
+  }
 }

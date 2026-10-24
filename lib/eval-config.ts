@@ -14,7 +14,8 @@ export type FieldType =
   | "text"
   | "flag"
   | "structured"
-  | "spans";
+  | "spans"
+  | "number";
 
 export interface Field {
   name: string;
@@ -23,6 +24,8 @@ export interface Field {
   hint?: string;
   options?: string[];
   classes?: string[];
+  /** number: the smallest and largest whole number accepted (scale uses max). */
+  min?: number;
   max?: number;
   rows?: number;
   label?: string;
@@ -42,7 +45,15 @@ export interface Field {
 
 export interface ContextBlock {
   label: string;
+  /** The text to read. Empty for an image block. */
   value: string;
+  /**
+   * "image" is shown as the image itself, fetched from `src`: a route on this
+   * platform that checks the clinician may see the case before handing the
+   * image over. The image's own address never reaches the browser.
+   */
+  kind?: "text" | "image";
+  src?: string;
 }
 
 export interface NormalizedConfig {
@@ -66,6 +77,10 @@ type RawField = Omit<Field, "name" | "title"> & { title?: string };
 type RawFields = Record<string, RawField> | (RawField & { name: string })[];
 
 interface RawSchema {
+  /** What the clinician reviews: "text" or "image" (HEALTH's default when absent). */
+  input?: string;
+  /** Which answer decides reviewer agreement in HEALTH (ls._primary_field). */
+  primary_field?: string;
   fields?: RawFields;
   field_order?: string[];
   classes?: string[];
@@ -77,7 +92,29 @@ export interface RawEvalConfig {
   title?: string;
   purpose?: string;
   instructions?: string;
+  input?: string;
   schema?: RawSchema;
+}
+
+/**
+ * Whether a case is an image to look at, as HEALTH decides it: schema.input,
+ * else the config's own input, else "image". The last case only counts when
+ * the case actually carries an image, because HEALTH refuses an image item
+ * without one at ingest; a config that simply never said "text" must not turn
+ * a text case into an empty picture.
+ */
+export function isImageTask(
+  raw: RawEvalConfig | null,
+  taskData: Record<string, unknown>
+): boolean {
+  const declared = (raw?.schema?.input ?? raw?.input)?.toLowerCase();
+  if (declared) return declared === "image";
+  return typeof taskData.image === "string" && taskData.image !== "";
+}
+
+/** The browser-facing address of a case's image. */
+export function mediaPath(taskId: number): string {
+  return `/api/tasks/${taskId}/media`;
 }
 
 const PURPOSES = new Set(["evaluate", "label", "create"]);
@@ -155,8 +192,22 @@ function humanize(name: string): string {
  */
 export function buildContext(
   raw: RawEvalConfig | null,
-  taskData: Record<string, unknown>
+  taskData: Record<string, unknown>,
+  taskId?: number
 ): ContextBlock[] {
+  // An image case shows what HEALTH's image layout showed: the image, then the
+  // model's prediction. The image is never rendered as its URL.
+  if (taskId !== undefined && isImageTask(raw, taskData)) {
+    const blocks: ContextBlock[] = [
+      { label: "Image", value: "", kind: "image", src: mediaPath(taskId) },
+    ];
+    const prediction = taskData.prediction;
+    if (prediction !== undefined && prediction !== null && prediction !== "") {
+      blocks.push({ label: "Model prediction", value: String(prediction) });
+    }
+    return blocks;
+  }
+
   const declared = raw?.schema?.context;
 
   if (Array.isArray(declared) && declared.length > 0) {
@@ -201,8 +252,15 @@ export function isVisible(
   return op === "==" ? actual === expected : actual !== expected;
 }
 
+/**
+ * What a field offers. A highlight field's tags are its own `options`, falling
+ * back to the classes, as HEALTH builds it (labelstudio.py: `options or
+ * classes`). It used to fall straight to the classes, so a highlight field
+ * offered the pool's answer categories as error tags, or nothing at all.
+ */
 export function optionsFor(field: Field, poolClasses: string[]): string[] {
   if (field.type === "single") return field.options ?? [];
+  if (field.type === "spans" && field.options?.length) return field.options;
   return field.classes ?? poolClasses;
 }
 
@@ -400,14 +458,56 @@ export function answersToLsResult(
         break;
       }
 
+      case "number": {
+        // A whole number, e.g. the step of an agent trace where things first
+        // went wrong. Refused rather than rounded: a clinician who typed 3.5
+        // meant something, and it is not 3 or 4.
+        const n = typeof value === "number" ? value : Number(String(value).trim());
+        if (!Number.isInteger(n)) {
+          throw new TranslationError(`"${field.title}" must be a whole number.`);
+        }
+        if (field.min !== undefined && n < field.min) {
+          throw new TranslationError(`"${field.title}" must be at least ${field.min}.`);
+        }
+        if (field.max !== undefined && n > field.max) {
+          throw new TranslationError(`"${field.title}" must be at most ${field.max}.`);
+        }
+        result.push({
+          from_name: field.name,
+          to_name: TO_NAME,
+          type: "number",
+          value: { number: n },
+        });
+        break;
+      }
+
       case "spans": {
         const spans = Array.isArray(value) ? value : [];
+        const allowed = optionsFor(field, config.classes);
         for (const span of spans as {
           start: number;
           end: number;
           text: string;
           label: string;
         }[]) {
+          // A span is offsets into the text the clinician read, and a tag from
+          // the field's list. Anything else would reach the client's data as a
+          // highlight of nothing, or under a tag nobody defined.
+          if (
+            !span ||
+            !Number.isInteger(span.start) ||
+            !Number.isInteger(span.end) ||
+            span.start < 0 ||
+            span.end <= span.start ||
+            typeof span.text !== "string"
+          ) {
+            throw new TranslationError(`A highlight in "${field.title}" is not a valid selection.`);
+          }
+          if (allowed.length > 0 && !allowed.includes(span.label)) {
+            throw new TranslationError(
+              `"${span.label}" is not one of the tags for "${field.title}".`
+            );
+          }
           result.push({
             from_name: field.name,
             to_name: TO_NAME,
@@ -421,6 +521,16 @@ export function answersToLsResult(
           });
         }
         break;
+      }
+
+      default: {
+        // A field type this platform cannot record is refused, never skipped.
+        // Skipping is how `number` answers used to vanish: the switch had no
+        // case for them, so the answer was dropped and the submit still succeeded.
+        const unknown: never = field.type;
+        throw new TranslationError(
+          `"${field.title}" is a kind of question this platform cannot record (${String(unknown)}).`
+        );
       }
     }
   }

@@ -1,14 +1,29 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
 import { supabaseAdmin } from "@/lib/supabase";
-import { FORBIDDEN, POOL_CLOSED, requireEligiblePoolForTask } from "@/lib/gate";
+import {
+  FORBIDDEN,
+  POOL_CLOSED,
+  requireEligiblePoolForNativeTask,
+  requireEligiblePoolForTask,
+  type GatedPool,
+} from "@/lib/gate";
 import {
   createAnnotation,
   deleteAnnotation,
   getTask,
   LabelStudioError,
   findNextTask,
+  selectNextTask,
 } from "@/lib/labelstudio";
+import {
+  getNativeTask,
+  isNativeTaskId,
+  nativeTaskStates,
+  submitJudgement,
+  TaskStoreError,
+  type SubmitOutcome,
+} from "@/lib/taskstore";
 import {
   answersToLsResult,
   buildContext,
@@ -19,7 +34,7 @@ import {
 } from "@/lib/eval-config";
 import { recordAuthored, reviewRequired } from "@/lib/review";
 import { READINGS_ONLY, recordPass } from "@/lib/completions";
-import { adjudicate, forgetHeld, heldCases } from "@/lib/health";
+import { adjudicate, forgetHeld, heldCases, notifyAnswersRecorded } from "@/lib/health";
 import { summariseDecision } from "@/lib/adjudication";
 
 export const dynamic = "force-dynamic";
@@ -28,10 +43,14 @@ export const dynamic = "force-dynamic";
  * Records one completed review.
  *
  * The body is a plain { fieldname: value } map — the client knows nothing of
- * Label Studio's shapes. The order here matters: write to LS first, then record
- * the completion. If the LS write fails the request fails and the clinician
- * keeps their answers; if the completion insert fails afterwards, the LS
- * annotation is rolled back so the two never diverge.
+ * the stored shapes.
+ *
+ * Two stores. On the native task store a judgement is one database call that
+ * writes the answer, the completion and the event HEALTH scores from, together
+ * or not at all. On Label Studio the order matters: write to LS first, then
+ * record the completion. If the LS write fails the request fails and the
+ * clinician keeps their answers; if the completion insert fails afterwards, the
+ * LS annotation is rolled back so the two never diverge.
  */
 export async function POST(
   req: NextRequest,
@@ -60,28 +79,32 @@ export async function POST(
     // The task must belong to a project backing a pool this clinician holds.
     // A store that is merely unreachable must not be reported as a refusal:
     // "not eligible" reads as permanent, and the clinician would stop retrying.
-    let lsTask;
+    const native = isNativeTaskId(taskId);
+    let pool: GatedPool | null;
+    let lsTotalAnnotations = 0;
     try {
-      lsTask = await getTask(taskId);
+      if (native) {
+        pool = (await requireEligiblePoolForNativeTask(auth.clinicianId, taskId))?.pool ?? null;
+      } else {
+        const lsTask = await getTask(taskId);
+        lsTotalAnnotations = lsTask.total_annotations ?? 0;
+        pool = await requireEligiblePoolForTask(
+          auth.clinicianId,
+          taskId,
+          Number((lsTask as unknown as { project?: number }).project)
+        );
+      }
     } catch (err) {
       if (err instanceof LabelStudioError && err.status === 404) {
         return FORBIDDEN();
       }
-      console.error(`[submit] LS unreachable resolving task ${taskId}`, err);
+      console.error(`[submit] case store unreachable resolving task ${taskId}`, err);
       return NextResponse.json(
         { error: "We could not reach the case store. Your answers are still here — try again in a moment." },
         { status: 502 }
       );
     }
 
-    const projectId = Number(
-      (lsTask as unknown as { project?: number }).project
-    );
-    const pool = await requireEligiblePoolForTask(
-      auth.clinicianId,
-      taskId,
-      projectId
-    );
     if (!pool) return FORBIDDEN();
     if (pool.closedAt) return POOL_CLOSED();
 
@@ -170,7 +193,7 @@ export async function POST(
     // third independent judgement is what HEALTH receives rather than a
     // refereed one.
     if (pool.senior) {
-      const held = await heldCases(pool.lsProjectId);
+      const held = await heldCases(pool);
       const thisCase = held.find((c) => c.ls_task_id === taskId);
 
       if (thisCase) {
@@ -245,7 +268,7 @@ export async function POST(
         }
 
         // Settled: stop offering it to the next senior who asks.
-        forgetHeld(pool.lsProjectId);
+        forgetHeld(pool);
 
         // Answered as an ordinary submission would be. The senior need not
         // know this case was contested, and nothing here tells them.
@@ -303,13 +326,17 @@ export async function POST(
       });
     }
 
+    if (native) {
+      return recordNativeJudgement(auth.clinicianId, pool, taskId, result, answers, raw);
+    }
+
     // The overlap ceiling was last checked when this task was served, which may
     // have been minutes ago and before other clinicians submitted. Re-check it
     // against the task we just fetched: the client commissioned a fixed number
     // of reviews per case and must not be billed for more.
     if (
       pool.maxAnnotations !== null &&
-      (lsTask.total_annotations ?? 0) >= pool.maxAnnotations
+      lsTotalAnnotations >= pool.maxAnnotations
     ) {
       return NextResponse.json(
         {
@@ -428,9 +455,62 @@ export async function POST(
   });
 }
 
+/**
+ * What each outcome of a native judgement means to the clinician. The wording
+ * matches the Label Studio path's, so the store is invisible to them.
+ */
+const NATIVE_REFUSALS: Record<Exclude<SubmitOutcome, "claimed" | "not_found" | "closed">, [number, string]> = {
+  already: [409, "You have already reviewed this case."],
+  full: [409, "This case has already been reviewed by enough clinicians. Nothing was lost — the next case is ready."],
+  settled: [409, "This case has already been settled by a senior clinician."],
+  unavailable: [409, "This case is not open for review yet. The next case is ready."],
+  wrong_phase: [409, "This pool asks for written work. Reload to continue."],
+  invalid: [422, "Complete at least one field before submitting."],
+};
+
+async function recordNativeJudgement(
+  clinicianId: string,
+  pool: GatedPool,
+  taskNo: number,
+  result: ReturnType<typeof answersToLsResult>,
+  answers: Record<string, unknown>,
+  raw: RawEvalConfig | null
+) {
+  let outcome: SubmitOutcome;
+  try {
+    outcome = await submitJudgement({ clinicianId, poolId: pool.id, taskNo, result, answers });
+  } catch (err) {
+    console.error(
+      `[submit] native store write failed for task ${taskNo}`,
+      err instanceof TaskStoreError ? err.message : err
+    );
+    return NextResponse.json(
+      { error: "We could not save your review. Your answers are still here." },
+      { status: 500 }
+    );
+  }
+
+  if (outcome === "not_found") return FORBIDDEN();
+  if (outcome === "closed") return POOL_CLOSED();
+  if (outcome !== "claimed") {
+    const [status, error] = NATIVE_REFUSALS[outcome];
+    return NextResponse.json({ error }, { status });
+  }
+
+  // Scoring happens in HEALTH. The answer and its event are already committed,
+  // so this is only a nudge, sent after the response so the clinician's next
+  // case does not wait on it.
+  after(() => notifyAnswersRecorded());
+
+  return NextResponse.json({
+    recorded: true,
+    next: await nextTaskFor(clinicianId, pool, raw),
+  });
+}
+
 async function nextTaskFor(
   clinicianId: string,
-  pool: { id: string; name: string; lsProjectId: number; maxAnnotations: number | null },
+  pool: GatedPool,
   raw: RawEvalConfig | null
 ) {
   const [{ data: completions }, { data: flags }] = await Promise.all([
@@ -458,23 +538,37 @@ async function nextTaskFor(
     READINGS_ONLY.includes(row.kind as (typeof READINGS_ONLY)[number])
   ).length;
 
-  let task;
+  let taskId: number;
+  let data: Record<string, unknown>;
   try {
-    task = await findNextTask(pool.lsProjectId, seen, pool.maxAnnotations);
+    if (pool.native && pool.projectId) {
+      const states = await nativeTaskStates(pool.projectId);
+      const pick = selectNextTask(
+        states.map((s) => ({ ...s, data: {} })),
+        seen,
+        pool.maxAnnotations
+      );
+      const task = pick ? await getNativeTask(pick.id) : null;
+      if (!task) return null;
+      taskId = task.id;
+      data = task.data;
+    } else {
+      const task = await findNextTask(pool.lsProjectId, seen, pool.maxAnnotations);
+      if (!task) return null;
+      taskId = task.id;
+      data = (task.data ?? {}) as Record<string, unknown>;
+    }
   } catch {
     return null;
   }
 
-  if (!task) return null;
-
   const config = normalizeConfig(raw);
-  const data = (task.data ?? {}) as Record<string, unknown>;
 
   return {
-    task_id: task.id,
+    task_id: taskId,
     pool: { id: pool.id, name: pool.name, purpose: config.purpose },
     case_id: caseIdFor(raw, data),
-    context: buildContext(raw, data),
+    context: buildContext(raw, data, taskId),
     eval_config: {
       instructions: config.instructions,
       fields: config.fields,

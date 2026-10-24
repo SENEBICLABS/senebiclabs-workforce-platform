@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
 import { availabilityFor } from "@/lib/availability";
 import { FORBIDDEN, requireEligiblePool } from "@/lib/gate";
-import { getTask, type LsTask } from "@/lib/labelstudio";
+import { getTask } from "@/lib/labelstudio";
+import { getNativeTask } from "@/lib/taskstore";
 import { reviewRequired } from "@/lib/review";
 import {
   buildContext,
@@ -35,17 +36,7 @@ export async function GET(
     const pool = await requireEligiblePool(auth.clinicianId, poolId);
     if (!pool) return FORBIDDEN();
 
-    const state = await availabilityFor(
-      {
-        id: pool.id,
-        lsProjectId: pool.lsProjectId,
-        maxAnnotations: pool.maxAnnotations,
-        evalConfig: pool.evalConfig,
-        senior: pool.senior,
-        closedAt: pool.closedAt,
-      },
-      auth.clinicianId
-    );
+    const state = await availabilityFor(pool, auth.clinicianId);
 
     // "We could not read the pool" and "the pool is finished" look identical
     // from here and mean opposite things to a clinician, so they are never
@@ -69,24 +60,35 @@ export async function GET(
     const lsTaskId =
       next.kind === "review" ? next.item.ls_task_id : next.lsTaskId;
 
-    let lsTask: LsTask;
+    // The case itself: from our own database on the native store, from Label
+    // Studio otherwise. Never both, and never one standing in for the other.
+    let data: Record<string, unknown>;
     try {
-      lsTask = await getTask(lsTaskId);
+      if (pool.native) {
+        const task = await getNativeTask(lsTaskId);
+        if (!task || task.projectId !== pool.projectId) {
+          // The availability rule offered a task this pool does not own. Serve
+          // nothing rather than another project's case.
+          console.error(`[next] task ${lsTaskId} is not in pool ${pool.id}'s project`);
+          return new NextResponse(null, { status: 204 });
+        }
+        data = task.data;
+      } else {
+        data = ((await getTask(lsTaskId)).data ?? {}) as Record<string, unknown>;
+      }
     } catch (err) {
-      console.error(`[next] LS unreachable for task ${lsTaskId}`, err);
+      console.error(`[next] case store unreachable for task ${lsTaskId}`, err);
       return NextResponse.json(
         { error: "We could not reach the case store. Try again in a moment." },
         { status: 502 }
       );
     }
 
-    const data = (lsTask.data ?? {}) as Record<string, unknown>;
-
     const common = {
       task_id: lsTaskId,
       pool: { id: pool.id, name: pool.name, purpose: config.purpose },
       case_id: caseIdFor(raw, data),
-      context: buildContext(raw, data),
+      context: buildContext(raw, data, lsTaskId),
       eval_config: {
         instructions: config.instructions,
         fields: config.fields,
