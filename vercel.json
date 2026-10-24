@@ -3,6 +3,11 @@
   "regions": [
     "dub1"
   ],
+  "git": {
+    "deploymentEnabled": {
+      "release/*": false
+    }
+  },
   "functions": {
     "app/api/pools/[poolId]/next/route.ts": {
       "maxDuration": 60
