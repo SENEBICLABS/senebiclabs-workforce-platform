@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { READINGS_ONLY } from "@/lib/completions";
 import { listTasks } from "@/lib/labelstudio";
+import { renderTaskData } from "@/lib/render";
+import { poolFacts, withPoolColumns, type PoolRow } from "@/lib/gate";
 import { caseIdFor, normalizeConfig, type RawEvalConfig } from "@/lib/eval-config";
 import {
   consensusForCase,
@@ -60,17 +62,20 @@ export async function GET(
   const { poolId } = await params;
   const format = new URL(req.url).searchParams.get("format") ?? "json";
 
-  const { data: pool } = await supabaseAdmin
-    .from("pools")
-    .select("id, name, ls_project_id, eval_config, maximum_annotations")
-    .eq("id", poolId)
-    .maybeSingle();
+  const { data: poolRow } = await withPoolColumns((pools) =>
+    supabaseAdmin.from("pools").select(pools).eq("id", poolId).maybeSingle()
+  );
+  // The select is chosen at run time (see withPoolColumns), so its row type is stated here.
+  const pool = poolRow as unknown as
+    | (PoolRow & { id: string; name: string; ls_project_id: number; maximum_annotations: number | null })
+    | null;
 
   if (!pool) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
 
-  const raw = (pool.eval_config ?? null) as RawEvalConfig | null;
+  const own = poolFacts(pool as unknown as PoolRow);
+  const raw = (own.evalConfig ?? null) as RawEvalConfig | null;
   const config = normalizeConfig(raw);
 
   // What a client is shown is readings. A flag is recorded work, but it
@@ -93,12 +98,24 @@ export async function GET(
   // Map LS task ids to the client's own case ids; the task id itself is dropped.
   const caseIdByTask = new Map<number, string>();
   try {
-    for (const task of await listTasks(pool.ls_project_id)) {
-      const data = (task.data ?? {}) as Record<string, unknown>;
-      caseIdByTask.set(task.id, caseIdFor(raw, data) ?? `case-${task.id}`);
+    if (own.native && own.projectId) {
+      const { data: items, error: itemsError } = await supabaseAdmin
+        .from("project_items")
+        .select("task_no, content")
+        .eq("project_id", own.projectId);
+      if (itemsError) throw itemsError;
+      for (const item of items ?? []) {
+        const data = renderTaskData(item.content as Record<string, unknown>);
+        caseIdByTask.set(Number(item.task_no), caseIdFor(raw, data) ?? `case-${item.task_no}`);
+      }
+    } else {
+      for (const task of await listTasks(pool.ls_project_id)) {
+        const data = (task.data ?? {}) as Record<string, unknown>;
+        caseIdByTask.set(task.id, caseIdFor(raw, data) ?? `case-${task.id}`);
+      }
     }
   } catch (err) {
-    console.error("[internal-preview] LS unreachable", err);
+    console.error("[internal-preview] case store unreachable", err);
     return NextResponse.json(
       { error: "Could not reach the case store." },
       { status: 502 }

@@ -1,9 +1,10 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { Check } from "lucide-react";
 import type { Field } from "@/lib/api";
 import { Input, Select, Textarea } from "@/components/ui/Field";
-import { findingOptionsFor } from "@/lib/eval-config";
+import { findingOptionsFor, optionsFor } from "@/lib/eval-config";
 
 export type Answers = Record<string, unknown>;
 
@@ -17,10 +18,9 @@ export function isVisible(field: Field, answers: Answers): boolean {
   return op === "==" ? actual === expected : actual !== expected;
 }
 
-function choicesFor(field: Field, poolClasses: string[]): string[] {
-  if (field.type === "single") return field.options ?? [];
-  return field.classes ?? poolClasses;
-}
+// The form and the validator must offer and accept the same list, so the form
+// asks the validator's own rule (which is where highlight tags were fixed).
+const choicesFor = optionsFor;
 
 /**
  * An option the clinician picks, drawn as a card. The native input stays in it,
@@ -71,12 +71,19 @@ export function ReviewField({
   poolClasses,
   onChange,
   invalid,
+  spanSource,
 }: {
   field: Field;
   answers: Answers;
   poolClasses: string[];
   onChange: (key: string, value: unknown) => void;
   invalid?: boolean;
+  /**
+   * The text a `spans` field highlights: the case's last text block, the one
+   * HEALTH binds highlights to (the model's output). Offsets are stored
+   * against exactly this string.
+   */
+  spanSource?: string;
 }) {
   const value = answers[field.name];
   const hintId = field.hint ? `${field.name}-hint` : undefined;
@@ -187,6 +194,30 @@ export function ReviewField({
               : `1 is lowest, ${field.max ?? 5} is highest`}
           </span>
         </div>
+      )}
+
+      {field.type === "number" && (
+        <Input
+          type="number"
+          inputMode="numeric"
+          step={1}
+          min={field.min}
+          max={field.max}
+          value={typeof value === "number" || typeof value === "string" ? String(value) : ""}
+          // Kept as typed until submit. The server refuses anything that is
+          // not a whole number in range, and says so, rather than rounding it.
+          onChange={(e) =>
+            onChange(field.name, e.target.value === "" ? "" : Number(e.target.value))
+          }
+          aria-describedby={hintId}
+          invalid={invalid}
+          className="max-w-[12rem] px-3"
+          placeholder={
+            field.min !== undefined && field.max !== undefined
+              ? `${field.min} to ${field.max}`
+              : "A whole number"
+          }
+        />
       )}
 
       {field.type === "text" && (
@@ -304,7 +335,7 @@ export function ReviewField({
 
       {field.type === "spans" && (
         <SpanPicker
-          field={field}
+          source={spanSource ?? ""}
           value={(value as Span[]) ?? []}
           options={options}
           onChange={(spans) => onChange(field.name, spans)}
@@ -323,43 +354,85 @@ interface Span {
 }
 
 /**
+ * Where a selection sits in the passage, as offsets into the passage's text.
+ *
+ * Measured from the selection itself, not by searching for its text: a phrase
+ * that appears twice ("no chest pain ... chest pain") would otherwise always be
+ * recorded at its first occurrence. Null when the selection is empty or not
+ * wholly inside the passage.
+ */
+export function selectionOffsets(
+  container: Node,
+  range: Range
+): { start: number; end: number; text: string } | null {
+  if (!container.contains(range.startContainer) || !container.contains(range.endContainer)) {
+    return null;
+  }
+  const text = range.toString();
+  if (!text) return null;
+  const before = document.createRange();
+  before.selectNodeContents(container);
+  before.setEnd(range.startContainer, range.startOffset);
+  const start = before.toString().length;
+  return { start, end: start + text.length, text };
+}
+
+/**
  * Select text in the passage, then tag the selection. Kept deliberately plain:
- * the server stores start/end offsets against the same string shown here.
+ * the server stores start/end offsets against the same string shown here,
+ * which is the case's own text, so a highlight points at what was read.
  */
 function SpanPicker({
-  field,
+  source,
   value,
   options,
   onChange,
   border,
 }: {
-  field: Field;
+  source: string;
   value: Span[];
   options: string[];
   onChange: (spans: Span[]) => void;
   border: string;
 }) {
-  const source = (field.label ?? "") as string;
+  const passage = useRef<HTMLParagraphElement>(null);
+  const [hint, setHint] = useState<string | null>(null);
 
   const capture = (label: string) => {
     const selection = window.getSelection();
-    const text = selection?.toString() ?? "";
-    if (!text) return;
-    const start = source.indexOf(text);
-    onChange([
-      ...value,
-      { start: start < 0 ? 0 : start, end: (start < 0 ? 0 : start) + text.length, text, label },
-    ]);
+    const span =
+      selection && selection.rangeCount > 0 && passage.current
+        ? selectionOffsets(passage.current, selection.getRangeAt(0))
+        : null;
+    if (!span) {
+      setHint("Select the words in the passage above first, then choose a tag.");
+      return;
+    }
+    setHint(null);
+    onChange([...value, { ...span, label }]);
     selection?.removeAllRanges();
   };
 
+  if (!source) {
+    return (
+      <p className="text-[15px] text-muted">
+        There is no text in this case to highlight.
+      </p>
+    );
+  }
+
   return (
     <div className="space-y-3">
-      {source && (
-        <p
-          className={`rounded-btn border bg-canvas-top px-4 py-3 text-body leading-relaxed text-ink selection:bg-accent/45 ${border}`}
-        >
-          {source}
+      <p
+        ref={passage}
+        className={`whitespace-pre-wrap rounded-btn border bg-canvas-top px-4 py-3 text-body leading-relaxed text-ink selection:bg-accent/45 ${border}`}
+      >
+        {source}
+      </p>
+
+      {hint && (
+        <p role="status" className="text-[14px] text-muted">
+          {hint}
         </p>
       )}
 

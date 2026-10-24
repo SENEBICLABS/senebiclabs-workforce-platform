@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
 import { supabaseAdmin } from "@/lib/supabase";
-import { FORBIDDEN, POOL_CLOSED, requireEligiblePoolForTask } from "@/lib/gate";
+import {
+  FORBIDDEN,
+  POOL_CLOSED,
+  requireEligiblePoolForNativeTask,
+  requireEligiblePoolForTask,
+  type GatedPool,
+} from "@/lib/gate";
+import { isNativeTaskId } from "@/lib/taskstore";
 import { getTask, LabelStudioError } from "@/lib/labelstudio";
 import { recordPass } from "@/lib/completions";
 
@@ -38,28 +45,28 @@ export async function POST(
       reason = "";
     }
 
-    let lsTask;
+    let pool: GatedPool | null;
     try {
-      lsTask = await getTask(taskId);
+      if (isNativeTaskId(taskId)) {
+        pool = (await requireEligiblePoolForNativeTask(auth.clinicianId, taskId))?.pool ?? null;
+      } else {
+        const lsTask = await getTask(taskId);
+        pool = await requireEligiblePoolForTask(
+          auth.clinicianId,
+          taskId,
+          Number((lsTask as unknown as { project?: number }).project)
+        );
+      }
     } catch (err) {
       if (err instanceof LabelStudioError && err.status === 404) {
         return FORBIDDEN();
       }
-      console.error(`[flag] LS unreachable resolving task ${taskId}`, err);
+      console.error(`[flag] case store unreachable resolving task ${taskId}`, err);
       return NextResponse.json(
         { error: "We could not reach the case store. Try again in a moment." },
         { status: 502 }
       );
     }
-
-    const projectId = Number(
-      (lsTask as unknown as { project?: number }).project
-    );
-    const pool = await requireEligiblePoolForTask(
-      auth.clinicianId,
-      taskId,
-      projectId
-    );
     if (!pool) return FORBIDDEN();
     if (pool.closedAt) return POOL_CLOSED();
 

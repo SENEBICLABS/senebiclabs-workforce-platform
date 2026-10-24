@@ -5,7 +5,23 @@ work in front of licensed clinicians and records what they decide. The **HEALTH
 backend** is the "Scale AI" tier: it owns the client relationship, the data, and
 everything downstream of a submitted annotation.
 
-Label Studio is the boundary between them. Neither side calls the other.
+There are two task stores, chosen per project in HEALTH
+(`project_submissions.task_store`):
+
+- **Native.** Tasks are HEALTH's own items, read from the shared database, and
+  each answer is written by one database function together with its completion
+  and an event (`lib/taskstore.ts`). The pool has `project_id` set and reads
+  that project's config and reviewer count directly (`lib/gate.ts`). After an
+  answer this platform nudges HEALTH's `/internal/process-answers` to score it.
+  Label Studio is never called. See HEALTH's `docs/native-task-store.md`.
+- **Label Studio**, the original path, drawn below. Task ids below a billion are
+  Label Studio's; native task numbers start at a billion, which is how a route
+  holding only a task id knows which store it belongs to.
+
+The two services do call each other directly in a few places: this platform
+reads HEALTH's held cases (`/admin/held/...`) and sends a senior's decision to
+`/admin/adjudicate` (`lib/health.ts`), and on the native store it sends the
+scoring nudge.
 
 ```
  HEALTH backend                Label Studio                 this platform

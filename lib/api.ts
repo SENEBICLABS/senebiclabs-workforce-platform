@@ -104,11 +104,14 @@ export interface Field {
     | "text"
     | "flag"
     | "structured"
-    | "spans";
+    | "spans"
+    | "number";
   title: string;
   hint?: string;
   options?: string[];
   classes?: string[];
+  /** number: the smallest whole number accepted. */
+  min?: number;
   max?: number;
   rows?: number;
   label?: string;
@@ -138,7 +141,11 @@ export interface Task {
   task_id: number;
   pool: { id: string; name: string; purpose: Purpose };
   case_id: string | null;
-  context: { label: string; value: string }[];
+  /**
+   * The case, in order. An image block carries no text: `src` is a route on
+   * this platform that checks access before showing the image.
+   */
+  context: { label: string; value: string; kind?: "text" | "image"; src?: string }[];
   eval_config: {
     instructions: string | null;
     fields: Field[];

@@ -1,0 +1,101 @@
+{
+  "_generated_by": "HEALTH app/services/labelstudio.py render_value; regenerate if that function changes",
+  "cases": [
+    {
+      "input": "plain text",
+      "rendered": "plain text"
+    },
+    {
+      "input": 42,
+      "rendered": 42
+    },
+    {
+      "input": 3.5,
+      "rendered": 3.5
+    },
+    {
+      "input": true,
+      "rendered": true
+    },
+    {
+      "input": null,
+      "rendered": null
+    },
+    {
+      "input": "",
+      "rendered": ""
+    },
+    {
+      "input": [
+        "step one",
+        "step two"
+      ],
+      "rendered": "Step 1: step one\n\nStep 2: step two"
+    },
+    {
+      "input": [
+        {
+          "action": "search",
+          "query": "chest pain",
+          "step": 1
+        },
+        {
+          "tool": "calc",
+          "args": {
+            "dose": 5,
+            "unit": "mg"
+          },
+          "result": null,
+          "ok": true
+        }
+      ],
+      "rendered": "Step 1\n   step: 1\n   action: search\n   query: chest pain\n\nStep 2\n   tool: calc\n   args: {\"dose\": 5, \"unit\": \"mg\"}\n   result: None\n   ok: True"
+    },
+    {
+      "input": [
+        {
+          "role": "user",
+          "text": "hi"
+        },
+        "bare",
+        [
+          1,
+          2
+        ]
+      ],
+      "rendered": "Step 1\n   role: user\n   text: hi\n\nStep 2: bare\n\nStep 3: [1, 2]"
+    },
+    {
+      "input": {
+        "b": 1,
+        "a": {
+          "x": [
+            1,
+            "two"
+          ]
+        },
+        "flag": false
+      },
+      "rendered": "b: 1\na: {\"x\": [1, \"two\"]}\nflag: False"
+    },
+    {
+      "input": [
+        {
+          "text": "Bénin ünïcode",
+          "type": "note",
+          "kind": "k",
+          "name": "n"
+        }
+      ],
+      "rendered": "Step 1\n   type: note\n   kind: k\n   name: n\n   text: Bénin ünïcode"
+    },
+    {
+      "input": [],
+      "rendered": ""
+    },
+    {
+      "input": {},
+      "rendered": ""
+    }
+  ]
+}

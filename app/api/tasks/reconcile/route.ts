@@ -4,6 +4,7 @@ import { READINGS_ONLY } from "@/lib/completions";
 import { deleteAnnotation, listTasks } from "@/lib/labelstudio";
 import { reviewRequired } from "@/lib/review";
 import type { RawEvalConfig } from "@/lib/eval-config";
+import { poolFacts, withPoolColumns, type PoolRow } from "@/lib/gate";
 
 export const dynamic = "force-dynamic";
 
@@ -212,12 +213,27 @@ function authorise(req: NextRequest): boolean {
 }
 
 async function resolvePool(poolId: string) {
-  const { data } = await supabaseAdmin
-    .from("pools")
-    .select("id, name, ls_project_id, eval_config")
-    .eq("id", poolId)
-    .maybeSingle();
-  return data;
+  const { data } = await withPoolColumns((pools) =>
+    supabaseAdmin.from("pools").select(pools).eq("id", poolId).maybeSingle()
+  );
+  return data as unknown as (PoolRow & { id: string; name: string; ls_project_id: number }) | null;
+}
+
+/**
+ * A pool on the native task store has nothing to reconcile: its answers are
+ * written once, in one transaction with the work record, so there is no second
+ * copy that could disagree. Said plainly rather than reported as "0 orphans",
+ * which would read as a check that ran and passed.
+ */
+function nativeAnswer(pool: { name: string }) {
+  return NextResponse.json({
+    pool: pool.name,
+    checked_at: new Date().toISOString(),
+    mode: "native",
+    applicable: false,
+    reason:
+      "This pool is on the native task store. Answers and work records are written in one transaction, so they cannot diverge; there is nothing to reconcile or clean up.",
+  });
 }
 
 /** Reports divergence. Read-only — safe to run on a schedule. */
@@ -236,6 +252,7 @@ export async function GET(req: NextRequest) {
 
   const pool = await resolvePool(poolId);
   if (!pool) return NextResponse.json({ error: "Not found." }, { status: 404 });
+  if (poolFacts(pool).native) return nativeAnswer(pool);
 
   const shared = await sharedProject(pool.ls_project_id, pool.id);
   if (shared) {
@@ -302,6 +319,7 @@ export async function POST(req: NextRequest) {
 
   const pool = await resolvePool(poolId);
   if (!pool) return NextResponse.json({ error: "Not found." }, { status: 404 });
+  if (poolFacts(pool).native) return nativeAnswer(pool);
 
   const shared = await sharedProject(pool.ls_project_id, pool.id);
   if (shared) {

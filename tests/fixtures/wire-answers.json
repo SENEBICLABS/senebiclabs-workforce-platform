@@ -1,0 +1,2498 @@
+{
+ "_generated_by": "tests/wire-format.test.ts with UPDATE_FIXTURES=1, from HEALTH tests/fixtures/template-configs.json",
+ "templates": {
+  "adversarial_prompts": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Normal",
+    "target_area": "Target area to probe: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "prompt": "prompt in the clinician's words",
+      "failure_mode": "Rare condition",
+      "expected_correct": "expected_correct in the clinician's words",
+      "notes": "notes in the clinician's words"
+     },
+     "visible": [
+      [
+       "prompt",
+       "text"
+      ],
+      [
+       "failure_mode",
+       "single"
+      ],
+      [
+       "expected_correct",
+       "text"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "prompt",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "prompt in the clinician's words"
+        ]
+       }
+      },
+      {
+       "from_name": "failure_mode",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Rare condition"
+        ]
+       }
+      },
+      {
+       "from_name": "expected_correct",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "expected_correct in the clinician's words"
+        ]
+       }
+      },
+      {
+       "from_name": "notes",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "notes in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "prompt": "prompt briefly"
+     },
+     "visible": [
+      [
+       "prompt",
+       "text"
+      ],
+      [
+       "failure_mode",
+       "single"
+      ],
+      [
+       "expected_correct",
+       "text"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "prompt",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "prompt briefly"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  "agent_trace_eval": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Agent's final answer: the patient reports chest pain at rest.",
+    "scenario": "Task given to the agent: the patient reports chest pain at rest.",
+    "trace": "Agent trace (highlight the steps that went wrong): the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "verdict": "Incorrect",
+      "step_errors": [
+       {
+        "start": 71,
+        "end": 81,
+        "text": "chest pain",
+        "label": "Wrong tool or action"
+       }
+      ],
+      "first_failed_step": 3,
+      "error_category": "Bad tool arguments",
+      "severity": "Moderate",
+      "task_completed": "Partly",
+      "efficiency": 4,
+      "rationale": "rationale in the clinician's words"
+     },
+     "visible": [
+      [
+       "verdict",
+       "single"
+      ],
+      [
+       "step_errors",
+       "spans"
+      ],
+      [
+       "first_failed_step",
+       "number"
+      ],
+      [
+       "error_category",
+       "single"
+      ],
+      [
+       "severity",
+       "single"
+      ],
+      [
+       "task_completed",
+       "single"
+      ],
+      [
+       "efficiency",
+       "scale"
+      ],
+      [
+       "rationale",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "verdict",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Incorrect"
+        ]
+       }
+      },
+      {
+       "from_name": "step_errors",
+       "to_name": "image",
+       "type": "labels",
+       "value": {
+        "start": 71,
+        "end": 81,
+        "text": "chest pain",
+        "labels": [
+         "Wrong tool or action"
+        ]
+       }
+      },
+      {
+       "from_name": "first_failed_step",
+       "to_name": "image",
+       "type": "number",
+       "value": {
+        "number": 3
+       }
+      },
+      {
+       "from_name": "error_category",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Bad tool arguments"
+        ]
+       }
+      },
+      {
+       "from_name": "severity",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Moderate"
+        ]
+       }
+      },
+      {
+       "from_name": "task_completed",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Partly"
+        ]
+       }
+      },
+      {
+       "from_name": "efficiency",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "rationale",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "rationale in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "verdict": "Correct",
+      "rationale": "rationale briefly"
+     },
+     "visible": [
+      [
+       "verdict",
+       "single"
+      ],
+      [
+       "step_errors",
+       "spans"
+      ],
+      [
+       "task_completed",
+       "single"
+      ],
+      [
+       "efficiency",
+       "scale"
+      ],
+      [
+       "rationale",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "verdict",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Correct"
+        ]
+       }
+      },
+      {
+       "from_name": "rationale",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "rationale briefly"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  "benchmark_creation": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Normal",
+    "topic": "Topic / clinical area: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "case": "case in the clinician's words",
+      "expected_answer": "expected_answer in the clinician's words",
+      "difficulty": "Hard",
+      "notes": "notes in the clinician's words"
+     },
+     "visible": [
+      [
+       "case",
+       "text"
+      ],
+      [
+       "expected_answer",
+       "text"
+      ],
+      [
+       "difficulty",
+       "single"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "case",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "case in the clinician's words"
+        ]
+       }
+      },
+      {
+       "from_name": "expected_answer",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "expected_answer in the clinician's words"
+        ]
+       }
+      },
+      {
+       "from_name": "difficulty",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Hard"
+        ]
+       }
+      },
+      {
+       "from_name": "notes",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "notes in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "case": "case briefly",
+      "expected_answer": "expected_answer briefly"
+     },
+     "visible": [
+      [
+       "case",
+       "text"
+      ],
+      [
+       "expected_answer",
+       "text"
+      ],
+      [
+       "difficulty",
+       "single"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "case",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "case briefly"
+        ]
+       }
+      },
+      {
+       "from_name": "expected_answer",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "expected_answer briefly"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  "case_review": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Normal",
+    "case": "Patient case: the patient reports chest pain at rest.",
+    "ai_involvement": "AI involvement / decision log: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "ai_effect": "No effect",
+      "quality": 4,
+      "notes": "notes in the clinician's words"
+     },
+     "visible": [
+      [
+       "ai_effect",
+       "single"
+      ],
+      [
+       "quality",
+       "scale"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "ai_effect",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "No effect"
+        ]
+       }
+      },
+      {
+       "from_name": "quality",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "notes",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "notes in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "ai_effect": "Improved"
+     },
+     "visible": [
+      [
+       "ai_effect",
+       "single"
+      ],
+      [
+       "quality",
+       "scale"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "ai_effect",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Improved"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  "clinical_safety_eval": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Model output: the patient reports chest pain at rest.",
+    "scenario": "Patient presentation: the patient reports chest pain at rest.",
+    "triage": "Model's urgency: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "verdict": "Incorrect",
+      "severity": "Moderate",
+      "correct_triage": "Routine",
+      "red_flag_missed": "Yes",
+      "red_flag_missed_finding": "Missed ST elevation",
+      "error_category": "Incorrect diagnosis",
+      "correct_label": "Abnormal",
+      "critical_miss": "Yes",
+      "critical_miss_finding": "Missed ST elevation",
+      "clinical_correctness": 4,
+      "reasoning": 4,
+      "completeness": 4,
+      "communication": 4,
+      "rationale": "rationale in the clinician's words"
+     },
+     "visible": [
+      [
+       "verdict",
+       "single"
+      ],
+      [
+       "severity",
+       "single"
+      ],
+      [
+       "correct_triage",
+       "single"
+      ],
+      [
+       "red_flag_missed",
+       "structured"
+      ],
+      [
+       "error_category",
+       "single"
+      ],
+      [
+       "correct_label",
+       "from_classes"
+      ],
+      [
+       "critical_miss",
+       "structured"
+      ],
+      [
+       "clinical_correctness",
+       "scale"
+      ],
+      [
+       "reasoning",
+       "scale"
+      ],
+      [
+       "completeness",
+       "scale"
+      ],
+      [
+       "communication",
+       "scale"
+      ],
+      [
+       "rationale",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "verdict",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Incorrect"
+        ]
+       }
+      },
+      {
+       "from_name": "severity",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Moderate"
+        ]
+       }
+      },
+      {
+       "from_name": "correct_triage",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Routine"
+        ]
+       }
+      },
+      {
+       "from_name": "red_flag_missed",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Yes"
+        ]
+       }
+      },
+      {
+       "from_name": "red_flag_missed_finding",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Missed ST elevation"
+        ]
+       }
+      },
+      {
+       "from_name": "error_category",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Incorrect diagnosis"
+        ]
+       }
+      },
+      {
+       "from_name": "correct_label",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Abnormal"
+        ]
+       }
+      },
+      {
+       "from_name": "critical_miss",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Yes"
+        ]
+       }
+      },
+      {
+       "from_name": "critical_miss_finding",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Missed ST elevation"
+        ]
+       }
+      },
+      {
+       "from_name": "clinical_correctness",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "reasoning",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "completeness",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "communication",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "rationale",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "rationale in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "verdict": "Correct",
+      "correct_triage": "Self-care",
+      "rationale": "rationale briefly"
+     },
+     "visible": [
+      [
+       "verdict",
+       "single"
+      ],
+      [
+       "correct_triage",
+       "single"
+      ],
+      [
+       "red_flag_missed",
+       "structured"
+      ],
+      [
+       "critical_miss",
+       "structured"
+      ],
+      [
+       "clinical_correctness",
+       "scale"
+      ],
+      [
+       "reasoning",
+       "scale"
+      ],
+      [
+       "completeness",
+       "scale"
+      ],
+      [
+       "communication",
+       "scale"
+      ],
+      [
+       "rationale",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "verdict",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Correct"
+        ]
+       }
+      },
+      {
+       "from_name": "correct_triage",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Self-care"
+        ]
+       }
+      },
+      {
+       "from_name": "red_flag_missed",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "No"
+        ]
+       }
+      },
+      {
+       "from_name": "red_flag_missed_finding",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": []
+       }
+      },
+      {
+       "from_name": "critical_miss",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "No"
+        ]
+       }
+      },
+      {
+       "from_name": "critical_miss_finding",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": []
+       }
+      },
+      {
+       "from_name": "rationale",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "rationale briefly"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  "contradiction_creation": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Normal",
+    "topic": "Clinical area: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "record": "record in the clinician's words",
+      "source": "source in the clinician's words",
+      "contradiction": "contradiction in the clinician's words",
+      "safe_behaviour": "safe_behaviour in the clinician's words",
+      "contradiction_type": "Medication or dose",
+      "harm_if_missed": "Moderate",
+      "notes": "notes in the clinician's words"
+     },
+     "visible": [
+      [
+       "record",
+       "text"
+      ],
+      [
+       "source",
+       "text"
+      ],
+      [
+       "contradiction",
+       "text"
+      ],
+      [
+       "safe_behaviour",
+       "text"
+      ],
+      [
+       "contradiction_type",
+       "single"
+      ],
+      [
+       "harm_if_missed",
+       "single"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "record",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "record in the clinician's words"
+        ]
+       }
+      },
+      {
+       "from_name": "source",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "source in the clinician's words"
+        ]
+       }
+      },
+      {
+       "from_name": "contradiction",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "contradiction in the clinician's words"
+        ]
+       }
+      },
+      {
+       "from_name": "safe_behaviour",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "safe_behaviour in the clinician's words"
+        ]
+       }
+      },
+      {
+       "from_name": "contradiction_type",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Medication or dose"
+        ]
+       }
+      },
+      {
+       "from_name": "harm_if_missed",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Moderate"
+        ]
+       }
+      },
+      {
+       "from_name": "notes",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "notes in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "record": "record briefly",
+      "source": "source briefly",
+      "contradiction": "contradiction briefly",
+      "safe_behaviour": "safe_behaviour briefly"
+     },
+     "visible": [
+      [
+       "record",
+       "text"
+      ],
+      [
+       "source",
+       "text"
+      ],
+      [
+       "contradiction",
+       "text"
+      ],
+      [
+       "safe_behaviour",
+       "text"
+      ],
+      [
+       "contradiction_type",
+       "single"
+      ],
+      [
+       "harm_if_missed",
+       "single"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "record",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "record briefly"
+        ]
+       }
+      },
+      {
+       "from_name": "source",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "source briefly"
+        ]
+       }
+      },
+      {
+       "from_name": "contradiction",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "contradiction briefly"
+        ]
+       }
+      },
+      {
+       "from_name": "safe_behaviour",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "safe_behaviour briefly"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  "data_labeling": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Normal",
+    "text": "Item: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "label": "Abnormal",
+      "notes": "notes in the clinician's words"
+     },
+     "visible": [
+      [
+       "label",
+       "from_classes"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "label",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Abnormal"
+        ]
+       }
+      },
+      {
+       "from_name": "notes",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "notes in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "label": "Normal"
+     },
+     "visible": [
+      [
+       "label",
+       "from_classes"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "label",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Normal"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  "dialogue_creation": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Normal",
+    "scenario": "Clinical scenario: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "dialogue": "dialogue in the clinician's words",
+      "notes": "notes in the clinician's words"
+     },
+     "visible": [
+      [
+       "dialogue",
+       "text"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "dialogue",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "dialogue in the clinician's words"
+        ]
+       }
+      },
+      {
+       "from_name": "notes",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "notes in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "dialogue": "dialogue briefly"
+     },
+     "visible": [
+      [
+       "dialogue",
+       "text"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "dialogue",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "dialogue briefly"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  "fact_checking": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Model output: the patient reports chest pain at rest.",
+    "topic": "Question / topic: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "verdict": "Has errors",
+      "error_spans": [
+       {
+        "start": 34,
+        "end": 44,
+        "text": "chest pain",
+        "label": "Hallucination"
+       }
+      ],
+      "correction": "correction in the clinician's words",
+      "citation": "citation in the clinician's words"
+     },
+     "visible": [
+      [
+       "verdict",
+       "single"
+      ],
+      [
+       "error_spans",
+       "spans"
+      ],
+      [
+       "correction",
+       "text"
+      ],
+      [
+       "citation",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "verdict",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Has errors"
+        ]
+       }
+      },
+      {
+       "from_name": "error_spans",
+       "to_name": "image",
+       "type": "labels",
+       "value": {
+        "start": 34,
+        "end": 44,
+        "text": "chest pain",
+        "labels": [
+         "Hallucination"
+        ]
+       }
+      },
+      {
+       "from_name": "correction",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "correction in the clinician's words"
+        ]
+       }
+      },
+      {
+       "from_name": "citation",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "citation in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "verdict": "Accurate"
+     },
+     "visible": [
+      [
+       "verdict",
+       "single"
+      ],
+      [
+       "error_spans",
+       "spans"
+      ],
+      [
+       "correction",
+       "text"
+      ],
+      [
+       "citation",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "verdict",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Accurate"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  "gold_answers": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Normal",
+    "prompt": "Prompt: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "answer": "answer in the clinician's words"
+     },
+     "visible": [
+      [
+       "answer",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "answer",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "answer in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "answer": "answer briefly"
+     },
+     "visible": [
+      [
+       "answer",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "answer",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "answer briefly"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  "grounding_eval": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Model answer: the patient reports chest pain at rest.",
+    "scenario": "Question: the patient reports chest pain at rest.",
+    "evidence": "Retrieved evidence: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "verdict": "Incorrect",
+      "retrieval_relevant": 4,
+      "grounding": 4,
+      "citations_support_claims": "Partly",
+      "contradiction_handling": "Flagged and handled safely",
+      "hallucination": "Yes",
+      "hallucination_finding": "Missed ST elevation",
+      "error_category": "Grounding failure",
+      "severity": "Moderate",
+      "rationale": "rationale in the clinician's words"
+     },
+     "visible": [
+      [
+       "verdict",
+       "single"
+      ],
+      [
+       "retrieval_relevant",
+       "scale"
+      ],
+      [
+       "grounding",
+       "scale"
+      ],
+      [
+       "citations_support_claims",
+       "single"
+      ],
+      [
+       "contradiction_handling",
+       "single"
+      ],
+      [
+       "hallucination",
+       "structured"
+      ],
+      [
+       "error_category",
+       "single"
+      ],
+      [
+       "severity",
+       "single"
+      ],
+      [
+       "rationale",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "verdict",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Incorrect"
+        ]
+       }
+      },
+      {
+       "from_name": "retrieval_relevant",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "grounding",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "citations_support_claims",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Partly"
+        ]
+       }
+      },
+      {
+       "from_name": "contradiction_handling",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Flagged and handled safely"
+        ]
+       }
+      },
+      {
+       "from_name": "hallucination",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Yes"
+        ]
+       }
+      },
+      {
+       "from_name": "hallucination_finding",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Missed ST elevation"
+        ]
+       }
+      },
+      {
+       "from_name": "error_category",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Grounding failure"
+        ]
+       }
+      },
+      {
+       "from_name": "severity",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Moderate"
+        ]
+       }
+      },
+      {
+       "from_name": "rationale",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "rationale in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "verdict": "Correct",
+      "rationale": "rationale briefly"
+     },
+     "visible": [
+      [
+       "verdict",
+       "single"
+      ],
+      [
+       "retrieval_relevant",
+       "scale"
+      ],
+      [
+       "grounding",
+       "scale"
+      ],
+      [
+       "citations_support_claims",
+       "single"
+      ],
+      [
+       "contradiction_handling",
+       "single"
+      ],
+      [
+       "hallucination",
+       "structured"
+      ],
+      [
+       "rationale",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "verdict",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Correct"
+        ]
+       }
+      },
+      {
+       "from_name": "hallucination",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "No"
+        ]
+       }
+      },
+      {
+       "from_name": "hallucination_finding",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": []
+       }
+      },
+      {
+       "from_name": "rationale",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "rationale briefly"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  "model_evaluation": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Model output: the patient reports chest pain at rest.",
+    "scenario": "Input: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "verdict": "Incorrect",
+      "correct_label": "Abnormal",
+      "critical_miss": "Yes",
+      "critical_miss_finding": "Normal",
+      "notes": "notes in the clinician's words"
+     },
+     "visible": [
+      [
+       "verdict",
+       "single"
+      ],
+      [
+       "correct_label",
+       "from_classes"
+      ],
+      [
+       "critical_miss",
+       "structured"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "verdict",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Incorrect"
+        ]
+       }
+      },
+      {
+       "from_name": "correct_label",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Abnormal"
+        ]
+       }
+      },
+      {
+       "from_name": "critical_miss",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Yes"
+        ]
+       }
+      },
+      {
+       "from_name": "critical_miss_finding",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Normal"
+        ]
+       }
+      },
+      {
+       "from_name": "notes",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "notes in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "verdict": "Correct"
+     },
+     "visible": [
+      [
+       "verdict",
+       "single"
+      ],
+      [
+       "critical_miss",
+       "structured"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "verdict",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Correct"
+        ]
+       }
+      },
+      {
+       "from_name": "critical_miss",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "No"
+        ]
+       }
+      },
+      {
+       "from_name": "critical_miss_finding",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": []
+       }
+      }
+     ]
+    }
+   }
+  },
+  "reasoning_eval": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Model response: the patient reports chest pain at rest.",
+    "scenario": "Patient presentation: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "verdict": "Incorrect",
+      "symptom_identification": 4,
+      "differential": 4,
+      "follow_up_questions": 4,
+      "recognised_missing_info": 4,
+      "conclusion_justified": 4,
+      "error_category": "Differential",
+      "severity": "Moderate",
+      "rationale": "rationale in the clinician's words"
+     },
+     "visible": [
+      [
+       "verdict",
+       "single"
+      ],
+      [
+       "symptom_identification",
+       "scale"
+      ],
+      [
+       "differential",
+       "scale"
+      ],
+      [
+       "follow_up_questions",
+       "scale"
+      ],
+      [
+       "recognised_missing_info",
+       "scale"
+      ],
+      [
+       "conclusion_justified",
+       "scale"
+      ],
+      [
+       "error_category",
+       "single"
+      ],
+      [
+       "severity",
+       "single"
+      ],
+      [
+       "rationale",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "verdict",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Incorrect"
+        ]
+       }
+      },
+      {
+       "from_name": "symptom_identification",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "differential",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "follow_up_questions",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "recognised_missing_info",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "conclusion_justified",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "error_category",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Differential"
+        ]
+       }
+      },
+      {
+       "from_name": "severity",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Moderate"
+        ]
+       }
+      },
+      {
+       "from_name": "rationale",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "rationale in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "verdict": "Correct",
+      "rationale": "rationale briefly"
+     },
+     "visible": [
+      [
+       "verdict",
+       "single"
+      ],
+      [
+       "symptom_identification",
+       "scale"
+      ],
+      [
+       "differential",
+       "scale"
+      ],
+      [
+       "follow_up_questions",
+       "scale"
+      ],
+      [
+       "recognised_missing_info",
+       "scale"
+      ],
+      [
+       "conclusion_justified",
+       "scale"
+      ],
+      [
+       "rationale",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "verdict",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Correct"
+        ]
+       }
+      },
+      {
+       "from_name": "rationale",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "rationale briefly"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  "response_ranking": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Normal",
+    "prompt": "Prompt: the patient reports chest pain at rest.",
+    "response_a": "Response A: the patient reports chest pain at rest.",
+    "response_b": "Response B: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "preference": "Response B",
+      "accuracy": 4,
+      "empathy": 4,
+      "clarity": 4,
+      "safety": 4,
+      "rationale": "rationale in the clinician's words"
+     },
+     "visible": [
+      [
+       "preference",
+       "single"
+      ],
+      [
+       "accuracy",
+       "scale"
+      ],
+      [
+       "empathy",
+       "scale"
+      ],
+      [
+       "clarity",
+       "scale"
+      ],
+      [
+       "safety",
+       "scale"
+      ],
+      [
+       "rationale",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "preference",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Response B"
+        ]
+       }
+      },
+      {
+       "from_name": "accuracy",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "empathy",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "clarity",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "safety",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "rationale",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "rationale in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "preference": "Response A",
+      "rationale": "rationale briefly"
+     },
+     "visible": [
+      [
+       "preference",
+       "single"
+      ],
+      [
+       "accuracy",
+       "scale"
+      ],
+      [
+       "empathy",
+       "scale"
+      ],
+      [
+       "clarity",
+       "scale"
+      ],
+      [
+       "safety",
+       "scale"
+      ],
+      [
+       "rationale",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "preference",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Response A"
+        ]
+       }
+      },
+      {
+       "from_name": "rationale",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "rationale briefly"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  "rlhf_preference": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Normal",
+    "prompt": "Prompt: the patient reports chest pain at rest.",
+    "response_a": "Response A: the patient reports chest pain at rest.",
+    "response_b": "Response B: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "preference": "Response B",
+      "reason": "reason in the clinician's words"
+     },
+     "visible": [
+      [
+       "preference",
+       "single"
+      ],
+      [
+       "reason",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "preference",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Response B"
+        ]
+       }
+      },
+      {
+       "from_name": "reason",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "reason in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "preference": "Response A"
+     },
+     "visible": [
+      [
+       "preference",
+       "single"
+      ],
+      [
+       "reason",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "preference",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Response A"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  "rubric_creation": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Normal",
+    "task_description": "What the AI is being asked to do: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "criteria": "criteria in the clinician's words",
+      "critical_failures": "critical_failures in the clinician's words",
+      "scoring": "Pass / fail per criterion",
+      "weighting": "weighting in the clinician's words",
+      "confidence": 4,
+      "notes": "notes in the clinician's words"
+     },
+     "visible": [
+      [
+       "criteria",
+       "text"
+      ],
+      [
+       "critical_failures",
+       "text"
+      ],
+      [
+       "scoring",
+       "single"
+      ],
+      [
+       "weighting",
+       "text"
+      ],
+      [
+       "confidence",
+       "scale"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "criteria",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "criteria in the clinician's words"
+        ]
+       }
+      },
+      {
+       "from_name": "critical_failures",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "critical_failures in the clinician's words"
+        ]
+       }
+      },
+      {
+       "from_name": "scoring",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Pass / fail per criterion"
+        ]
+       }
+      },
+      {
+       "from_name": "weighting",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "weighting in the clinician's words"
+        ]
+       }
+      },
+      {
+       "from_name": "confidence",
+       "to_name": "image",
+       "type": "rating",
+       "value": {
+        "rating": 4
+       }
+      },
+      {
+       "from_name": "notes",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "notes in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "criteria": "criteria briefly",
+      "critical_failures": "critical_failures briefly",
+      "scoring": "1-5 per criterion"
+     },
+     "visible": [
+      [
+       "criteria",
+       "text"
+      ],
+      [
+       "critical_failures",
+       "text"
+      ],
+      [
+       "scoring",
+       "single"
+      ],
+      [
+       "weighting",
+       "text"
+      ],
+      [
+       "confidence",
+       "scale"
+      ],
+      [
+       "notes",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "criteria",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "criteria briefly"
+        ]
+       }
+      },
+      {
+       "from_name": "critical_failures",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "critical_failures briefly"
+        ]
+       }
+      },
+      {
+       "from_name": "scoring",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "1-5 per criterion"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  },
+  "triage_eval": {
+   "content": {
+    "case_id": "CASE-1",
+    "prediction": "Normal",
+    "scenario": "Patient presentation: the patient reports chest pain at rest.",
+    "triage": "Model's urgency: the patient reports chest pain at rest."
+   },
+   "sets": {
+    "full": {
+     "answers": {
+      "correct_triage": "Routine",
+      "verdict": "Incorrect",
+      "severity": "Moderate",
+      "error_category": "Inappropriate reassurance",
+      "rationale": "rationale in the clinician's words"
+     },
+     "visible": [
+      [
+       "correct_triage",
+       "single"
+      ],
+      [
+       "verdict",
+       "single"
+      ],
+      [
+       "severity",
+       "single"
+      ],
+      [
+       "error_category",
+       "single"
+      ],
+      [
+       "rationale",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "correct_triage",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Routine"
+        ]
+       }
+      },
+      {
+       "from_name": "verdict",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Incorrect"
+        ]
+       }
+      },
+      {
+       "from_name": "severity",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Moderate"
+        ]
+       }
+      },
+      {
+       "from_name": "error_category",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Inappropriate reassurance"
+        ]
+       }
+      },
+      {
+       "from_name": "rationale",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "rationale in the clinician's words"
+        ]
+       }
+      }
+     ]
+    },
+    "minimal": {
+     "answers": {
+      "correct_triage": "Self-care",
+      "verdict": "Correct",
+      "rationale": "rationale briefly"
+     },
+     "visible": [
+      [
+       "correct_triage",
+       "single"
+      ],
+      [
+       "verdict",
+       "single"
+      ],
+      [
+       "rationale",
+       "text"
+      ]
+     ],
+     "result": [
+      {
+       "from_name": "correct_triage",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Self-care"
+        ]
+       }
+      },
+      {
+       "from_name": "verdict",
+       "to_name": "image",
+       "type": "choices",
+       "value": {
+        "choices": [
+         "Correct"
+        ]
+       }
+      },
+      {
+       "from_name": "rationale",
+       "to_name": "image",
+       "type": "textarea",
+       "value": {
+        "text": [
+         "rationale briefly"
+        ]
+       }
+      }
+     ]
+    }
+   }
+  }
+ }
+}

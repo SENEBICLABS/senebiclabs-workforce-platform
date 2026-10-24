@@ -3,6 +3,7 @@ import { supabaseAdmin } from "./supabase";
 import { READINGS_ONLY } from "./completions";
 import { heldSnapshot } from "./health";
 import { taskStates } from "./labelstudio";
+import { nativeTaskStates } from "./taskstore";
 import {
   claimedTaskIds,
   itemsAwaitingReview,
@@ -46,6 +47,9 @@ export interface PoolFacts {
   evalConfig: Record<string, unknown> | null;
   senior: boolean;
   closedAt: string | null;
+  /** On the native task store: tasks are read from the database, never from Label Studio. */
+  native: boolean;
+  projectId: string | null;
 }
 
 /**
@@ -134,12 +138,15 @@ export async function availabilityFor(
   // The clinician's own passes come from our database and are not allowed to
   // fail quietly; the project's task states come from Label Studio and are.
   const [tasks, owned, held] = await Promise.all([
-    taskStates(pool.lsProjectId).catch((err) => {
-      console.error(`[availability] could not read tasks for project ${pool.lsProjectId}`, err);
+    (pool.native && pool.projectId
+      ? nativeTaskStates(pool.projectId)
+      : taskStates(pool.lsProjectId)
+    ).catch((err) => {
+      console.error(`[availability] could not read tasks for pool ${pool.id}`, err);
       return null;
     }),
     ownedBy(clinicianId, pool.id),
-    heldSnapshot(pool.lsProjectId),
+    heldSnapshot(pool),
   ]);
 
   if (tasks === null) {
