@@ -7,19 +7,19 @@
  * "in progress" with a button, over a queue that had nothing to serve. The two
  * now come from one computation, and the only way to be sure they still do is
  * to ask both and compare — a unit test cannot, because the disagreement lived
- * in the gap between a database count and a Label Studio read.
+ * in the gap between two separate reads of the same pool.
  *
  * Read-only. It lists pools and asks for the next case, which is what a
  * clinician's browser does on every dashboard load, and writes nothing
- * anywhere. Safe against live projects, which is the point: the sandbox is for
- * the write path, and this has no write path to guard.
+ * anywhere. Safe against live projects, which is the point: it has no write
+ * path to guard.
  *
  * Every clinician given on the command line is checked, defaulting to everyone
  * with pool access, because the interesting disagreements are per person: a
  * senior sees held cases nobody else does, and a clinician who has worked a
  * pool out sees nothing where a colleague still sees work.
  */
-import { loadEnv } from "./sandbox.mjs";
+import { loadEnv } from "./env.mjs";
 import { sessionFor } from "./session-for.mjs";
 
 const env = loadEnv();

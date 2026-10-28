@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { READINGS_ONLY } from "@/lib/completions";
-import { listTasks } from "@/lib/labelstudio";
 import { renderTaskData } from "@/lib/render";
-import { poolFacts, withPoolColumns, type PoolRow } from "@/lib/gate";
+import { POOL_SELECT, poolFacts, type PoolRow } from "@/lib/gate";
 import { caseIdFor, normalizeConfig, type RawEvalConfig } from "@/lib/eval-config";
 import {
   consensusForCase,
@@ -17,18 +16,17 @@ export const dynamic = "force-dynamic";
 /**
  * INTERNAL OPS PREVIEW — not the client deliverable. Never send this to a client.
  *
- * This platform is the clinician-serving layer. It serves tasks from Label
- * Studio projects the HEALTH backend creates and owns, and writes annotations
- * back to LS. HEALTH pulls those annotations via its webhook and produces the
- * official client deliverable, including QA, adjudication and gold comparison.
+ * This platform is the clinician-serving layer. It serves tasks from projects
+ * the HEALTH backend creates and owns, and records answers in the task store.
+ * HEALTH scores those answers and produces the official client deliverable,
+ * including QA, adjudication and gold comparison.
  *
  * What this endpoint gives is a rough read of what our clinicians have
- * submitted for a pool, so ops can sanity-check serving without opening Label
- * Studio. Its consensus is a naive majority with no QA, no adjudication and no
+ * submitted for a pool, so ops can sanity-check serving. Its consensus is a naive majority with no QA, no adjudication and no
  * gold, so it will disagree with the official deliverable — treat any conflict
  * as this being wrong.
  *
- * It still redacts identity (no clinician, database or LS ids) because ops
+ * It still redacts identity (no clinician, database or task ids) because ops
  * output leaks, but redaction is not what makes something deliverable.
  *
  * Authorised by OPS_API_KEY, never a clinician session.
@@ -62,19 +60,19 @@ export async function GET(
   const { poolId } = await params;
   const format = new URL(req.url).searchParams.get("format") ?? "json";
 
-  const { data: poolRow } = await withPoolColumns((pools) =>
-    supabaseAdmin.from("pools").select(pools).eq("id", poolId).maybeSingle()
-  );
-  // The select is chosen at run time (see withPoolColumns), so its row type is stated here.
-  const pool = poolRow as unknown as
-    | (PoolRow & { id: string; name: string; ls_project_id: number; maximum_annotations: number | null })
-    | null;
+  const { data: poolRow } = await supabaseAdmin
+    .from("pools")
+    .select(POOL_SELECT)
+    .eq("id", poolId)
+    .maybeSingle();
+  const pool = poolRow as unknown as (PoolRow & { id: string; name: string }) | null;
+  // A pool with no project has nothing to preview.
+  const own = pool ? poolFacts(pool) : null;
 
-  if (!pool) {
+  if (!pool || !own) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
 
-  const own = poolFacts(pool as unknown as PoolRow);
   const raw = (own.evalConfig ?? null) as RawEvalConfig | null;
   const config = normalizeConfig(raw);
 
@@ -95,24 +93,17 @@ export async function GET(
     );
   }
 
-  // Map LS task ids to the client's own case ids; the task id itself is dropped.
+  // Map task numbers to the client's own case ids; the task number itself is dropped.
   const caseIdByTask = new Map<number, string>();
   try {
-    if (own.native && own.projectId) {
-      const { data: items, error: itemsError } = await supabaseAdmin
-        .from("project_items")
-        .select("task_no, content")
-        .eq("project_id", own.projectId);
-      if (itemsError) throw itemsError;
-      for (const item of items ?? []) {
-        const data = renderTaskData(item.content as Record<string, unknown>);
-        caseIdByTask.set(Number(item.task_no), caseIdFor(raw, data) ?? `case-${item.task_no}`);
-      }
-    } else {
-      for (const task of await listTasks(pool.ls_project_id)) {
-        const data = (task.data ?? {}) as Record<string, unknown>;
-        caseIdByTask.set(task.id, caseIdFor(raw, data) ?? `case-${task.id}`);
-      }
+    const { data: items, error: itemsError } = await supabaseAdmin
+      .from("project_items")
+      .select("task_no, content")
+      .eq("project_id", own.projectId);
+    if (itemsError) throw itemsError;
+    for (const item of items ?? []) {
+      const data = renderTaskData(item.content as Record<string, unknown>);
+      caseIdByTask.set(Number(item.task_no), caseIdFor(raw, data) ?? `case-${item.task_no}`);
     }
   } catch (err) {
     console.error("[internal-preview] case store unreachable", err);

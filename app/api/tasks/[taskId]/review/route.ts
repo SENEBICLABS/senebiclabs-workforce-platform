@@ -4,30 +4,18 @@ import { recordPass } from "@/lib/completions";
 import {
   FORBIDDEN,
   POOL_CLOSED,
-  requireEligiblePoolForNativeTask,
   requireEligiblePoolForTask,
   type GatedPool,
 } from "@/lib/gate";
-import { approveReview, isNativeTaskId, TaskStoreError } from "@/lib/taskstore";
+import { approveReview, TaskStoreError } from "@/lib/taskstore";
 import { notifyAnswersRecorded } from "@/lib/health";
-import {
-  createAnnotation,
-  deleteAnnotation,
-  getTask,
-  LabelStudioError,
-} from "@/lib/labelstudio";
 import {
   answersToLsResult,
   normalizeConfig,
   TranslationError,
   type RawEvalConfig,
 } from "@/lib/eval-config";
-import {
-  loadItem,
-  recordApproved,
-  recordRejected,
-  reviewRequired,
-} from "@/lib/review";
+import { loadItem, recordRejected, reviewRequired } from "@/lib/review";
 
 export const dynamic = "force-dynamic";
 
@@ -58,8 +46,8 @@ async function recordReviewerWork(
  * The approval pass on written work.
  *
  * Three outcomes: approve the text as written, edit it and approve the edit, or
- * send it back with a reason. Approving is what publishes — the annotation is
- * created here, so Label Studio holds approved prose and nothing else.
+ * send it back with a reason. Approving is what publishes: the answer of record
+ * is written here, so the task store holds approved prose and nothing else.
  *
  * One approver is enough. Prose cannot be majority-voted, and the delivered
  * value is one clinician's words, never a merge of two.
@@ -93,18 +81,10 @@ export async function POST(
       );
     }
 
-    const native = isNativeTaskId(taskId);
     let pool: GatedPool | null;
     try {
-      if (native) {
-        pool = (await requireEligiblePoolForNativeTask(auth.clinicianId, taskId))?.pool ?? null;
-      } else {
-        const lsTask = await getTask(taskId);
-        const projectId = Number((lsTask as unknown as { project?: number }).project);
-        pool = await requireEligiblePoolForTask(auth.clinicianId, taskId, projectId);
-      }
+      pool = (await requireEligiblePoolForTask(auth.clinicianId, taskId))?.pool ?? null;
     } catch (err) {
-      if (err instanceof LabelStudioError && err.status === 404) return FORBIDDEN();
       console.error(`[review] case store unreachable resolving task ${taskId}`, err);
       return NextResponse.json(
         { error: "We could not reach the case store. Try again in a moment." },
@@ -193,88 +173,40 @@ export async function POST(
       throw err;
     }
 
-    // Native store: publishing, approving, recording the reviewer's pass and
-    // the event for HEALTH are one transaction, and the database re-checks
-    // that the reader is not the author.
-    if (native) {
-      let outcome;
-      try {
-        outcome = await approveReview({
-          reviewItemId: item.id,
-          reviewerId: auth.clinicianId,
-          action: action === "edit" ? "edited" : "approved",
-          finalData,
-          result,
-        });
-      } catch (err) {
-        console.error(
-          `[review] native store write failed for task ${taskId}`,
-          err instanceof TaskStoreError ? err.message : err
-        );
-        return NextResponse.json(
-          { error: "We could not publish this approval. Your decision is not lost — try again." },
-          { status: 500 }
-        );
-      }
-      if (outcome === "not_found") return FORBIDDEN();
-      if (outcome === "closed") return POOL_CLOSED();
-      if (outcome === "own_work") {
-        return NextResponse.json(
-          { error: "You wrote this one, so you cannot review it." },
-          { status: 403 }
-        );
-      }
-      if (outcome !== "approved") {
-        return NextResponse.json({ error: "This case was already reviewed." }, { status: 409 });
-      }
-      after(() => notifyAnswersRecorded());
-      return NextResponse.json({
-        reviewed: true,
-        action: action === "edit" ? "edited" : "approved",
-        state: "approved",
-        final: finalData,
-      });
-    }
-
-    // Publish first, then record — the same order as a single-phase submit, so
-    // a failure leaves the item reviewable rather than silently approved.
-    let annotationId: number;
+    // Publishing, approving, recording the reviewer's pass and the event for
+    // HEALTH are one transaction, and the database re-checks that the reader is
+    // not the author.
+    let outcome;
     try {
-      annotationId = await createAnnotation(taskId, result);
+      outcome = await approveReview({
+        reviewItemId: item.id,
+        reviewerId: auth.clinicianId,
+        action: action === "edit" ? "edited" : "approved",
+        finalData,
+        result,
+      });
     } catch (err) {
-      console.error(`[review] LS write failed for task ${taskId}`, err);
+      console.error(
+        `[review] task store write failed for task ${taskId}`,
+        err instanceof TaskStoreError ? err.message : err
+      );
       return NextResponse.json(
         { error: "We could not publish this approval. Your decision is not lost — try again." },
-        { status: 502 }
+        { status: 500 }
       );
     }
-
-    const recorded = await recordApproved(
-      item.id,
-      auth.clinicianId,
-      action === "edit" ? "edited" : "approved",
-      finalData,
-      annotationId
-    );
-
-    if (!recorded) {
-      // Someone else reviewed it first; withdraw what we just published.
-      try {
-        await deleteAnnotation(annotationId);
-      } catch (rollbackError) {
-        console.error(
-          `[review] ORPHAN annotation ${annotationId} on task ${taskId}`,
-          rollbackError
-        );
-      }
+    if (outcome === "not_found") return FORBIDDEN();
+    if (outcome === "closed") return POOL_CLOSED();
+    if (outcome === "own_work") {
       return NextResponse.json(
-        { error: "This case was already reviewed." },
-        { status: 409 }
+        { error: "You wrote this one, so you cannot review it." },
+        { status: 403 }
       );
     }
-
-    await recordReviewerWork(auth.clinicianId, pool.id, taskId, result);
-
+    if (outcome !== "approved") {
+      return NextResponse.json({ error: "This case was already reviewed." }, { status: 409 });
+    }
+    after(() => notifyAnswersRecorded());
     return NextResponse.json({
       reviewed: true,
       action: action === "edit" ? "edited" : "approved",

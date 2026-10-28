@@ -4,21 +4,12 @@ import { supabaseAdmin } from "@/lib/supabase";
 import {
   FORBIDDEN,
   POOL_CLOSED,
-  requireEligiblePoolForNativeTask,
   requireEligiblePoolForTask,
   type GatedPool,
 } from "@/lib/gate";
-import {
-  createAnnotation,
-  deleteAnnotation,
-  getTask,
-  LabelStudioError,
-  findNextTask,
-  selectNextTask,
-} from "@/lib/labelstudio";
+import { selectNextTask } from "@/lib/availability-rules";
 import {
   getNativeTask,
-  isNativeTaskId,
   nativeTaskStates,
   submitJudgement,
   TaskStoreError,
@@ -45,12 +36,8 @@ export const dynamic = "force-dynamic";
  * The body is a plain { fieldname: value } map — the client knows nothing of
  * the stored shapes.
  *
- * Two stores. On the native task store a judgement is one database call that
- * writes the answer, the completion and the event HEALTH scores from, together
- * or not at all. On Label Studio the order matters: write to LS first, then
- * record the completion. If the LS write fails the request fails and the
- * clinician keeps their answers; if the completion insert fails afterwards, the
- * LS annotation is rolled back so the two never diverge.
+ * A judgement is one database call that writes the answer, the completion and
+ * the event HEALTH scores from, together or not at all.
  */
 export async function POST(
   req: NextRequest,
@@ -79,25 +66,10 @@ export async function POST(
     // The task must belong to a project backing a pool this clinician holds.
     // A store that is merely unreachable must not be reported as a refusal:
     // "not eligible" reads as permanent, and the clinician would stop retrying.
-    const native = isNativeTaskId(taskId);
     let pool: GatedPool | null;
-    let lsTotalAnnotations = 0;
     try {
-      if (native) {
-        pool = (await requireEligiblePoolForNativeTask(auth.clinicianId, taskId))?.pool ?? null;
-      } else {
-        const lsTask = await getTask(taskId);
-        lsTotalAnnotations = lsTask.total_annotations ?? 0;
-        pool = await requireEligiblePoolForTask(
-          auth.clinicianId,
-          taskId,
-          Number((lsTask as unknown as { project?: number }).project)
-        );
-      }
+      pool = (await requireEligiblePoolForTask(auth.clinicianId, taskId))?.pool ?? null;
     } catch (err) {
-      if (err instanceof LabelStudioError && err.status === 404) {
-        return FORBIDDEN();
-      }
       console.error(`[submit] case store unreachable resolving task ${taskId}`, err);
       return NextResponse.json(
         { error: "We could not reach the case store. Your answers are still here — try again in a moment." },
@@ -184,9 +156,9 @@ export async function POST(
     // with, so the claim is re-derived from the same two sources the queue used
     // to offer it.
     //
-    // Nothing is written to Label Studio. A third annotation would be pulled
-    // back as a third reading and re-open the very disagreement this settles,
-    // so the decision goes to HEALTH as the case's final answer instead.
+    // Nothing is written to the task store. A third answer would be read back
+    // as a third reading and re-open the very disagreement this settles, so the
+    // decision goes to HEALTH as the case's final answer instead.
     //
     // The senior was never shown the earlier readings. They judged the case as
     // their own work, and the comparison below happens after the fact, so a
@@ -280,8 +252,8 @@ export async function POST(
     }
 
     // Written work is not published on submission. The draft is held until a
-    // second clinician approves it, so an unapproved answer never reaches Label
-    // Studio and never reaches whatever consumes that project's webhook.
+    // second clinician approves it, so an unapproved answer never reaches the
+    // task store and never reaches whatever consumes that project's webhook.
     if (reviewRequired(raw)) {
       const claimed = await recordAuthored(
         pool.id,
@@ -326,140 +298,12 @@ export async function POST(
       });
     }
 
-    if (native) {
-      return recordNativeJudgement(auth.clinicianId, pool, taskId, result, answers, raw);
-    }
-
-    // The overlap ceiling was last checked when this task was served, which may
-    // have been minutes ago and before other clinicians submitted. Re-check it
-    // against the task we just fetched: the client commissioned a fixed number
-    // of reviews per case and must not be billed for more.
-    if (
-      pool.maxAnnotations !== null &&
-      lsTotalAnnotations >= pool.maxAnnotations
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "This case has already been reviewed by enough clinicians. Nothing was lost — the next case is ready.",
-        },
-        { status: 409 }
-      );
-    }
-
-    // 1. Write to LS.
-    let annotationId: number;
-    try {
-      annotationId = await createAnnotation(taskId, result);
-    } catch (err) {
-      console.error(`[submit] LS write failed for task ${taskId}`, err);
-      return NextResponse.json(
-        { error: "We could not save your review. Your answers are still here." },
-        { status: 502 }
-      );
-    }
-
-    // 2. Record the completion. On failure, undo the LS write.
-    //
-    // claim_task_slot (migration 002) counts and inserts under a row lock, so
-    // concurrent clinicians cannot each pass the ceiling check and overshoot the
-    // reviews the client commissioned. Where the function is not yet installed
-    // this falls back to a plain insert, which is idempotent but can overshoot.
-    const claim = await supabaseAdmin.rpc("claim_task_slot", {
-      p_clinician_id: auth.clinicianId,
-      p_pool_id: pool.id,
-      p_ls_task_id: taskId,
-      p_annotation_data: result,
-    });
-
-    let insertError = claim.error;
-
-    // Which path decided this submit — atomic claim, or the degraded fallback.
-    console.log(
-      `[submit] task ${taskId} claim_task_slot → ${
-        claim.error ? `error ${claim.error.code}` : claim.data
-      }`
-    );
-
-    if (claim.error) {
-      const missing =
-        claim.error.code === "PGRST202" ||
-        /claim_task_slot/i.test(claim.error.message ?? "");
-      if (missing) {
-        console.warn(
-          "[submit] claim_task_slot missing — run migration 002; overlap is not atomic"
-        );
-        const fallback = await supabaseAdmin.from("task_completions").insert({
-          clinician_id: auth.clinicianId,
-          pool_id: pool.id,
-          ls_task_id: taskId,
-          annotation_data: result,
-          kind: "judgement",
-        });
-        insertError = fallback.error;
-      }
-    } else if (claim.data === "full" || claim.data === "already") {
-      // Someone else took the slot between serving and submitting; the
-      // annotation we just wrote has to come back out.
-      try {
-        await deleteAnnotation(annotationId);
-      } catch (rollbackError) {
-        console.error(
-          `[submit] ORPHAN annotation ${annotationId} on task ${taskId}`,
-          rollbackError
-        );
-      }
-      return NextResponse.json(
-        {
-          error:
-            claim.data === "already"
-              ? "You have already reviewed this case."
-              : "This case has already been reviewed by enough clinicians. Nothing was lost — the next case is ready.",
-        },
-        { status: 409 }
-      );
-    }
-
-    if (insertError) {
-      // The annotation is already in LS, so it must come back out — including
-      // on 23505. That code means a concurrent request won the race and has
-      // already recorded this completion, which makes ours the duplicate.
-      try {
-        await deleteAnnotation(annotationId);
-      } catch (rollbackError) {
-        // Left for the reconcile endpoint to sweep up.
-        console.error(
-          `[submit] ORPHAN annotation ${annotationId} on task ${taskId}`,
-          rollbackError
-        );
-      }
-
-      if (insertError.code === "23505") {
-        return NextResponse.json(
-          { error: "You have already reviewed this case." },
-          { status: 409 }
-        );
-      }
-
-      console.error(`[submit] completion insert failed for ${taskId}`, insertError);
-      return NextResponse.json(
-        { error: "We could not save your review. Your answers are still here." },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      recorded: true,
-      next: await nextTaskFor(auth.clinicianId, pool, raw),
-    });
+    return recordJudgement(auth.clinicianId, pool, taskId, result, answers, raw);
   });
 }
 
-/**
- * What each outcome of a native judgement means to the clinician. The wording
- * matches the Label Studio path's, so the store is invisible to them.
- */
-const NATIVE_REFUSALS: Record<Exclude<SubmitOutcome, "claimed" | "not_found" | "closed">, [number, string]> = {
+/** What each outcome of a judgement means to the clinician. */
+const REFUSALS: Record<Exclude<SubmitOutcome, "claimed" | "not_found" | "closed">, [number, string]> = {
   already: [409, "You have already reviewed this case."],
   full: [409, "This case has already been reviewed by enough clinicians. Nothing was lost — the next case is ready."],
   settled: [409, "This case has already been settled by a senior clinician."],
@@ -468,7 +312,7 @@ const NATIVE_REFUSALS: Record<Exclude<SubmitOutcome, "claimed" | "not_found" | "
   invalid: [422, "Complete at least one field before submitting."],
 };
 
-async function recordNativeJudgement(
+async function recordJudgement(
   clinicianId: string,
   pool: GatedPool,
   taskNo: number,
@@ -481,7 +325,7 @@ async function recordNativeJudgement(
     outcome = await submitJudgement({ clinicianId, poolId: pool.id, taskNo, result, answers });
   } catch (err) {
     console.error(
-      `[submit] native store write failed for task ${taskNo}`,
+      `[submit] task store write failed for task ${taskNo}`,
       err instanceof TaskStoreError ? err.message : err
     );
     return NextResponse.json(
@@ -493,7 +337,7 @@ async function recordNativeJudgement(
   if (outcome === "not_found") return FORBIDDEN();
   if (outcome === "closed") return POOL_CLOSED();
   if (outcome !== "claimed") {
-    const [status, error] = NATIVE_REFUSALS[outcome];
+    const [status, error] = REFUSALS[outcome];
     return NextResponse.json({ error }, { status });
   }
 
@@ -541,23 +385,12 @@ async function nextTaskFor(
   let taskId: number;
   let data: Record<string, unknown>;
   try {
-    if (pool.native && pool.projectId) {
-      const states = await nativeTaskStates(pool.projectId);
-      const pick = selectNextTask(
-        states.map((s) => ({ ...s, data: {} })),
-        seen,
-        pool.maxAnnotations
-      );
-      const task = pick ? await getNativeTask(pick.id) : null;
-      if (!task) return null;
-      taskId = task.id;
-      data = task.data;
-    } else {
-      const task = await findNextTask(pool.lsProjectId, seen, pool.maxAnnotations);
-      if (!task) return null;
-      taskId = task.id;
-      data = (task.data ?? {}) as Record<string, unknown>;
-    }
+    const states = await nativeTaskStates(pool.projectId);
+    const pick = selectNextTask(states, seen, pool.maxAnnotations);
+    const task = pick ? await getNativeTask(pick.id) : null;
+    if (!task) return null;
+    taskId = task.id;
+    data = task.data;
   } catch {
     return null;
   }
@@ -574,7 +407,7 @@ async function nextTaskFor(
       fields: config.fields,
       classes: config.classes,
     },
-    // No + 1 here. This runs after claim_task_slot has inserted the completion,
+    // No + 1 here. This runs after the judgement has inserted the completion,
     // so the row just written is already in this count; adding one made the
     // number the clinician sees jump by two on their first submit and stay one
     // too high for the rest of the sitting, correcting itself only on a reload.

@@ -4,21 +4,18 @@ import { supabaseAdmin } from "@/lib/supabase";
 import {
   FORBIDDEN,
   POOL_CLOSED,
-  requireEligiblePoolForNativeTask,
   requireEligiblePoolForTask,
   type GatedPool,
 } from "@/lib/gate";
-import { isNativeTaskId } from "@/lib/taskstore";
-import { getTask, LabelStudioError } from "@/lib/labelstudio";
 import { recordPass } from "@/lib/completions";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Skips a case without writing an annotation.
+ * Skips a case without writing an answer.
  *
  * Flagging is the escape hatch for a case a clinician cannot judge — it must
- * never produce a guess in Label Studio, so nothing is written there.
+ * never produce a guess, so nothing is written to the task store.
  *
  * Two rows, for two different purposes. task_flags is the routing fact: do not
  * serve this case to this clinician again. task_completions is the record of
@@ -47,20 +44,8 @@ export async function POST(
 
     let pool: GatedPool | null;
     try {
-      if (isNativeTaskId(taskId)) {
-        pool = (await requireEligiblePoolForNativeTask(auth.clinicianId, taskId))?.pool ?? null;
-      } else {
-        const lsTask = await getTask(taskId);
-        pool = await requireEligiblePoolForTask(
-          auth.clinicianId,
-          taskId,
-          Number((lsTask as unknown as { project?: number }).project)
-        );
-      }
+      pool = (await requireEligiblePoolForTask(auth.clinicianId, taskId))?.pool ?? null;
     } catch (err) {
-      if (err instanceof LabelStudioError && err.status === 404) {
-        return FORBIDDEN();
-      }
       console.error(`[flag] case store unreachable resolving task ${taskId}`, err);
       return NextResponse.json(
         { error: "We could not reach the case store. Try again in a moment." },

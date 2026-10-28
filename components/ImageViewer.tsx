@@ -6,8 +6,7 @@ import { RotateCw, ZoomIn, ZoomOut, Maximize } from "lucide-react";
 /**
  * A case's image, to be read rather than glanced at.
  *
- * Zoom and rotate are what a reader of a scan reaches for first, and they were
- * what the old Label Studio viewer offered. Zooming enlarges the image inside a
+ * Zoom and rotate are what a reader of a scan reaches for first. Zooming enlarges the image inside a
  * scrolling frame, so a zoomed scan is panned with the scrollbars, the keyboard
  * or a finger, with no gesture to learn. Every control is a labelled button.
  *

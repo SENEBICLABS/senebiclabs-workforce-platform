@@ -4,12 +4,9 @@ import { supabaseAdmin } from "@/lib/supabase";
 import {
   FORBIDDEN,
   POOL_CLOSED,
-  requireEligiblePoolForNativeTask,
   requireEligiblePoolForTask,
   type GatedPool,
 } from "@/lib/gate";
-import { getTask, LabelStudioError } from "@/lib/labelstudio";
-import { isNativeTaskId } from "@/lib/taskstore";
 import { isImageTask, type RawEvalConfig } from "@/lib/eval-config";
 import { IMAGE_BUCKET, resolveImageSource } from "@/lib/media";
 
@@ -44,27 +41,15 @@ export async function GET(
     let stored: unknown;
     let data: Record<string, unknown>;
     try {
-      if (isNativeTaskId(taskId)) {
-        const found = await requireEligiblePoolForNativeTask(auth.clinicianId, taskId);
-        pool = found?.pool ?? null;
-        // The stored value, not the rendered one. HEALTH records our own bucket's
-        // object key beside the image (`_image_key`, never sent to a browser), so a
-        // fresh link is signed from the key itself rather than from a URL whose
-        // weeks-long signature may since have expired.
-        stored = found?.task.content._image_key ?? found?.task.content.image;
-        data = found?.task.data ?? {};
-      } else {
-        const lsTask = await getTask(taskId);
-        pool = await requireEligiblePoolForTask(
-          auth.clinicianId,
-          taskId,
-          Number((lsTask as unknown as { project?: number }).project)
-        );
-        data = (lsTask.data ?? {}) as Record<string, unknown>;
-        stored = data.image;
-      }
+      const found = await requireEligiblePoolForTask(auth.clinicianId, taskId);
+      pool = found?.pool ?? null;
+      // The stored value, not the rendered one. HEALTH records our own bucket's
+      // object key beside the image (`_image_key`, never sent to a browser), so a
+      // fresh link is signed from the key itself rather than from a URL whose
+      // weeks-long signature may since have expired.
+      stored = found?.task.content._image_key ?? found?.task.content.image;
+      data = found?.task.data ?? {};
     } catch (err) {
-      if (err instanceof LabelStudioError && err.status === 404) return FORBIDDEN();
       console.error(`[media] case store unreachable for task ${taskId}`, err);
       return NextResponse.json(
         { error: "We could not reach the case store. Try again in a moment." },

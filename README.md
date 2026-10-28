@@ -1,13 +1,13 @@
 # Senebiclabs Workforce Platform
 
-A clinician-facing task review platform for licensed medical professionals. Built with Next.js 14, Supabase, and Label Studio.
+A clinician-facing task review platform for licensed medical professionals. Built with Next.js and Supabase. See ARCHITECTURE.md for how it fits with the HEALTH backend.
 
 ## Architecture
 
 - **Frontend:** Next.js 14 (App Router), React 19, TailwindCSS
 - **Backend:** Next.js API routes (server-side)
 - **Database:** Supabase (Postgres)
-- **Task Canvas:** @humansignal/label-studio
+- **Tasks:** HEALTH's task store, in the shared database (`lib/taskstore.ts`)
 - **Auth:** Passwordless magic links (JWT-based)
 
 ## Prerequisites
@@ -33,8 +33,6 @@ Required env vars:
 - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anon key
 - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key
-- `LABEL_STUDIO_API_URL` - Label Studio API URL (e.g., https://annotate.senebiclabs.com)
-- `LABEL_STUDIO_API_TOKEN` - Label Studio API token
 - `MAGIC_LINK_SECRET` - Secret for signing magic links (generate a random string)
 - `JWT_SECRET` - Secret for signing JWTs (generate a random string)
 
@@ -81,13 +79,13 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - **Confidentiality Gate:** All endpoints verify clinician eligibility server-side
 - **Session Tokens:** JWT-based sessions stored in httpOnly cookies
 - **Task Gating:** Clinicians can only see tasks from eligible pools they haven't completed
-- **Label Studio Integration:** All LS API calls go through backend (clinician never sees LS directly)
+- **Task Store:** All task reads and answer writes happen server-side; a clinician never reaches the database directly
 
 ## Database Schema
 
 See `database.sql` for full schema. Key tables:
 - `clinicians` - User accounts
-- `pools` - Task categories (maps to LS projects)
+- `pools` - Task categories (each serves one HEALTH project)
 - `pool_eligibility` - Access control (THE CONFIDENTIALITY GATE)
 - `calibration_attempts` - Qualification scores
 - `task_completions` - Audit trail
@@ -97,7 +95,6 @@ See `database.sql` for full schema. Key tables:
 
 1. Set up Supabase database
 2. Add env vars
-3. Integrate Label Studio widget in `/app/tasks/page.tsx`
 4. Add email service for magic links (currently logged to console)
 5. Add pool data and calibration items to database
 6. Test end-to-end flow

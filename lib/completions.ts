@@ -43,9 +43,8 @@ export type PassKind = (typeof PASS_KINDS)[number];
  * — a senior reads the case and decides it — but it is a second pass over a
  * case already read to its ceiling, and every consumer of this list treats one
  * entry as one case read once. Counting it would make a pool look further
- * through than it is, and would show reconcile a completion with no Label
- * Studio annotation behind it, because a senior's decision goes to HEALTH
- * rather than to Label Studio. It is counted as its own kind on the work
+ * through than it is, and a senior's decision goes to HEALTH as the case's
+ * final answer rather than into the task store as a reading. It is counted as its own kind on the work
  * record, which is where a clinician looks for what they are owed.
  */
 export const READING_KINDS: PassKind[] = ["judgement", "authoring", "review"];

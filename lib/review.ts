@@ -9,8 +9,9 @@ import type { RawEvalConfig } from "./eval-config";
  * delivered verbatim — never merged with another version, because two good
  * answers to the same prompt are not votes.
  *
- * Drafts live here, not in Label Studio. An annotation is written when a
- * reviewer approves, so a project's webhook only ever delivers approved prose.
+ * Drafts live here, apart from the answers of record. An answer is written
+ * when a reviewer approves (lib/taskstore approveReview), so a project's
+ * webhook only ever delivers approved prose.
  */
 
 export type ReviewState =
@@ -139,32 +140,6 @@ export async function recordAuthored(
   // 23505 means someone inserted first; theirs stands.
   if (error) return { ok: false, reason: "taken" };
   return { ok: true, item: data as ReviewItem };
-}
-
-/** Marks an item approved, with the value that will be delivered. */
-export async function recordApproved(
-  itemId: string,
-  reviewerId: string,
-  action: "approved" | "edited",
-  finalData: Record<string, unknown>,
-  annotationId: number
-): Promise<boolean> {
-  const { data } = await supabaseAdmin
-    .from("review_items")
-    .update({
-      state: "approved",
-      reviewer_id: reviewerId,
-      reviewed_at: new Date().toISOString(),
-      review_action: action,
-      final_data: finalData,
-      ls_annotation_id: annotationId,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", itemId)
-    .eq("state", "needs_review")
-    .select("id");
-
-  return (data?.length ?? 0) > 0;
 }
 
 /**

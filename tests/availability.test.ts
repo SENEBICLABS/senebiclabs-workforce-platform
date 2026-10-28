@@ -59,7 +59,7 @@ describe("an ordinary pool", () => {
     expect(decision.next).toEqual({ kind: "task", lsTaskId: 2 });
   });
 
-  it("does not offer a case Label Studio considers finished", () => {
+  it("does not offer a case already marked finished", () => {
     expect(ask({ tasks: [task(1, 0, true), task(2)] }).available).toBe(1);
   });
 

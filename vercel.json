@@ -21,9 +21,6 @@
     "app/api/pools/route.ts": {
       "maxDuration": 30
     },
-    "app/api/tasks/reconcile/route.ts": {
-      "maxDuration": 300
-    },
     "app/api/internal/preview/[poolId]/route.ts": {
       "maxDuration": 300
     }

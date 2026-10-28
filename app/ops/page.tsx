@@ -92,7 +92,7 @@ interface Clinician {
   reviews: number; flags: number; flag_rate: number | null; pools: number;
 }
 interface Pool {
-  id: string; name: string; ls_project_id: number; purpose: string;
+  id: string; name: string; project_id: string | null; purpose: string;
   review_required: boolean; open_access: boolean; closed_at: string | null; items: number | null;
   reviewed: number; eligible_clinicians: number; senior_clinicians: number;
 }
@@ -452,7 +452,9 @@ export default function OpsConsole() {
             {pools.map((p) => (
               <tr key={p.id} className={rowLine}>
                 <td className={`${cell} min-w-[190px] font-medium text-ink`}>{p.name}</td>
-                <td className={`${cell} tnum`}>{p.ls_project_id}</td>
+                <td className={`${cell} tnum`} title={p.project_id ?? "No project: nothing is served"}>
+                  {p.project_id ? p.project_id.slice(0, 8) : "—"}
+                </td>
                 <td className={`${cell} capitalize`}>{p.purpose}</td>
                 <td className={`${cell}`}>{p.review_required ? "two-phase" : "—"}</td>
                 <td className={`${cell} tnum`}>{p.items ?? "—"}</td>

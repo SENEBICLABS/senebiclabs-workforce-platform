@@ -3,9 +3,8 @@ import { withOps } from "@/lib/ops-auth";
 import { supabaseAdmin } from "@/lib/supabase";
 import { closedPools } from "@/lib/pool-closure";
 import { READINGS_ONLY } from "@/lib/completions";
-import { countTasks } from "@/lib/labelstudio";
 import { countNativeTasks } from "@/lib/taskstore";
-import { poolFacts, withPoolColumns, type PoolRow } from "@/lib/gate";
+import { POOL_SELECT, poolFacts, type PoolRow } from "@/lib/gate";
 import { normalizeConfig, type RawEvalConfig } from "@/lib/eval-config";
 import { reviewRequired } from "@/lib/review";
 
@@ -16,9 +15,7 @@ export async function GET(req: NextRequest) {
   return withOps(req, async () => {
     const [{ data: poolRows }, { data: completions }, { data: eligibility }] =
       await Promise.all([
-        withPoolColumns((pools) =>
-          supabaseAdmin.from("pools").select(`${pools}, open_access`).order("name")
-        ),
+        supabaseAdmin.from("pools").select(`${POOL_SELECT}, open_access`).order("name"),
         supabaseAdmin.from("task_completions").select("pool_id").in("kind", READINGS_ONLY),
         supabaseAdmin.from("pool_eligibility").select("pool_id, eligible, senior"),
       ]);
@@ -42,29 +39,25 @@ export async function GET(req: NextRequest) {
 
     const closed = await closedPools();
 
-    // The select is chosen at run time (see withPoolColumns), so its row type is stated here.
     const pools = (poolRows ?? []) as unknown as (PoolRow & {
       id: string;
       name: string;
-      ls_project_id: number;
       open_access?: boolean;
     })[];
 
     const rows = await Promise.all(
       pools.map(async (p) => {
-        // On the native store a pool's config and ceiling are its project's.
+        // A pool's config and ceiling are its project's. A pool with no project
+        // serves nothing, and is still listed so an operator can see it.
         const own = poolFacts(p as unknown as PoolRow);
-        const raw = (own.evalConfig ?? null) as RawEvalConfig | null;
+        const raw = (own?.evalConfig ?? null) as RawEvalConfig | null;
         const config = normalizeConfig(raw);
 
-        // A pool whose project is unreachable is still listed, with items null
+        // A pool whose tasks cannot be read is still listed, with items null
         // rather than a made-up number.
         let items: number | null = null;
         try {
-          items =
-            own.native && own.projectId
-              ? await countNativeTasks(own.projectId)
-              : await countTasks(Number(p.ls_project_id));
+          items = own ? await countNativeTasks(own.projectId) : null;
         } catch {
           items = null;
         }
@@ -72,14 +65,12 @@ export async function GET(req: NextRequest) {
         return {
           id: p.id,
           name: p.name,
-          ls_project_id: p.ls_project_id,
           purpose: config.purpose,
           review_required: reviewRequired(raw),
           open_access: p.open_access === true,
           closed_at: closed.get(String(p.id)) ?? null,
-          max_annotations: own.maxAnnotations,
-          task_store: own.native ? "native" : "label_studio",
-          project_id: own.projectId,
+          max_annotations: own?.maxAnnotations ?? null,
+          project_id: own?.projectId ?? null,
           items,
           reviewed: reviewed.get(p.id) ?? 0,
           eligible_clinicians: eligible.get(p.id) ?? 0,

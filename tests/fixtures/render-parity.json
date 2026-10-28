@@ -1,5 +1,5 @@
 {
-  "_generated_by": "HEALTH app/services/labelstudio.py render_value; regenerate if that function changes",
+  "_generated_by": "HEALTH app/services/render.py render_value; regenerate if that function changes",
   "cases": [
     {
       "input": "plain text",

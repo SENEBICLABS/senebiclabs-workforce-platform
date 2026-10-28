@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
 import { supabaseAdmin } from "@/lib/supabase";
 import { availabilityFor, type PoolFacts } from "@/lib/availability";
-import { poolFacts, withPoolColumns, type PoolRow } from "@/lib/gate";
+import { POOL_SELECT, poolFacts, type PoolRow } from "@/lib/gate";
 import { closedPools } from "@/lib/pool-closure";
 import { normalizeConfig, type RawEvalConfig } from "@/lib/eval-config";
 
@@ -26,13 +26,10 @@ export const dynamic = "force-dynamic";
  * what was actually on offer. One computation now serves both.
  *
  * It costs. This route made no upstream call at all and answered in about half
- * a second; it now reads the project's task states from Label Studio and the
- * held list from HEALTH, each around 1.3s, in parallel across pools, so a cold
- * instance answers in about 4s and a warm one in about 1s. That is the price of
- * the number being true, and the half-second version was fast because it was
- * answering an easier question wrongly. The task states are cached for 30s and
- * dropped on any annotation write, which covers the common case of a clinician
- * working through a pool and watching their own count fall.
+ * a second; it now reads the project's task states and the held list from
+ * HEALTH, in parallel across pools. That is the price of the number being true,
+ * and the half-second version was fast because it was answering an easier
+ * question wrongly.
  *
  * The count can still go stale between the card rendering and the button being
  * pressed, because cases are claimed competitively and another clinician may
@@ -42,13 +39,11 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   return withAuth(req, async (_req, auth) => {
     const [{ data: rows, error }, closed] = await Promise.all([
-      withPoolColumns((pools) =>
-        supabaseAdmin
-          .from("pool_eligibility")
-          .select(`pool_id, senior, pools!inner(${pools})`)
-          .eq("clinician_id", auth.clinicianId)
-          .eq("eligible", true)
-      ),
+      supabaseAdmin
+        .from("pool_eligibility")
+        .select(`pool_id, senior, pools!inner(${POOL_SELECT})`)
+        .eq("clinician_id", auth.clinicianId)
+        .eq("eligible", true),
       closedPools(),
     ]);
 
@@ -60,27 +55,29 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // A pool with no project has nothing to serve (see poolFacts), so it is not
+    // listed at all.
     const eligible = (rows ?? [])
       .map((row) => row as unknown as { senior?: boolean; pools: PoolRow })
-      .filter((row) => Boolean(row.pools));
+      .flatMap((row) => {
+        const own = row.pools ? poolFacts(row.pools) : null;
+        return own ? [{ ...row, own }] : [];
+      });
 
     if (eligible.length === 0) return NextResponse.json({ pools: [] });
 
     const listed = await Promise.all(
       eligible.map(async (row) => {
-        const pool = row.pools;
-        // On the native store the config and the ceiling are the project's own.
-        const own = poolFacts(pool);
+        const { pools: pool, own } = row;
+        // The config and the ceiling are the project's own.
         const config = normalizeConfig(own.evalConfig as RawEvalConfig | null);
 
         const facts: PoolFacts = {
           id: String(pool.id),
-          lsProjectId: Number(pool.ls_project_id),
           maxAnnotations: own.maxAnnotations,
           evalConfig: own.evalConfig,
           senior: row.senior === true,
           closedAt: closed.get(String(pool.id)) ?? null,
-          native: own.native,
           projectId: own.projectId,
         };
 

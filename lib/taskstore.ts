@@ -5,25 +5,22 @@ import type { TaskState } from "./availability-rules";
 import type { LsResultEntry } from "./eval-config";
 
 /**
- * The native task store: Senebiclabs' own tasks and answers, in the shared
- * database. It replaces Label Studio for pools whose project has moved to it
- * (HEALTH's project_submissions.task_store = 'native').
+ * The task store: Senebiclabs' own tasks and answers, in the shared database.
+ * Every pool's tasks are its HEALTH project's items.
  *
  * Every write is one database function, so an answer, the completion that
  * records the work, and the event that tells HEALTH to score it commit together
- * or not at all. There is nothing to roll back by hand, which is why none of
- * the compensating deletes the Label Studio path needs appear here. The
- * functions and their guarantees are in HEALTH's migrations/005 and are tested
+ * or not at all. There is nothing to roll back by hand. The functions and their guarantees are in HEALTH's migrations/005 and are tested
  * against Postgres in HEALTH's tests/sql.
  *
- * Task numbers start at a billion. Label Studio's ids sit below that, so any
- * route holding only a task id can tell which store it belongs to.
+ * Task numbers start at a billion (HEALTH migration 005 enforces it), so
+ * anything below that is not a task and is answered without a query.
  */
 
-export const NATIVE_TASK_FLOOR = 1_000_000_000;
+export const TASK_NO_FLOOR = 1_000_000_000;
 
-export function isNativeTaskId(id: number): boolean {
-  return Number.isInteger(id) && id >= NATIVE_TASK_FLOOR;
+export function isTaskNumber(id: number): boolean {
+  return Number.isInteger(id) && id >= TASK_NO_FLOOR;
 }
 
 export class TaskStoreError extends Error {
@@ -45,7 +42,7 @@ export interface NativeTask {
 
 /** One task by number, or null if there is no such task. */
 export async function getNativeTask(taskNo: number): Promise<NativeTask | null> {
-  if (!isNativeTaskId(taskNo)) return null;
+  if (!isTaskNumber(taskNo)) return null;
   const { data, error } = await supabaseAdmin
     .from("project_items")
     .select("task_no, project_id, status, content")
