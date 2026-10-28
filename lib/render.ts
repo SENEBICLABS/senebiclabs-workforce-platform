@@ -1,12 +1,11 @@
 /**
  * Item content as a clinician reads it.
  *
- * On Label Studio, HEALTH rendered each task's content before sending it
- * (labelstudio.py `render_value`): a structured value such as an agent trace,
- * sent as a list of steps, became numbered readable text. The native store
- * serves the stored content as it is, so the rendering happens here instead,
- * and must produce exactly the same text, character for character, or the
- * same case would read differently depending on which store served it.
+ * HEALTH renders a task's content as text (app/services/render.py
+ * `render_value`): a structured value such as an agent trace, sent as a list of
+ * steps, becomes numbered readable text. The task store serves the stored
+ * content as it is, so the rendering happens here, and must produce exactly the
+ * same text, character for character, as the text HEALTH reads back and scores.
  * tests/render.test.ts holds it to fixtures generated from the Python.
  *
  * Python's own formatting is reproduced where it shows: json.dumps puts a
@@ -16,7 +15,7 @@
 
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
 
-/** What a step IS comes before what it contains (labelstudio.py _STEP_LEAD_KEYS). */
+/** What a step IS comes before what it contains (render.py _STEP_LEAD_KEYS). */
 const STEP_LEAD_KEYS = ["step", "type", "kind", "role", "action", "tool", "name"];
 
 function stepKeyOrder(step: Record<string, Json>): string[] {
@@ -49,7 +48,7 @@ function oneLine(x: Json): string {
   return x !== null && typeof x === "object" ? pyJsonDumps(x) : pyStr(x);
 }
 
-/** labelstudio.py render_value: lists and objects become text, scalars pass through. */
+/** render.py render_value: lists and objects become text, scalars pass through. */
 export function renderValue(value: unknown): Json {
   const v = value as Json;
   if (Array.isArray(v)) {

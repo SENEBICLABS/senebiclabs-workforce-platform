@@ -254,8 +254,7 @@ export function isVisible(
 
 /**
  * What a field offers. A highlight field's tags are its own `options`, falling
- * back to the classes, as HEALTH builds it (labelstudio.py: `options or
- * classes`). It used to fall straight to the classes, so a highlight field
+ * back to the classes, as HEALTH reads it (`options or classes`). It used to fall straight to the classes, so a highlight field
  * offered the pool's answer categories as error tags, or nothing at all.
  */
 export function optionsFor(field: Field, poolClasses: string[]): string[] {
@@ -300,7 +299,7 @@ export function findingOptionsFor(
 }
 
 /* ------------------------------------------------------------------ */
-/* Answers → Label Studio result. The browser never sees any of this.  */
+/* Answers → stored result. The browser never sees any of this.        */
 /* ------------------------------------------------------------------ */
 
 export interface LsResultEntry {
@@ -314,7 +313,7 @@ const TO_NAME = "image";
 
 /**
  * Upper bound on a free-text answer. Generous for a clinical rationale, but
- * finite — an unbounded string reaches both Label Studio and the client's
+ * finite — an unbounded string reaches both the task store and the client's
  * deliverable, so it is rejected at the door rather than stored.
  */
 export const MAX_TEXT_LENGTH = 20_000;

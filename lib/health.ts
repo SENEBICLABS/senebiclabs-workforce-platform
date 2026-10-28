@@ -137,27 +137,20 @@ async function call<T>(
 const heldCache = new Map<string, { cases: HeldCase[]; known: boolean; at: number }>();
 
 /**
- * Which project's held cases to ask for.
- *
- * A Label Studio pool is addressed by its Label Studio project id, a pool on
- * the native task store by its HEALTH project: HEALTH answers both with the
- * same cases in the same shape (`ls_task_id` carries whichever kind of task id
- * the pool's store issues). A GatedPool satisfies this as it is.
+ * Which project's held cases to ask for: the pool's HEALTH project
+ * (`ls_task_id` in the answer is the task number, under its old name). A
+ * GatedPool satisfies this as it is.
  */
 export interface HeldScope {
-  native: boolean;
-  lsProjectId: number;
-  projectId: string | null;
+  projectId: string;
 }
 
 function heldKey(scope: HeldScope): string {
-  return scope.native ? `project:${scope.projectId}` : `ls:${scope.lsProjectId}`;
+  return `project:${scope.projectId}`;
 }
 
 function heldPath(scope: HeldScope): string {
-  return scope.native
-    ? `/admin/held/project/${encodeURIComponent(String(scope.projectId))}`
-    : `/admin/held/${scope.lsProjectId}`;
+  return `/admin/held/project/${encodeURIComponent(scope.projectId)}`;
 }
 
 /**
@@ -268,7 +261,7 @@ export async function adjudicate(decision: {
 }
 
 /**
- * Tells HEALTH that answers are waiting to be scored on the native task store.
+ * Tells HEALTH that answers are waiting to be scored on the task store.
  *
  * A nudge, not a delivery: the answer and its event are already committed in
  * the database, so if this call is lost nothing is lost with it. HEALTH also

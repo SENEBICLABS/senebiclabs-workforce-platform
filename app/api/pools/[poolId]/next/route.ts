@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
 import { availabilityFor } from "@/lib/availability";
 import { FORBIDDEN, requireEligiblePool } from "@/lib/gate";
-import { getTask } from "@/lib/labelstudio";
 import { getNativeTask } from "@/lib/taskstore";
 import { reviewRequired } from "@/lib/review";
 import {
@@ -18,8 +17,8 @@ export const dynamic = "force-dynamic";
  * The next task in a pool for this clinician.
  *
  * 403 if they are not gated into the pool, 204 once there is nothing left for
- * them. The response carries the task payload and the project's config — never
- * an LS id the client could act on directly, and never an LS URL or token.
+ * them. The response carries the task payload and the project's config, and
+ * nothing the client could use to reach the database directly.
  *
  * What to serve is not decided here. lib/availability decides it, and the pool
  * list reads the same decision to say how many cases are waiting, so a card
@@ -60,22 +59,16 @@ export async function GET(
     const lsTaskId =
       next.kind === "review" ? next.item.ls_task_id : next.lsTaskId;
 
-    // The case itself: from our own database on the native store, from Label
-    // Studio otherwise. Never both, and never one standing in for the other.
     let data: Record<string, unknown>;
     try {
-      if (pool.native) {
-        const task = await getNativeTask(lsTaskId);
-        if (!task || task.projectId !== pool.projectId) {
-          // The availability rule offered a task this pool does not own. Serve
-          // nothing rather than another project's case.
-          console.error(`[next] task ${lsTaskId} is not in pool ${pool.id}'s project`);
-          return new NextResponse(null, { status: 204 });
-        }
-        data = task.data;
-      } else {
-        data = ((await getTask(lsTaskId)).data ?? {}) as Record<string, unknown>;
+      const task = await getNativeTask(lsTaskId);
+      if (!task || task.projectId !== pool.projectId) {
+        // The availability rule offered a task this pool does not own. Serve
+        // nothing rather than another project's case.
+        console.error(`[next] task ${lsTaskId} is not in pool ${pool.id}'s project`);
+        return new NextResponse(null, { status: 204 });
       }
+      data = task.data;
     } catch (err) {
       console.error(`[next] case store unreachable for task ${lsTaskId}`, err);
       return NextResponse.json(

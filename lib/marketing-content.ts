@@ -200,8 +200,8 @@ export const WORK_TASKS: WorkTask[] = [
  *
  * The flag claim is gone for a different reason. "A flagged case pays what a
  * completed one pays" was false when flagging wrote no record of work at all;
- * flagging now writes one, of kind "flag", in the same table as a judgement,
- * and scripts/verify-completion-kinds.mjs proves it. But a published parity
+ * flagging now writes one, of kind "flag", in the same table as a judgement.
+ * But a published parity
  * guarantee is not the same promise as a recorded pass: it prices every flag in
  * advance, and the clinician it pays best is the one who flags everything. What
  * the copy asks for instead is the honest flag, which is what we actually want
@@ -213,11 +213,12 @@ export const WORK_TASKS: WorkTask[] = [
  * escape hatch it is or as the cheaper path.
  *
  * What is left is checkable. Being recorded for the pass rather than the
- * outcome is proven by scripts/verify-reviewer-pay.mjs. Choosing your own pools
+ * outcome is what app/api/tasks/[taskId]/review records: every review pass,
+ * approve and send-back alike. Choosing your own pools
  * and hours is agreement term 1. Working to the rubric supplied with a pool is
  * term 2. Seeing only the pools you were invited to is enforced server-side on
- * every request. No clinician identity reaches Label Studio, and so none
- * reaches a client.
+ * every request. Clinician identity stays internal: HEALTH strips it from
+ * everything a client receives.
  */
 export interface WhyJoin {
   title: string;

@@ -2,7 +2,6 @@ import "server-only";
 import { supabaseAdmin } from "./supabase";
 import { READINGS_ONLY } from "./completions";
 import { heldSnapshot } from "./health";
-import { taskStates } from "./labelstudio";
 import { nativeTaskStates } from "./taskstore";
 import {
   claimedTaskIds,
@@ -26,10 +25,10 @@ export type PoolAvailability = Omit<Availability<ReviewItem>, "available" | "rem
   /**
    * Cases this clinician could be served, or null when it could not be read.
    *
-   * Null is not zero and must never be shown as one. Label Studio is a separate
-   * service, and when it cannot be reached the honest answer is that we do not
-   * know what is left — telling a clinician "no cases available" would send
-   * them away from a pool that is full of work.
+   * Null is not zero and must never be shown as one. When the task store
+   * cannot be read the honest answer is that we do not know what is left —
+   * telling a clinician "no cases available" would send them away from a pool
+   * that is full of work.
    */
   available: number | null;
   remaining: number | null;
@@ -42,14 +41,11 @@ export type PoolAvailability = Omit<Availability<ReviewItem>, "available" | "rem
 /** A pool's own facts, whether or not a clinician is in the picture. */
 export interface PoolFacts {
   id: string;
-  lsProjectId: number;
   maxAnnotations: number | null;
   evalConfig: Record<string, unknown> | null;
   senior: boolean;
   closedAt: string | null;
-  /** On the native task store: tasks are read from the database, never from Label Studio. */
-  native: boolean;
-  projectId: string | null;
+  projectId: string;
 }
 
 /**
@@ -93,8 +89,7 @@ async function ownedBy(clinicianId: string, poolId: string) {
  * settle a disagreement they are part of, and the only record of who read what
  * is this table: HEALTH sends the earlier answers with no author, deliberately,
  * so it cannot be asked and must not be inferred. A case is a case whichever
- * pool row served it, because two pool rows can point at one Label Studio
- * project, and the database already takes that view — claim_task_slot matches
+ * pool row served it, and the database already takes that view — claim_task_slot matches
  * on (clinician, task) with no pool in it, and one adjudication per case is
  * unique on the task alone.
  *
@@ -135,13 +130,10 @@ export async function availabilityFor(
   const raw = pool.evalConfig as RawEvalConfig | null;
   const authored = reviewRequired(raw);
 
-  // The clinician's own passes come from our database and are not allowed to
-  // fail quietly; the project's task states come from Label Studio and are.
+  // The clinician's own passes are not allowed to fail quietly; the project's
+  // task states are, and are reported as unknown rather than as none.
   const [tasks, owned, held] = await Promise.all([
-    (pool.native && pool.projectId
-      ? nativeTaskStates(pool.projectId)
-      : taskStates(pool.lsProjectId)
-    ).catch((err) => {
+    nativeTaskStates(pool.projectId).catch((err) => {
       console.error(`[availability] could not read tasks for pool ${pool.id}`, err);
       return null;
     }),
@@ -154,8 +146,8 @@ export async function availabilityFor(
       available: null,
       remaining: null,
       degraded: true,
-      // Delivered is a fact we hold ourselves, so it survives Label Studio
-      // being unreachable. "Finished" is a count, and counts are gone.
+      // Delivered is a fact we hold separately, so it survives the task states
+      // being unreadable. "Finished" is a count, and counts are gone.
       closed: pool.closedAt !== null,
       next: null,
       completed: owned.completed,

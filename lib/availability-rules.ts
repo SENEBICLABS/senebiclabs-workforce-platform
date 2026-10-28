@@ -2,7 +2,7 @@
  * What a pool has for one clinician, decided once.
  *
  * This exists because there were two answers to that question and they
- * disagreed. The pool list counted tasks in the Label Studio project; the queue
+ * disagreed. The pool list counted every task in the project; the queue
  * found out by asking for the next case. A clinician who had worked a pool to
  * the end saw a card reading "in progress" with a button that led straight to
  * "you're all caught up", because the card came from a pool total and the
@@ -100,6 +100,23 @@ function onOffer(task: TaskState, maxAnnotations: number | null): boolean {
     return false;
   }
   return true;
+}
+
+/**
+ * The next case for a clinician who is not being served a review or a held
+ * case: the lowest-numbered case on offer that they have not judged or flagged,
+ * so a pool is worked front-to-back and overlap fills evenly.
+ */
+export function selectNextTask<Task extends TaskState>(
+  tasks: Task[],
+  excludeTaskIds: Set<number>,
+  maxAnnotations: number | null
+): Task | null {
+  const available = tasks.filter(
+    (task) => !excludeTaskIds.has(task.id) && onOffer(task, maxAnnotations)
+  );
+  available.sort((a, b) => a.id - b.id);
+  return available[0] ?? null;
 }
 
 export function decideAvailability<Item extends ReviewableItem>(

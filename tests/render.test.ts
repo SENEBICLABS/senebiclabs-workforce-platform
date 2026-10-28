@@ -3,10 +3,9 @@ import fixture from "./fixtures/render-parity.json";
 import { renderTaskData, renderValue } from "../lib/render";
 
 /**
- * The native store must show a case exactly as Label Studio showed it, and
- * Label Studio showed what HEALTH's render_value produced. The fixture is that
- * function's own output (see its _generated_by note), so this compares against
- * the Python, not against a guess at it.
+ * The task store must show a case exactly as HEALTH's render_value renders
+ * it. The fixture is that function's own output (see its _generated_by note),
+ * so this compares against the Python, not against a guess at it.
  */
 describe("renderValue matches HEALTH's render_value", () => {
   for (const [i, c] of fixture.cases.entries()) {

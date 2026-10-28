@@ -11,11 +11,9 @@
  * for one case, with no way to say which was the answer.
  *
  * The guard is a unique index on the case, and this exercises it directly: no
- * Label Studio, no HEALTH, a pool invented for the purpose and task ids that
- * exist nowhere. That is also why it still runs while there is no webhook-free
- * sandbox.
+ * HEALTH, a pool invented for the purpose and task ids that exist nowhere.
  */
-import { loadEnv } from "./sandbox.mjs";
+import { loadEnv } from "./env.mjs";
 
 const env = loadEnv();
 const SB = `${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1`;
@@ -65,7 +63,7 @@ const [pool] = await (await q("pools", {
   headers: { ...H, Prefer: "return=representation" },
   body: JSON.stringify({
     name: `TEMP — adjudication pass ${stamp}`,
-    ls_project_id: 998000 + Number(stamp.slice(-3)),
+    ls_project_id: 0,                    // required by the table, unused
     open_access: false,
     maximum_annotations: 2,
     calibration_items: 0,

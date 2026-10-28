@@ -13,15 +13,9 @@ import {
   TranslationError,
   type RawEvalConfig,
 } from "../lib/eval-config";
-import {
-  ceilingFrom,
-  clinicianConfig,
-  LEGACY_POOL_SELECT,
-  POOL_SELECT,
-  poolFacts,
-  withPoolColumns,
-} from "../lib/gate";
-import { isNativeTaskId, NATIVE_TASK_FLOOR } from "../lib/taskstore";
+import { ceilingFrom, clinicianConfig, POOL_SELECT, poolFacts } from "../lib/gate";
+import { selectNextTask, type TaskState } from "../lib/availability-rules";
+import { isTaskNumber, TASK_NO_FLOOR } from "../lib/taskstore";
 
 /**
  * The parts of the native task store that are decisions rather than database
@@ -166,35 +160,33 @@ describe("which config and ceiling a pool runs on", () => {
     _ingest_keys: ["k"],
   };
 
-  it("a native pool reads its project's config and ceiling, not its own copy", () => {
+  it("a pool reads its project's config and ceiling, not its own copy", () => {
     const facts = poolFacts({
       id: "p",
       project_id: "proj",
       eval_config: { reviewers_per_item: 9, schema: { fields: { stale: { type: "text" } } } },
       maximum_annotations: 9,
-      project: { task_store: "native", eval_config: projectConfig },
+      project: { eval_config: projectConfig },
     });
-    expect(facts.native).toBe(true);
-    expect(facts.maxAnnotations).toBe(3);
-    expect(facts.evalConfig).toEqual({ reviewers_per_item: 3, schema: { fields: {} } });
+    expect(facts?.projectId).toBe("proj");
+    expect(facts?.maxAnnotations).toBe(3);
+    expect(facts?.evalConfig).toEqual({ reviewers_per_item: 3, schema: { fields: {} } });
   });
 
   it("never lets a project's internal keys, the webhook secret among them, through", () => {
     expect(JSON.stringify(clinicianConfig(projectConfig))).not.toContain("s3cret");
-    const lsPool = poolFacts({ id: "p", eval_config: projectConfig, maximum_annotations: 2 });
-    expect(JSON.stringify(lsPool.evalConfig)).not.toContain("s3cret");
+    const facts = poolFacts({ id: "p", project_id: "proj", project: { eval_config: projectConfig } });
+    expect(JSON.stringify(facts?.evalConfig)).not.toContain("s3cret");
   });
 
-  it("a Label Studio pool keeps its own config and ceiling", () => {
-    const facts = poolFacts({
-      id: "p",
-      project_id: "proj",
-      eval_config: { reviewers_per_item: 2 },
-      maximum_annotations: 2,
-      project: { task_store: "label_studio", eval_config: projectConfig },
-    });
-    expect(facts.native).toBe(false);
-    expect(facts.maxAnnotations).toBe(2);
+  it("serves nothing from a pool with no project, whatever its own columns say", () => {
+    // A Label Studio leftover: its own config and ceiling are never a reason to serve it.
+    expect(poolFacts({ id: "p", eval_config: { reviewers_per_item: 2 }, maximum_annotations: 2 })).toBeNull();
+    expect(poolFacts({ id: "p", project_id: null, project: { eval_config: projectConfig } })).toBeNull();
+  });
+
+  it("reads neither the Label Studio project id nor the store flag", () => {
+    expect(POOL_SELECT).not.toMatch(/ls_project_id|task_store/);
   });
 
   it.each([
@@ -208,43 +200,30 @@ describe("which config and ceiling a pool runs on", () => {
   });
 });
 
-describe("telling the stores' task ids apart", () => {
-  it("native numbers start where Label Studio's could never reach", () => {
-    expect(isNativeTaskId(NATIVE_TASK_FLOOR)).toBe(true);
-    expect(isNativeTaskId(18204)).toBe(false);
-    expect(isNativeTaskId(1)).toBe(false);
-    expect(isNativeTaskId(1_000_000_000.5)).toBe(false);
+describe("task numbers", () => {
+  it("start at a billion; anything else is not a task", () => {
+    expect(isTaskNumber(TASK_NO_FLOOR)).toBe(true);
+    expect(isTaskNumber(18204)).toBe(false);
+    expect(isTaskNumber(1)).toBe(false);
+    expect(isTaskNumber(1_000_000_000.5)).toBe(false);
   });
 });
 
-describe("deploying before the migrations", () => {
-  it("retries pool queries without the native columns only when the database lacks them", async () => {
-    for (const code of ["42703", "PGRST200", "PGRST204"]) {
-      const seen: string[] = [];
-      const out = await withPoolColumns(async (select) => {
-        seen.push(select);
-        return select === POOL_SELECT
-          ? { data: null, error: { code } }
-          : { data: [{ id: "p" }], error: null };
-      });
-      expect(seen).toEqual([POOL_SELECT, LEGACY_POOL_SELECT]);
-      expect(out.data).toEqual([{ id: "p" }]);
-    }
+describe("the next case after a submit", () => {
+  const t = (id: number, total = 0, labeled = false): TaskState => ({
+    id,
+    total_annotations: total,
+    is_labeled: labeled,
   });
 
-  it("never retries for any other failure, and never hides it", async () => {
-    const seen: string[] = [];
-    const out = await withPoolColumns(async (select) => {
-      seen.push(select);
-      return { data: null, error: { code: "57014" } }; // a timeout, say
-    });
-    expect(seen).toEqual([POOL_SELECT]);
-    expect(out.error).toEqual({ code: "57014" });
+  it("is the lowest-numbered case on offer that this clinician has not seen", () => {
+    const tasks = [t(1_000_000_003), t(1_000_000_001), t(1_000_000_002)];
+    expect(selectNextTask(tasks, new Set([1_000_000_001]), 2)?.id).toBe(1_000_000_002);
   });
 
-  it("serves every pool as a Label Studio pool from the legacy columns", () => {
-    const facts = poolFacts({ id: "p", eval_config: { reviewers_per_item: 2 }, maximum_annotations: 2 });
-    expect(facts.native).toBe(false);
-    expect(facts.projectId).toBeNull();
+  it("skips cases at the ceiling and cases already finished", () => {
+    const tasks = [t(1_000_000_001, 2), t(1_000_000_002, 0, true), t(1_000_000_003, 1)];
+    expect(selectNextTask(tasks, new Set(), 2)?.id).toBe(1_000_000_003);
+    expect(selectNextTask(tasks.slice(0, 2), new Set(), 2)).toBeNull();
   });
 });

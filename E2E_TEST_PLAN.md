@@ -1,3 +1,6 @@
+> **Historical.** Written when tasks lived in Label Studio, which has since been
+> removed. For how the platform works now, see ARCHITECTURE.md.
+
 # End-to-End Test Plan
 
 ## Quick Verification (10 minutes)

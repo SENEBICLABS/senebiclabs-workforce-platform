@@ -10,8 +10,7 @@
  * For our bucket, the long-lived URL is never handed on: the path is pulled out
  * and a fresh URL is signed for a few minutes, on each view, for a clinician the
  * gate has already admitted. For a client's URL there is nothing of ours to
- * sign; it is passed on only if it is https, which is what Label Studio's
- * viewer did with it. Anything else is not served.
+ * sign; it is passed on only if it is https. Anything else is not served.
  */
 
 export const IMAGE_BUCKET = "client-images";
