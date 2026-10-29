@@ -2,7 +2,7 @@ import "server-only";
 import { supabaseAdmin } from "./supabase";
 import { READINGS_ONLY } from "./completions";
 import { heldSnapshot } from "./health";
-import { nativeTaskStates } from "./taskstore";
+import { itemLeaseStates, nativeTaskStates } from "./taskstore";
 import {
   claimedTaskIds,
   itemsAwaitingReview,
@@ -10,7 +10,11 @@ import {
   type ReviewItem,
 } from "./review";
 import type { RawEvalConfig } from "./eval-config";
-import { decideAvailability, type Availability } from "./availability-rules";
+import {
+  decideAvailability,
+  type Availability,
+  type TaskState,
+} from "./availability-rules";
 
 /**
  * Gathers what the availability rule needs, and applies it.
@@ -154,6 +158,22 @@ export async function availabilityFor(
     };
   }
 
+  // What the queue will honour, so the card and the queue are counted the same way.
+  // Failing to read the holds is not fatal: without them a card can overstate by the
+  // number of cases being read right now, which is a smaller wrong than showing a busy
+  // pool as empty.
+  let withLeases: TaskState[] = tasks;
+  const leases = await itemLeaseStates(pool.projectId, clinicianId).catch((err) => {
+    console.error(`[availability] could not read holds for pool ${pool.id}`, err);
+    return null;
+  });
+  if (leases) {
+    withLeases = tasks.map((task) => {
+      const lease = leases.get(task.id);
+      return lease ? { ...task, slots_taken: lease.slotsTaken, mine: lease.mine } : task;
+    });
+  }
+
   const heldIds = new Set(held.cases.map((c) => c.ls_task_id));
 
   const [settleable, waiting, claimed] = await Promise.all([
@@ -163,7 +183,7 @@ export async function availabilityFor(
   ]);
 
   const decided = decideAvailability<ReviewItem>({
-    tasks,
+    tasks: withLeases,
     maxAnnotations: pool.maxAnnotations,
     seen: owned.seen,
     heldIds,

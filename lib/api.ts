@@ -319,6 +319,17 @@ export const api = {
       body: JSON.stringify({ answers }),
     }),
 
+  /**
+   * Asks to keep the case this clinician is reading.
+   *
+   * `held: false` is a normal reply, not an error: the hold has ended and the reason says
+   * why. It says nothing at all about whether their review was saved.
+   */
+  heartbeat: (taskId: number) =>
+    call<{ held: boolean; reason?: string }>(`/api/tasks/${taskId}/heartbeat`, {
+      method: "POST",
+    }),
+
   flag: (taskId: number, reason: string) =>
     call<{ flagged: true }>(`/api/tasks/${taskId}/flag`, {
       method: "POST",

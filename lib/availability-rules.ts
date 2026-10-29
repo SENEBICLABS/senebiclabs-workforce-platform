@@ -17,7 +17,8 @@
  * Availability, stated once:
  *
  *   a case below the pool's reviewer ceiling, that this clinician has neither
- *   judged nor flagged, plus the held cases they are senior for
+ *   judged nor flagged, that nobody else is reading, plus the held cases they
+ *   are senior for
  *
  * with two adjustments for pools that commission written work: an item waiting
  * to be reviewed counts, because it is work and it is served first, and a case
@@ -35,6 +36,15 @@ export interface TaskState {
   id: number;
   is_labeled: boolean;
   total_annotations: number;
+  /**
+   * Readings already spoken for: answers that count, plus the cases somebody is reading
+   * right now (HEALTH's migration 009). Absent where holds were not read, and it then
+   * falls back to the answer count, which is what this file did before serving began
+   * holding cases.
+   */
+  slots_taken?: number;
+  /** True when this clinician holds this case, so it is theirs to finish. */
+  mine?: boolean;
 }
 
 /** Just enough of a review item to decide whether it is reviewable. */
@@ -107,6 +117,25 @@ function onOffer(task: TaskState, maxAnnotations: number | null): boolean {
  * case: the lowest-numbered case on offer that they have not judged or flagged,
  * so a pool is worked front-to-back and overlap fills evenly.
  */
+/**
+ * A case one of whose readings this clinician could actually start now.
+ *
+ * `onOffer` asks whether a case still needs readings. This asks whether one of them is
+ * free. The two came apart when serving began holding cases: a case at its ceiling on
+ * held reservations still needs readings and has none to give out, and counting it puts
+ * a number on a pool card that the queue cannot honour.
+ *
+ * It is deliberately not folded into `onOffer`, because `remaining` and `closed` are
+ * built from that one and must stay answer-only. A pool whose last cases are being read
+ * is busy, not finished, and calling it finished would hide it from everybody for as
+ * long as somebody was working in it.
+ */
+function free(task: TaskState, maxAnnotations: number | null): boolean {
+  if (task.mine) return true;
+  if (maxAnnotations === null) return true;
+  return (task.slots_taken ?? task.total_annotations) < maxAnnotations;
+}
+
 export function selectNextTask<Task extends TaskState>(
   tasks: Task[],
   excludeTaskIds: Set<number>,
@@ -152,7 +181,7 @@ export function decideAvailability<Item extends ReviewableItem>(
   // and is never shown to them; it is what decides whether a pool is finished.
   const remaining = open.length;
 
-  let unclaimed = open.filter((task) => !seen.has(task.id));
+  let unclaimed = open.filter((task) => !seen.has(task.id) && free(task, maxAnnotations));
 
   // Only a flag hides an item from a reviewer. A completion must not: a
   // reviewer who sent work back should see the rewrite and judge whether their
@@ -170,7 +199,13 @@ export function decideAvailability<Item extends ReviewableItem>(
   // the most valuable thing in the pool and the only person who can clear it is
   // already here.
   const firstHeld = [...settleable].sort((a, b) => a - b)[0];
-  const firstTask = [...unclaimed].sort((a, b) => a.id - b.id)[0];
+  // A case they are already holding comes first, so a reload resumes it rather than
+  // queueing behind a lower-numbered case somebody else is reading. The reservation would
+  // resume it anyway; agreeing here keeps the count, the card and the queue telling one
+  // story.
+  const firstTask = [...unclaimed].sort(
+    (a, b) => Number(Boolean(b.mine)) - Number(Boolean(a.mine)) || a.id - b.id
+  )[0];
 
   const next: NextUp<Item> | null =
     firstHeld !== undefined

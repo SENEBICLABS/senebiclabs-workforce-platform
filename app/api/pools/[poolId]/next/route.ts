@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/middleware";
 import { availabilityFor } from "@/lib/availability";
 import { FORBIDDEN, requireEligiblePool } from "@/lib/gate";
-import { getNativeTask } from "@/lib/taskstore";
+import {
+  getNativeTask,
+  reserveAdjudication,
+  reserveNextItem,
+} from "@/lib/taskstore";
 import { reviewRequired } from "@/lib/review";
 import {
   buildContext,
@@ -56,8 +60,68 @@ export async function GET(
     const config = normalizeConfig(raw);
     const next = state.next;
 
-    const lsTaskId =
-      next.kind === "review" ? next.item.ls_task_id : next.lsTaskId;
+    // Work is held the moment it is served. The availability rule says whether there is
+    // any; the reservation picks which case and keeps it for this clinician, so two
+    // asking together are never sent one case and nobody reads a case they will not be
+    // allowed to submit.
+    //
+    // A review is not reserved: an authored item is claimed through review_items, which
+    // this platform owns. A held case is, but by its own rule, because it sits at its
+    // reviewer ceiling by definition and the ordinary reservation would refuse it.
+    let lsTaskId: number;
+    if (next.kind === "held") {
+      // One senior settles a case and that decision is final, so a held case goes to one
+      // senior at a time. Before this, every free senior was shown the same contested
+      // case and all but the first were refused at submit.
+      let claim;
+      try {
+        claim = await reserveAdjudication({ clinicianId: auth.clinicianId, poolId: pool.id });
+      } catch (err) {
+        console.error(`[next] could not assign a held case in pool ${pool.id}`, err);
+        return NextResponse.json(
+          { error: "We could not reach the case store. Try again in a moment." },
+          { status: 502 }
+        );
+      }
+      if (claim) {
+        lsTaskId = claim.taskNo;
+      } else {
+        // Another senior is settling it. Offer ordinary work rather than sending them
+        // away from a pool that still has cases in it.
+        const lease = await reserveNextItem({
+          clinicianId: auth.clinicianId,
+          poolId: pool.id,
+        }).catch((err) => {
+          console.error(`[next] could not hold a case in pool ${pool.id}`, err);
+          return undefined;
+        });
+        if (lease === undefined) {
+          return NextResponse.json(
+            { error: "We could not reach the case store. Try again in a moment." },
+            { status: 502 }
+          );
+        }
+        if (!lease) return new NextResponse(null, { status: 204 });
+        lsTaskId = lease.taskNo;
+      }
+    } else if (next.kind === "task") {
+      let lease;
+      try {
+        lease = await reserveNextItem({ clinicianId: auth.clinicianId, poolId: pool.id });
+      } catch (err) {
+        console.error(`[next] could not hold a case in pool ${pool.id}`, err);
+        return NextResponse.json(
+          { error: "We could not reach the case store. Try again in a moment." },
+          { status: 502 }
+        );
+      }
+      // The free readings went between the count and the ask. There is work in the pool
+      // and none of it is theirs to read, which is the same 204 as an empty pool.
+      if (!lease) return new NextResponse(null, { status: 204 });
+      lsTaskId = lease.taskNo;
+    } else {
+      lsTaskId = next.item.ls_task_id;
+    }
 
     let data: Record<string, unknown>;
     try {

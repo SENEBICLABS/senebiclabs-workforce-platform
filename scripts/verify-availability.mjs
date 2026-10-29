@@ -9,10 +9,15 @@
  * to ask both and compare — a unit test cannot, because the disagreement lived
  * in the gap between two separate reads of the same pool.
  *
- * Read-only. It lists pools and asks for the next case, which is what a
- * clinician's browser does on every dashboard load, and writes nothing
- * anywhere. Safe against live projects, which is the point: it has no write
- * path to guard.
+ * It lists pools and asks for the next case, which is what a clinician's browser does on
+ * every dashboard load.
+ *
+ * NO LONGER READ-ONLY. Since HEALTH's migration 009, asking for the next case holds it:
+ * one row in item_reservations per clinician per pool, for the clinician this script is
+ * impersonating. Nothing is deleted or altered and every hold lapses within the hour, but
+ * while they are live those cases are not offered to anybody else. Run it against a
+ * throwaway stack (HEALTH's scripts/native_e2e_stack.sh), not a live project, and do not
+ * run it in the middle of a sitting.
  *
  * Every clinician given on the command line is checked, defaulting to everyone
  * with pool access, because the interesting disagreements are per person: a

@@ -20,6 +20,7 @@ import { Card } from "@/components/ui/Card";
 import { PurposeBadge } from "@/components/ui/Pill";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/States";
 import { ApiError, NO_CONTENT, api, type ReviewAction, type Task } from "@/lib/api";
+import { heartbeatIntervalMs, startHeartbeat } from "@/lib/heartbeat";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import { ImageViewer } from "@/components/ImageViewer";
 
@@ -154,6 +155,10 @@ function Workspace() {
   // Flagging hands the case to someone else and throws away what they typed.
   // It sits next to Submit, so it asks once before doing that.
   const [confirmFlag, setConfirmFlag] = useState(false);
+  // Set when the hold on this case has ended under them. Shown next to Submit and kept
+  // there: a clinician must not finish a long review believing it will be saved when the
+  // case has already gone back to the pool.
+  const [leaseLost, setLeaseLost] = useState<string | null>(null);
 
   // A different pool resets the page, during render rather than in an effect,
   // so a task from the old pool is never shown under the new one's heading.
@@ -170,6 +175,7 @@ function Workspace() {
     setMissing([]);
     setSubmitError(null);
     setConfirmFlag(false);
+    setLeaseLost(null);
     if (!next) {
       setTask(null);
       setAnswers({});
@@ -179,6 +185,42 @@ function Workspace() {
     setTask(next);
     setAnswers(readDraft(next.task_id));
   }, []);
+
+  // Keeping the case while it is read.
+  //
+  // Keyed on the task, so exactly one loop runs per case: adopting the next one tears this
+  // down and starts another, and leaving the page, changing pool or signing out all
+  // unmount the component and stop it. The logic is in lib/heartbeat, where it is tested
+  // against lapsed holds, unanswered beats and replies that arrive too late.
+  const taskId = task?.task_id ?? null;
+  useEffect(() => {
+    if (taskId === null) return;
+    const loop = startHeartbeat({
+      beat: async () => {
+        try {
+          const { held, reason } = await api.heartbeat(taskId);
+          return held ? { held: true } : { held: false, reason: reason ?? "" };
+        } catch (err) {
+          // A refusal is an answer: the case is not theirs. Anything else is a beat we
+          // did not get an answer to, and the loop retries those.
+          if (err instanceof ApiError && err.status === 403) {
+            return { held: false, reason: "You are not holding this case." };
+          }
+          return { unknown: true };
+        }
+      },
+      // A hidden tab is not someone reading. Skipping the beat is what lets a case go
+      // back to the pool when a clinician walks away without closing it.
+      isActive: () =>
+        typeof document === "undefined" || document.visibilityState === "visible",
+      onLost: (reason) => setLeaseLost(reason || "This case is no longer yours."),
+      // Tunable without a code change, and left at the module default when unset or
+      // invalid. A much shorter interval spends the four renewals quickly and ends the
+      // hold sooner, so this is for testing and for tracking a change to the lease.
+      intervalMs: heartbeatIntervalMs(),
+    });
+    return () => loop.stop();
+  }, [taskId]);
 
   const load = useCallback(async () => {
     if (!poolId) return;
@@ -568,7 +610,7 @@ function Workspace() {
               />
             </div>
 
-            {(missing.length > 0 || submitError) && (
+            {(missing.length > 0 || submitError || leaseLost) && (
               <div className="space-y-3 px-5 pt-5 sm:px-6">
                 {missing.length > 0 && (
                   <Alert tone="danger" role="alert">
@@ -576,6 +618,13 @@ function Workspace() {
                       ? "One required field is still empty."
                       : `${missing.length} required fields are still empty.`}{" "}
                     Complete them to submit this review.
+                  </Alert>
+                )}
+
+                {leaseLost && (
+                  <Alert id="lease-lost" tone="warning" role="alert" title={leaseLost}>
+                    Submitting may be refused. Your answers are still below, so copy
+                    anything you want to keep before reloading for a fresh case.
                   </Alert>
                 )}
 

@@ -225,3 +225,50 @@ describe("the two counts are not the same number", () => {
     expect(decision.available).toBe(1);
   });
 });
+
+describe("a case somebody else is already reading", () => {
+  // `slots_taken` is answers plus live holds (HEALTH migration 009). A case at its
+  // ceiling on holds still needs readings and has none to give out, so counting it would
+  // put a number on a pool card that the queue cannot honour.
+  const holding = (id: number, slotsTaken: number, mine = false): TaskState => ({
+    ...task(id, 0),
+    slots_taken: slotsTaken,
+    mine,
+  });
+
+  it("is not offered, and is not counted", () => {
+    const decision = ask({ tasks: [holding(1, 2), holding(2, 0), holding(3, 2)] });
+    expect(decision.available).toBe(1);
+    expect(decision.next).toEqual({ kind: "task", lsTaskId: 2 });
+  });
+
+  it("still counts as remaining, because the pool is busy rather than finished", () => {
+    // `remaining` and `closed` stay answer-only on purpose: a pool whose last cases are
+    // being read must not be hidden from everybody while somebody is working in it.
+    const decision = ask({ tasks: [holding(1, 2), holding(2, 2)] });
+    expect(decision.available).toBe(0);
+    expect(decision.remaining).toBe(2);
+    expect(decision.closed).toBe(false);
+    expect(decision.next).toBeNull();
+  });
+
+  it("is offered to the clinician who is holding it, ahead of a lower-numbered case", () => {
+    // A reload must resume their case rather than queueing behind one somebody else has.
+    const decision = ask({ tasks: [holding(1, 2), holding(2, 2, true), holding(3, 0)] });
+    expect(decision.next).toEqual({ kind: "task", lsTaskId: 2 });
+    expect(decision.available).toBe(2);
+  });
+
+  it("falls back to the answer count when holds could not be read", () => {
+    // itemLeaseStates failing must not empty a pool: without slots_taken the rule behaves
+    // exactly as it did before serving began holding cases.
+    const decision = ask({ tasks: [task(1, 2), task(2, 1), task(3, 0)] });
+    expect(decision.available).toBe(2);
+    expect(decision.next).toEqual({ kind: "task", lsTaskId: 2 });
+  });
+
+  it("ignores holds where the pool commissions no fixed number of readings", () => {
+    const decision = ask({ tasks: [holding(1, 9), holding(2, 40)], maxAnnotations: null });
+    expect(decision.available).toBe(2);
+  });
+});

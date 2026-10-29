@@ -8,6 +8,7 @@ import {
   type GatedPool,
 } from "@/lib/gate";
 import { recordPass } from "@/lib/completions";
+import { releaseReservation } from "@/lib/taskstore";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +89,11 @@ export async function POST(
         `[flag] task ${taskId} was flagged but the pass was not recorded for ${auth.clinicianId}`
       );
     }
+
+    // The case goes back to the pool now rather than when its hold lapses. The flag
+    // already stops it being offered to this clinician again; this frees the reading they
+    // were holding for somebody else immediately.
+    await releaseReservation(auth.clinicianId, taskId, "flagged");
 
     return NextResponse.json({ flagged: true });
   });
