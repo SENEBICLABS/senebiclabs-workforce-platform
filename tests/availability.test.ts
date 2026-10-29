@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { isLocalSupabase, remoteGuard } from "../scripts/env.mjs";
 import { describe, expect, it } from "vitest";
 import {
   decideAvailability,
@@ -270,5 +273,80 @@ describe("a case somebody else is already reading", () => {
   it("ignores holds where the pool commissions no fixed number of readings", () => {
     const decision = ask({ tasks: [holding(1, 9), holding(2, 40)], maxAnnotations: null });
     expect(decision.available).toBe(2);
+  });
+});
+
+describe("the availability verification script's safety guard", () => {
+  // scripts/verify-availability.mjs holds every case it is served, so it is no longer
+  // read-only. The guard decides on the database's URL, never the app's: a Next server on
+  // localhost reads the same .env.local, so a local APP_URL in front of a hosted project
+  // still writes to that project. Judging by the app's address is exactly how a check
+  // meant for a test stack ends up taking real work out of circulation.
+  it("recognises a throwaway database on this machine", () => {
+    for (const url of [
+      "http://127.0.0.1:54321",
+      "http://localhost:54321",
+      "http://0.0.0.0:54321",
+      "http://stack.local:8000",
+    ]) {
+      expect(isLocalSupabase(url), url).toBe(true);
+    }
+  });
+
+  it("treats anything it cannot vouch for as remote", () => {
+    // Fail closed: a script that writes may only ever be wrong towards refusing to run.
+    for (const url of ["https://abc.supabase.co", "", "   ", "not a url", undefined, null, 42]) {
+      expect(isLocalSupabase(url), String(url)).toBe(false);
+    }
+  });
+
+  it("refuses a hosted database, and says why", () => {
+    const verdict = remoteGuard({ supabaseUrl: "https://abc.supabase.co" });
+    expect(verdict.ok).toBe(false);
+    expect(verdict.remote).toBe(true);
+    expect(verdict.reason).toMatch(/not a local database/i);
+    expect(verdict.reason).toMatch(/ALLOW_REMOTE=1/);
+  });
+
+  it("allows a hosted database only on an explicit opt-in", () => {
+    const url = "https://abc.supabase.co";
+    expect(remoteGuard({ supabaseUrl: url, allowRemote: "1" }).ok).toBe(true);
+    // Anything other than the exact opt-in is not an opt-in.
+    for (const almost of ["0", "true", "yes", "", " 1", undefined]) {
+      expect(remoteGuard({ supabaseUrl: url, allowRemote: almost }).ok, String(almost)).toBe(false);
+    }
+  });
+
+  it("needs no opt-in for a local database", () => {
+    const verdict = remoteGuard({ supabaseUrl: "http://127.0.0.1:54321" });
+    expect(verdict.ok).toBe(true);
+    expect(verdict.remote).toBe(false);
+  });
+});
+
+describe("the verification script releases what it holds", () => {
+  const script = readFileSync(join(__dirname, "..", "scripts", "verify-availability.mjs"), "utf8");
+
+  it("records a hold the moment a case is served", () => {
+    expect(script).toMatch(/holds\.push\(/);
+    expect(script).toMatch(/task_no: body\.task_id|taskNo: body\.task_id/);
+  });
+
+  it("releases in a finally, so an early failure still hands the cases back", () => {
+    expect(script).toMatch(/\}\s*finally\s*\{[\s\S]*releaseHolds\(\)/);
+    // process.exit does not unwind, so it has to come after the cleanup.
+    expect(script.indexOf("releaseHolds()")).toBeLessThan(script.lastIndexOf("process.exit"));
+  });
+
+  it("uses the documented RPC, and names what it could not release", () => {
+    expect(script).toMatch(/rpc\/release_reservation/);
+    expect(script).toMatch(/p_clinician_id/);
+    expect(script).toMatch(/could NOT be released/);
+    expect(script).toMatch(/clinician=\$\{h\.clinicianId\} task=\$\{h\.taskNo\} pool=\$\{h\.poolId\}/);
+  });
+
+  it("prints no secret when it reports a stuck hold", () => {
+    const report = script.slice(script.indexOf("could NOT be released"), script.indexOf("}\n\nconst asked"));
+    expect(report).not.toMatch(/SERVICE_ROLE|apikey|JWT_SECRET|email/);
   });
 });

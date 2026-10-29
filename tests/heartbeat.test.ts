@@ -6,6 +6,8 @@
  * waited for. `run()` drains the queue a fixed number of times, which is enough for the
  * chains these tests build and short enough to fail rather than hang.
  */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_INACTIVE_RECHECK_MS,
@@ -209,6 +211,64 @@ describe("when a beat goes unanswered", () => {
     expect(said).not.toMatch(/ran out|gone back/i);
   });
 
+  it("treats a refusal as unanswered, not as the case being taken away", async () => {
+    // The regression this guards. A 403 from the heartbeat route does not mean the hold
+    // has ended: every lease outcome arrives as a 200 with `held`, and the eligibility
+    // read behind that 403 swallows a transient database error. Reading it as confirmed
+    // loss stopped the loop, and the hold then lapsed for real an hour later, so a
+    // momentary blip caused the loss it announced.
+    class ApiErrorLike extends Error {
+      status: number;
+      constructor(status: number) {
+        super(`HTTP ${status}`);
+        this.status = status;
+      }
+    }
+    const clock = fakeClock();
+    const lost = vi.fn();
+    let calls = 0;
+    startHeartbeat({
+      beat: async () => {
+        calls += 1;
+        if (calls <= 2) throw new ApiErrorLike(403);
+        return { held: true };
+      },
+      onLost: lost,
+      schedule: (fn, ms) => clock.schedule(fn, ms),
+      cancel: (h) => clock.cancel(h),
+    });
+    await clock.run(5);
+
+    expect(lost).not.toHaveBeenCalled();
+    expect(calls).toBeGreaterThanOrEqual(3);          // retried rather than giving up
+    const retries = clock.delays.slice(1, 3);
+    expect(retries[0]).toBeLessThan(DEFAULT_INTERVAL_MS);   // backoff, not the full wait
+    expect(clock.delays[clock.delays.length - 1]).toBe(DEFAULT_INTERVAL_MS);
+  });
+
+  it("says the hold is unconfirmed, never that it is lost, when only refusals come back", async () => {
+    class ApiErrorLike extends Error {
+      status = 403;
+    }
+    const clock = fakeClock();
+    const lost = vi.fn();
+    startHeartbeat({
+      beat: async () => {
+        throw new ApiErrorLike();
+      },
+      onLost: lost,
+      maxFailures: 2,
+      schedule: (fn, ms) => clock.schedule(fn, ms),
+      cancel: (h) => clock.cancel(h),
+    });
+    await clock.run(5);
+
+    expect(lost).toHaveBeenCalledTimes(1);
+    const said = lost.mock.calls[0][0] as string;
+    expect(said).toMatch(/could not confirm/i);
+    expect(said).not.toMatch(/not holding|ran out|gone back/i);
+  });
+
   it("treats a thrown beat as unanswered rather than crashing the loop", async () => {
     const clock = fakeClock();
     const lost = vi.fn();
@@ -295,5 +355,35 @@ describe("the configured interval", () => {
     expect(heartbeatIntervalMs(String(MAX_INTERVAL_MS))).toBe(MAX_INTERVAL_MS);
     expect(heartbeatIntervalMs(String(MAX_INTERVAL_MS + 1))).toBeUndefined();
     expect(heartbeatIntervalMs(String(MIN_INTERVAL_MS - 1))).toBeUndefined();
+  });
+});
+
+describe("the workspace's beat", () => {
+  // The loop has always treated a throw as unknown, so the tests above would pass with or
+  // without the fix: the defect was in the component, which caught the error itself and
+  // turned a 403 into a lease outcome before the loop ever saw it. Nothing in this repo
+  // can render that component (vitest runs in node, with no DOM), so the regression is
+  // pinned at the source, the way tests/no-label-studio.test.ts pins its own rule.
+  const workspace = readFileSync(join(__dirname, "..", "app", "workspace", "page.tsx"), "utf8");
+  const beat = workspace.slice(
+    workspace.indexOf("beat: async () =>"),
+    workspace.indexOf("isActive:")
+  );
+
+  it("exists where this test expects it", () => {
+    expect(beat).toContain("api.heartbeat");
+    expect(beat.length).toBeGreaterThan(40);
+  });
+
+  it("never decides the hold has ended from a status code", () => {
+    expect(beat).not.toMatch(/\b403\b/);
+    expect(beat).not.toMatch(/\.status\b/);
+    expect(beat).not.toMatch(/instanceof ApiError/);
+  });
+
+  it("reports only what the server said about the lease", () => {
+    // `held` and `reason` come straight from the reply; the component invents neither.
+    expect(beat).toMatch(/const \{ held, reason \} = await api\.heartbeat/);
+    expect(beat).not.toMatch(/unknown/);
   });
 });

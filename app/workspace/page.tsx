@@ -196,18 +196,15 @@ function Workspace() {
   useEffect(() => {
     if (taskId === null) return;
     const loop = startHeartbeat({
+      // Only the server's own answer about the lease ends the hold. Every lease outcome
+      // comes back as a 200 with `held`, so anything that throws is a beat we did not get
+      // an answer to, and lib/heartbeat retries those. A 403 used to be read here as
+      // "not yours", but the eligibility read behind it swallows a transient database
+      // error, so a momentary blip stopped the loop and the hold then lapsed for real:
+      // the false report caused the loss it announced.
       beat: async () => {
-        try {
-          const { held, reason } = await api.heartbeat(taskId);
-          return held ? { held: true } : { held: false, reason: reason ?? "" };
-        } catch (err) {
-          // A refusal is an answer: the case is not theirs. Anything else is a beat we
-          // did not get an answer to, and the loop retries those.
-          if (err instanceof ApiError && err.status === 403) {
-            return { held: false, reason: "You are not holding this case." };
-          }
-          return { unknown: true };
-        }
+        const { held, reason } = await api.heartbeat(taskId);
+        return held ? { held: true } : { held: false, reason: reason ?? "" };
       },
       // A hidden tab is not someone reading. Skipping the beat is what lets a case go
       // back to the pool when a clinician walks away without closing it.
