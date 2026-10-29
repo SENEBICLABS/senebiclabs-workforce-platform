@@ -62,8 +62,8 @@ export const POOL_CLOSED = () =>
 /**
  * The pool columns every gate reads, with its project's config.
  *
- * pools.ls_project_id is not read: it is a name kept from Label Studio for a
- * column nothing uses any more, and it goes with a later migration.
+ * pools.ls_project_id is not read: nothing uses that column any more, and it
+ * goes with a later migration.
  */
 export const POOL_SELECT =
   "id, name, eval_config, maximum_annotations, project_id, project:project_submissions(eval_config)";
@@ -99,9 +99,8 @@ export type PoolRow = Record<string, unknown> & {
 /**
  * The facts of a pool row, or null for a pool no clinician may be served from.
  *
- * Every pool serves one HEALTH project. A pool with no project is a leftover of
- * Label Studio, where tasks lived outside our database; there is nothing to
- * serve from it, so it is treated exactly like a pool that does not exist.
+ * Every pool serves one HEALTH project. A pool with no project has no tasks to
+ * serve, so it is treated exactly like a pool that does not exist.
  * Pure, so it can be tested.
  */
 export function poolFacts(pool: PoolRow) {

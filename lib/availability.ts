@@ -89,9 +89,9 @@ async function ownedBy(clinicianId: string, poolId: string) {
  * settle a disagreement they are part of, and the only record of who read what
  * is this table: HEALTH sends the earlier answers with no author, deliberately,
  * so it cannot be asked and must not be inferred. A case is a case whichever
- * pool row served it, and the database already takes that view — claim_task_slot matches
- * on (clinician, task) with no pool in it, and one adjudication per case is
- * unique on the task alone.
+ * pool row served it, and the database already takes that view: a reading is
+ * unique per (clinician, task, kind) with no pool in it, and one adjudication
+ * per case is unique on the task alone.
  *
  * Finding none is a resting state, not a failure. A case whose every senior has
  * already read it stays held for an operator to settle through HEALTH's own

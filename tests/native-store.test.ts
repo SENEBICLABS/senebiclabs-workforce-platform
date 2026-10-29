@@ -180,12 +180,12 @@ describe("which config and ceiling a pool runs on", () => {
   });
 
   it("serves nothing from a pool with no project, whatever its own columns say", () => {
-    // A Label Studio leftover: its own config and ceiling are never a reason to serve it.
+    // Its own config and ceiling are never a reason to serve it.
     expect(poolFacts({ id: "p", eval_config: { reviewers_per_item: 2 }, maximum_annotations: 2 })).toBeNull();
     expect(poolFacts({ id: "p", project_id: null, project: { eval_config: projectConfig } })).toBeNull();
   });
 
-  it("reads neither the Label Studio project id nor the store flag", () => {
+  it("reads neither the legacy project id nor the store flag", () => {
     expect(POOL_SELECT).not.toMatch(/ls_project_id|task_store/);
   });
 
