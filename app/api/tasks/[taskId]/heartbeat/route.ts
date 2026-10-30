@@ -40,7 +40,19 @@ export async function POST(
 
     // The same gate as every other route that acts on a case: eligibility is read
     // from the database on this request, not inferred from holding a lease.
-    const gated = await requireEligiblePoolForTask(auth.clinicianId, taskId);
+    // A refusal and a failed read are different answers. The client treats a 502 as a
+    // beat it did not get an answer to and retries; a 403 would be read as the case
+    // having been taken away, which is the mistake this whole loop is careful about.
+    let gated;
+    try {
+      gated = await requireEligiblePoolForTask(auth.clinicianId, taskId);
+    } catch (err) {
+      console.error(`[heartbeat] could not establish eligibility for task ${taskId}`, err);
+      return NextResponse.json(
+        { error: "We could not reach the case store. Try again in a moment." },
+        { status: 502, headers: { "Cache-Control": "no-store" } }
+      );
+    }
     if (!gated) return FORBIDDEN();
     if (gated.pool.closedAt) return POOL_CLOSED();
 

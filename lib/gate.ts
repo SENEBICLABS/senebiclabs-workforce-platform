@@ -38,6 +38,25 @@ export interface GatedPool {
   projectId: string;
 }
 
+/**
+ * A read this gate depends on failed.
+ *
+ * Distinct from returning null, which is this gate's refusal and says nothing about why.
+ * An error means we could not establish eligibility at all, and the caller owes the
+ * clinician a different answer: "not eligible" reads as permanent and stops them working,
+ * where the truth is that the database did not answer and they should try again.
+ *
+ * The message carries the database's own code and nothing else. A clinician id, a pool id
+ * or a task number in here would end up in logs and in a response body, so none of them
+ * is ever put in.
+ */
+export class GateError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "GateError";
+  }
+}
+
 export const FORBIDDEN = () =>
   NextResponse.json(
     { error: "You are not eligible for this pool." },
@@ -130,7 +149,8 @@ export async function toGatedPool(pool: PoolRow, senior: boolean): Promise<Gated
  * Resolves a pool for a clinician, or null if they may not have it.
  *
  * Returns null for "does not exist" and for "exists but not eligible" alike, so
- * callers cannot leak the difference.
+ * callers cannot leak the difference. Null never means "we could not tell": a failed
+ * read throws GateError, which callers answer with a 502 rather than a refusal.
  */
 export async function requireEligiblePool(
   clinicianId: string,
@@ -141,13 +161,17 @@ export async function requireEligiblePool(
   // One round trip, not two: the inner join yields nothing when the pool does
   // not exist and nothing when the clinician is not eligible, which is exactly
   // the indistinguishable refusal this gate owes callers.
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("pool_eligibility")
     .select(`senior, pools!inner(${POOL_SELECT})`)
     .eq("clinician_id", clinicianId)
     .eq("pool_id", poolId)
     .eq("eligible", true)
     .maybeSingle();
+
+  // A failed read is not a refusal. Letting it fall through to null told a clinician they
+  // were not eligible for a pool they hold, which reads as permanent, and they stopped.
+  if (error) throw new GateError(`pool eligibility: ${error.code ?? error.message}`);
 
   const pool = (data as unknown as { pools?: PoolRow })?.pools;
   if (!pool) return null;
@@ -161,7 +185,8 @@ export async function requireEligiblePool(
  * A task id alone is not authority to write. The task's own project decides the
  * pool (one pool per project), so a task number from another client's project
  * can never be answered through a pool this clinician holds. Null for "no such
- * task" and "not yours" alike.
+ * task" and "not yours" alike; GateError when a read failed and neither can be
+ * established.
  */
 export async function requireEligiblePoolForTask(
   clinicianId: string,
@@ -170,13 +195,18 @@ export async function requireEligiblePoolForTask(
   const task = await getNativeTask(taskNo);
   if (!task) return null;
 
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("pool_eligibility")
     .select(`senior, pools!inner(${POOL_SELECT})`)
     .eq("clinician_id", clinicianId)
     .eq("eligible", true)
     .eq("pools.project_id", task.projectId)
     .maybeSingle();
+
+  // getNativeTask above already throws when the store cannot be read, so the two reads in
+  // this function now fail the same way. Swallowing this one made a transient fault look
+  // like "not yours" on the path that records clinical work.
+  if (error) throw new GateError(`task eligibility: ${error.code ?? error.message}`);
 
   const row = data as unknown as { senior?: boolean; pools?: PoolRow } | null;
   if (!row?.pools) return null;

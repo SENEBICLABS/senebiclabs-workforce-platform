@@ -36,7 +36,19 @@ export async function GET(
   return withAuth(req, async (_req, auth) => {
     const { poolId } = await params;
 
-    const pool = await requireEligiblePool(auth.clinicianId, poolId);
+    // Null is the gate's refusal and says nothing about why. A throw means the read
+    // failed, which is a different answer: "not eligible" reads as permanent and a
+    // clinician who believes it stops working.
+    let pool;
+    try {
+      pool = await requireEligiblePool(auth.clinicianId, poolId);
+    } catch (err) {
+      console.error(`[next] could not establish eligibility for pool ${poolId}`, err);
+      return NextResponse.json(
+        { error: "We could not reach the case store. Try again in a moment." },
+        { status: 502 }
+      );
+    }
     if (!pool) return FORBIDDEN();
 
     const state = await availabilityFor(pool, auth.clinicianId);

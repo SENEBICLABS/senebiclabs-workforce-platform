@@ -246,6 +246,33 @@ describe("when a beat goes unanswered", () => {
     expect(clock.delays[clock.delays.length - 1]).toBe(DEFAULT_INTERVAL_MS);
   });
 
+  it("treats the gate's 502 as unanswered, which is what the route now sends", async () => {
+    // The eligibility read failing used to reach here as a 403 and be read as the case
+    // being taken away. The route answers 502 now, and a 502 is a beat we did not get an
+    // answer to: retried, and never reported as a lease outcome.
+    class ApiErrorLike extends Error {
+      status = 502;
+    }
+    const clock = fakeClock();
+    const lost = vi.fn();
+    let calls = 0;
+    startHeartbeat({
+      beat: async () => {
+        calls += 1;
+        if (calls === 1) throw new ApiErrorLike();
+        return { held: true };
+      },
+      onLost: lost,
+      schedule: (fn, ms) => clock.schedule(fn, ms),
+      cancel: (h) => clock.cancel(h),
+    });
+    await clock.run(4);
+
+    expect(lost).not.toHaveBeenCalled();
+    expect(calls).toBeGreaterThanOrEqual(2);
+    expect(clock.delays[clock.delays.length - 1]).toBe(DEFAULT_INTERVAL_MS);
+  });
+
   it("says the hold is unconfirmed, never that it is lost, when only refusals come back", async () => {
     class ApiErrorLike extends Error {
       status = 403;
