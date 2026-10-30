@@ -9,32 +9,97 @@
  * to ask both and compare — a unit test cannot, because the disagreement lived
  * in the gap between two separate reads of the same pool.
  *
- * Read-only. It lists pools and asks for the next case, which is what a
- * clinician's browser does on every dashboard load, and writes nothing
- * anywhere. Safe against live projects, which is the point: it has no write
- * path to guard.
+ * It lists pools and asks for the next case, which is what a clinician's browser does on
+ * every dashboard load.
+ *
+ * NO LONGER READ-ONLY. Since HEALTH's migration 009, asking for the next case holds it:
+ * one row in item_reservations per clinician per pool, for the clinician this script is
+ * impersonating. Nothing is deleted or altered and every hold lapses within the hour, but
+ * while they are live those cases are not offered to anybody else. Run it against a
+ * throwaway stack (HEALTH's scripts/native_e2e_stack.sh), not a live project, and do not
+ * run it in the middle of a sitting.
  *
  * Every clinician given on the command line is checked, defaulting to everyone
  * with pool access, because the interesting disagreements are per person: a
  * senior sees held cases nobody else does, and a clinician who has worked a
  * pool out sees nothing where a colleague still sees work.
  */
-import { loadEnv } from "./env.mjs";
+import { loadEnv, remoteGuard } from "./env.mjs";
 import { sessionFor } from "./session-for.mjs";
 
 const env = loadEnv();
 const APP = env.APP_URL || "http://localhost:3000";
 
-const rest = async (path) => {
+// Fail closed before anything is asked for. The decision is made on the database's URL,
+// never the app's: a Next server on localhost reads this same .env.local, so a local
+// APP_URL in front of a hosted project still writes to that project.
+const guard = remoteGuard({
+  supabaseUrl: env.NEXT_PUBLIC_SUPABASE_URL,
+  allowRemote: process.env.ALLOW_REMOTE,
+});
+if (!guard.ok) {
+  console.error(`  REFUSING TO RUN. ${guard.reason}`);
+  process.exit(2);
+}
+if (guard.remote) {
+  console.error("  ALLOW_REMOTE=1: running against a hosted database. Holds are released");
+  console.error("  on the way out, but do not do this in the middle of a sitting.\n");
+}
+
+const supabase = async (path, init = {}) => {
   const res = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/${path}`, {
+    ...init,
     headers: {
       apikey: env.SUPABASE_SERVICE_ROLE_KEY,
       Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+      ...(init.body ? { "Content-Type": "application/json" } : {}),
+      ...(init.headers ?? {}),
     },
   });
   if (!res.ok) throw new Error(`Supabase ${path} -> ${res.status}`);
-  return res.json();
+  return res.status === 204 ? null : res.json();
 };
+
+const rest = (path) => supabase(path);
+
+/**
+ * Every case this run was served, so each can be handed back.
+ *
+ * Asking for the next case holds it (HEALTH migration 009). That is the whole reason this
+ * script is no longer read-only, and leaving the holds behind would withhold real work for
+ * an hour for the sake of a check that takes seconds.
+ */
+const holds = [];
+
+async function releaseHolds() {
+  if (holds.length === 0) return;
+  const stuck = [];
+  for (const hold of holds) {
+    try {
+      await supabase("rpc/release_reservation", {
+        method: "POST",
+        body: JSON.stringify({
+          p_clinician_id: hold.clinicianId,
+          p_task_no: hold.taskNo,
+          p_reason: "verify-availability",
+        }),
+      });
+    } catch {
+      stuck.push(hold);
+    }
+  }
+  if (stuck.length === 0) {
+    console.log(`\n  ${holds.length} hold(s) released`);
+    return;
+  }
+  // Named so an operator can finish the job by hand. Ids only: no email, no secrets.
+  console.error(`\n  ${stuck.length} of ${holds.length} hold(s) could NOT be released.`);
+  console.error("  Release them with, for each line below:");
+  console.error("    select release_reservation('<clinician>', <task>, 'manual');");
+  for (const h of stuck) {
+    console.error(`    clinician=${h.clinicianId} task=${h.taskNo} pool=${h.poolId}`);
+  }
+}
 
 const asked = process.argv.slice(2);
 
@@ -52,6 +117,7 @@ if (clinicians.length === 0) {
 let failures = 0;
 let checked = 0;
 
+try {
 for (const clinician of clinicians) {
   const token = await sessionFor(env, {
     clinicianId: clinician.id,
@@ -78,6 +144,19 @@ for (const clinician of clinicians) {
     const res = await fetch(`${APP}/api/pools/${pool.id}/next`, { headers });
     const serves = res.status === 200;
     checked++;
+
+    // A served case is a held case. Remember it before anything else can fail, so the
+    // cleanup below can hand it back even if this run stops early.
+    if (serves) {
+      const body = await res.clone().json().catch(() => null);
+      if (body?.task_id) {
+        holds.push({
+          clinicianId: clinician.id,
+          taskNo: body.task_id,
+          poolId: pool.id,
+        });
+      }
+    }
 
     // A null count means the case store could not be read. The list says so
     // rather than claiming zero, and there is nothing to compare: the queue
@@ -109,6 +188,12 @@ for (const clinician of clinicians) {
         ` /next=${res.status}  ${verdict}`
     );
   }
+}
+
+} finally {
+  // However this run ended, including a thrown assertion, the cases go back.
+  // process.exit does not unwind, so it is deliberately after this block.
+  await releaseHolds();
 }
 
 console.log(

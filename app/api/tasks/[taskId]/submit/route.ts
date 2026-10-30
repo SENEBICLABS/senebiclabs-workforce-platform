@@ -7,10 +7,10 @@ import {
   requireEligiblePoolForTask,
   type GatedPool,
 } from "@/lib/gate";
-import { selectNextTask } from "@/lib/availability-rules";
 import {
   getNativeTask,
-  nativeTaskStates,
+  reserveNextItem,
+  settleReservation,
   submitJudgement,
   TaskStoreError,
   type SubmitOutcome,
@@ -343,8 +343,12 @@ async function recordJudgement(
 
   // Scoring happens in HEALTH. The answer and its event are already committed,
   // so this is only a nudge, sent after the response so the clinician's next
-  // case does not wait on it.
-  after(() => notifyAnswersRecorded());
+  // case does not wait on it. The hold is tidied in the same breath: the ceiling never
+  // depended on it, because a hold whose owner has answered already stopped counting.
+  after(async () => {
+    await settleReservation(clinicianId, taskNo);
+    notifyAnswersRecorded();
+  });
 
   return NextResponse.json({
     recorded: true,
@@ -385,9 +389,16 @@ async function nextTaskFor(
   let taskId: number;
   let data: Record<string, unknown>;
   try {
-    const states = await nativeTaskStates(pool.projectId);
-    const pick = selectNextTask(states, seen, pool.maxAnnotations);
-    const task = pick ? await getNativeTask(pick.id) : null;
+    // Held before it is shown, like every other way a case reaches a clinician. This is
+    // the path that matters most: someone who is working draws nearly every case through
+    // it rather than through /next, so reserving only there would leave the collision
+    // exactly where the work happens.
+    //
+    // `seen` is no longer consulted because the database applies the same exclusions this
+    // branch used to apply by hand: answered, passed, flagged, already held, at its
+    // ceiling. There was one copy of that rule too many.
+    const lease = await reserveNextItem({ clinicianId, poolId: pool.id });
+    const task = lease ? await getNativeTask(lease.taskNo) : null;
     if (!task) return null;
     taskId = task.id;
     data = task.data;
